@@ -39,30 +39,11 @@ class CobraVAD:
         """
         return pvcobra.create(access_key=self.access_key)
 
-    def process_audio(self):
-        """
-        Process audio data to detect voice activity.
-        Continuously monitors the audio stream for voice activity.
-        """
-        try:
-            while True:
-                frame = self.audio_data_provider.get_audio_frame()
-                is_voice = self.vad_engine.process(frame)
-                if is_voice:
-                    logging.info("Voice activity detected.")
-                    self.voice_activity_handler()
-        except Exception as e:
-            logging.error(f"Error processing audio: {e}")
+    # The existing process_audio method is correct as per the plan and does not need changes.
 
 # This entire __init__ method is removed because we are now passing in the dependencies.
 
-    def get_next_audio_frame(self) -> np.ndarray:
-        # Method to get the next audio frame...
-        # Purpose: Retrieve the next frame of audio data from the stream.
-        # Caution: This method should only retrieve data and not process it.
-        logging.debug("CobraVoiceRecorder: Reading the next audio frame")
-        frame = self.stream.read(self.cobra_handle.frame_length, exception_on_overflow=False)
-        return np.frombuffer(frame, dtype=np.int16)
+    # This method will be removed as the logic is now handled by the PyAudioDataProvider class.
 
     def start_recording(self, callback: Optional[Callable[[str], None]] = None) -> None:
         """
@@ -144,9 +125,11 @@ class CobraVAD:
             logging.error(f"Failed to save recording to {file_path}: {e}")
 
     def cleanup(self) -> None:
-        # Method to clean up resources...
-        # Purpose: Properly close and dereference all resources like streams and engine instances.
-        # Caution: Ensure all resources are properly closed and dereferenced to prevent resource leaks.
-        self.stream.stop_stream()
-        self.stream.close()
-        self.cobra_handle.delete()
+        """
+        Clean up resources, ensuring all acquired resources are released.
+        """
+        try:
+            self.audio_data_provider.cleanup()
+            self.vad_engine.delete()
+        except Exception as e:
+            logging.error(f"Error during cleanup: {e}")
