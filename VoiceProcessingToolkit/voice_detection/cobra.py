@@ -21,12 +21,6 @@ class CobraVAD:
     """
 
     def __init__(self, vad_engine: pvcobra.VoiceActivityDetector, audio_data_provider: AudioDataProvider, voice_activity_handler: Callable[[str], None]):
-        if not isinstance(vad_engine, pvcobra.VoiceActivityDetector):
-            raise TypeError("vad_engine must be an instance of pvcobra.VoiceActivityDetector")
-        if not isinstance(audio_data_provider, AudioDataProvider):
-            raise TypeError("audio_data_provider must be an instance of AudioDataProvider")
-        if not callable(voice_activity_handler):
-            raise TypeError("voice_activity_handler must be callable")
         """
         Initialize the Cobra VAD.
         Args:
@@ -34,13 +28,6 @@ class CobraVAD:
             audio_data_provider: An instance that provides audio data frames.
             voice_activity_handler: A callable that handles detected voice activity.
         """
-        if not isinstance(vad_engine, pvcobra.VoiceActivityDetector):
-            raise TypeError("vad_engine must be an instance of pvcobra.VoiceActivityDetector")
-        if not isinstance(audio_data_provider, AudioDataProvider):
-            raise TypeError("audio_data_provider must be an instance of AudioDataProvider")
-        if not callable(voice_activity_handler):
-            raise TypeError("voice_activity_handler must be callable")
-
         self.vad_engine = vad_engine
         self.audio_data_provider = audio_data_provider
         self.voice_activity_handler = voice_activity_handler
