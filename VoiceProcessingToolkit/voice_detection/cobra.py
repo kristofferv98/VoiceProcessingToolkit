@@ -3,7 +3,7 @@ import os
 import tempfile
 import wave
 from collections import deque
-from typing import Optional, List
+from typing import Optional, List, Callable
 
 import numpy as np
 import pvcobra
