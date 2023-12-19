@@ -169,8 +169,7 @@ def example_usage(play_notification_sound=True):
         action_function=print_detected,
         audio_stream_manager=audio_stream_manager,
         notification_sound_manager=dummy_notification_sound_manager,
-        play_notification_sound=play_notification_sound  # Control the playback of the notification sound
-    )
+        )
 
     # Start the wake word detection loop
     detector.run()
