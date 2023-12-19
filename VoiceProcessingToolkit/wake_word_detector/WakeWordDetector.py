@@ -2,162 +2,168 @@
 WakeWordDetector Library
 ------------------------
 
-This module provides an easy-to-use interface for wake word detection and voice transcription using Porcupine and Cobra.
+This module provides an easy-to-use interface for wake word detection using Porcupine.
 
 Classes:
-    WakeWordDetector: Main class for wake word detection and handling transcription.
-    CobraVoiceRecorder: Handles voice recording and transcription using Cobra VAD engine.
+    WakeWordDetector: Main class for wake word detection.
+    AudioStreamManager: Manages the audio stream from the microphone.
+    NotificationSoundManager: Plays a notification sound.
 
 How to use:
     1. Set up the required environment variables (PICOVOICE_APIKEY).
-    2. Create an instance of WakeWordDetector.
-    3. Call the `run` method to start listening for the wake word.
+    2. Create an instance of AudioStreamManager and NotificationSoundManager.
+    3. Create an instance of WakeWordDetector.
+    4. Call the `run` method to start listening for the wake word.
 
 Example:
     ```python
-    from wake_word_detector import WakeWordDetector
+    from wake_word_detector import WakeWordDetector, AudioStreamManager, NotificationSoundManager
 
-    detector = WakeWordDetector(picovoice_api_key='your-picovoice_api_key', wake_word='jarvis', run_once=True)
-    result = detector.run()
-    print("Transcription:", result)
+    audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
+    notification_sound_manager = NotificationSoundManager('path/to/notification/sound.wav')
+    detector = WakeWordDetector(
+        access_key='your-picovoice_api_key',
+        wake_word='jarvis',
+        sensitivity=0.5,
+        action_function=custom_action,
+        audio_stream_manager=audio_stream_manager,
+        notification_sound_manager=notification_sound_manager
+    )
+    detector.run()
     ```
 """
-import contextlib
-import logging
+
 import os
 import struct
 import threading
 
 import pvporcupine
 import pyaudio
-import pygame
-from dotenv import load_dotenv
 
-from .AudioStreamManager import AudioStreamManager
-
-logger = logging.getLogger(__name__)
-
-load_dotenv()
-
-
-
+from AudioStreamManager import AudioStreamManager
+from NotificationSoundManager import NotificationSoundManager
 
 
 class WakeWordDetector:
     """
-    Main class for wake word detection and handling transcription.
+    Main class for wake word detection.
 
     Attributes:
-        access_key (str): Access key for Porcupine.
-        wake_word (str): Wake word to listen for.
-        sensitivity (float): Sensitivity of wake word detection.
-        action_function (callable): Custom function to call when wake word is detected.
-        notification_sound_path (str): Path to notification sound file.
-        continuous_run (bool): Whether to run the detection loop continuously.
+        access_key (str): The access key for the Porcupine wake word engine.
+        wake_word (str): The wake word that the detector should listen for.
+        sensitivity (float): The sensitivity of the wake word detection.
+        action_function (callable): The function to call when the wake word is detected.
+        audio_stream_manager (AudioStreamManager): Manages the audio stream.
+        notification_sound_manager (NotificationSoundManager): Plays a notification sound.
+        stop_event (threading.Event): Signals when to stop the detection loop.
+        porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
 
     Methods:
-        run: Starts the wake word detection loop and returns the transcription result.
+        __init__(self, access_key: str, wake_word: str, sensitivity: float,
+                 action_function: callable, audio_stream_manager: AudioStreamManager,
+                 notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None
+            Initializes the WakeWordDetector with the provided parameters.
+
+        initialize_porcupine(self) -> None
+            Initializes the Porcupine wake word engine.
+
+        voice_loop(self)
+            The main loop that listens for the wake word and triggers the action function.
+
+        run(self) -> None
+            Starts the wake word detection loop.
+
+        cleanup(self) -> None
+            Cleans up the resources used by the wake word detector.
     """
 
-    def __init__(self, access_key: str, wake_word: str, sensitivity: float, action_function: callable,
-                 audio_stream_manager: AudioStreamManager, notification_sound_manager: NotificationSoundManager,
-                 continuous_run: bool = False) -> None:
+    def __init__(self, access_key: str, wake_word: str, sensitivity: float,
+                 action_function: callable, audio_stream_manager: AudioStreamManager,
+                 notification_sound_manager: NotificationSoundManager) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
-
+        
         Args:
-            access_key (str): Access key for Porcupine, can be provided or set as an environment variable 'PICOVOICE_APIKEY'.
-            wake_word (str): Wake word to listen for.
-            sensitivity (float): Sensitivity of wake word detection.
-            action_function (callable): Custom function to call when wake word is detected.
-            notification_sound_path (str): Path to notification sound file.
-            continuous_run (bool): Whether to run the detection loop continuously.
+            access_key (str): The access key for the Porcupine wake word engine.
+            wake_word (str): The wake word that the detector should listen for.
+            sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
+            action_function (callable): The function to call when the wake word is detected.
+            audio_stream_manager (AudioStreamManager): Manages the audio stream.
+            notification_sound_manager (NotificationSoundManager): Plays a notification sound.
         """
-        self.continuous_run = continuous_run
-        self.notification_sound = None
-        self.audio_stream = None
-        self.py_audio = None
-        self.porcupine = None
-        self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
-        if not self.access_key:
-            raise ValueError(
-                "Porcupine access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
+        self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.action_function = action_function
-        default_sound_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
-        self.notification_sound_path = notification_sound_path or default_sound_path
-        self.stop_event = threading.Event()  # Initialize the stop event
+        self.audio_stream_manager = audio_stream_manager
+        self.notification_sound_manager = notification_sound_manager
+        self.stop_event = threading.Event()
+        self.porcupine = None
         self.initialize_porcupine()
-        # Removed the initialization of AudioStreamManager and NotificationSoundManager
 
     def initialize_porcupine(self) -> None:
-        self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
+        """
+        Initializes the Porcupine wake word engine.
+        """
+        if self.porcupine is None:
+            self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
                                             sensitivities=[self.sensitivity])
-        logger.debug("Porcupine initialized with wake word '%s' and sensitivity %.2f", self.wake_word,
-                     self.sensitivity)
-
 
     def voice_loop(self):
+        """
+        The main loop that listens for the wake word and triggers the action function.
+        """
         while not self.stop_event.is_set():
-            try:
-                pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length, exception_on_overflow=False)
-                pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
-                if self.porcupine.process(pcm) >= 0:
-                    logging.info("Wake word detected")
-                    if self.action_function and callable(self.action_function):
-                        self.action_function()
-                    if not self.continuous_run:
-                        break
-            except Exception as e:
-                logging.exception("Error in voice loop: %s", e)
-                self.audio_stream_manager.cleanup()
-                self.audio_stream_manager = self.initialize_audio_stream_manager()
+            pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length)
+            pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
+            if self.porcupine.process(pcm) >= 0:
+                self.notification_sound_manager.play()
+                if self.action_function:
+                    self.action_function()
 
+    def run(self) -> None:
+        """
+        Starts the wake word detection loop.
+        """
+        self.voice_loop()
+        self.cleanup()
 
     def cleanup(self) -> None:
-        # The cleanup of the audio stream is now handled by the audio_stream_manager passed in
+        """
+        Cleans up the resources used by the wake word detector.
+        """
+        self.audio_stream_manager.cleanup()
         self.porcupine.delete()
 
-    def run(self) -> str:
-        """
-        Starts the wake word detection loop and returns the transcription result.
 
-        Returns:
-            str: The transcription result or None if no transcription was obtained.
-        """
-        logging.info("Listening for the wake word...")
-        return self.voice_loop()  # Return the result of voice_loop
+if __name__ == '__main__':
+    # Define a simple action function
+    def action_function():
+        print("Wake word detected!")
 
+    # Set up the required parameters for AudioStreamManager
+    rate = 16000  # Sample rate
+    channels = 1  # Number of audio channels
+    format = pyaudio.paInt16  # Audio format
+    frames_per_buffer = 512  # Number of frames per buffer
 
-def custom_action():
-    picovoice_api_key = os.getenv('PICOVOICE_APIKEY')
-    voice_detector = WakeWordDetector(access_key=picovoice_api_key, action_function=custom_action)
-    transcription_text = voice_detector.voice_loop()
-    voice_detector.cleanup()
-    if transcription_text:
-        print("Wake word detected! Transcription result:", transcription_text)
-    else:
-        print("Wake word detected! No transcription obtained.")
-    return transcription_text
-class AudioStreamManager:
-    def __init__(self, rate: int, channels: int, format: int, frames_per_buffer: int):
-        self.py_audio = pyaudio.PyAudio()
-        self.stream = self._initialize_stream(rate, channels, format, frames_per_buffer)
+    # Create an instance of AudioStreamManager
+    audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-    def _initialize_stream(self, rate: int, channels: int, format: int, frames_per_buffer: int):
-        try:
-            return self.py_audio.open(rate=rate, channels=channels, format=format,
-                                      input=True, frames_per_buffer=frames_per_buffer)
-        except Exception as e:
-            logging.error("Failed to initialize audio stream: %s", e)
-            raise
+    # Path to the notification sound file
+    notification_sound_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
+    # Create an instance of NotificationSoundManager
+    notification_sound_manager = NotificationSoundManager(notification_sound_path)
+    api_key = os.getenv('PICOVOICE_APIKEY')
+    # Create an instance of WakeWordDetector
+    detector = WakeWordDetector(
+        access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
+        wake_word='jarvis',
+        sensitivity=0.5,
+        action_function=action_function,
+        audio_stream_manager=audio_stream_manager,
+        notification_sound_manager=notification_sound_manager
+    )
 
-    def get_stream(self):
-        return self.stream
-
-    def cleanup(self):
-        if self.stream.is_active():
-            self.stream.stop_stream()
-        self.stream.close()
-        self.py_audio.terminate()
+    # Start the wake word detection loop
+    detector.run()
