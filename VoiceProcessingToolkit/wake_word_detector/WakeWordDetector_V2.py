@@ -42,12 +42,12 @@ import pvporcupine
 from .AudioStreamManager import AudioStreamManager
 from .NotificationSoundManager import NotificationSoundManager
 
+
 class WakeWordDetector:
     """
     Main class for wake word detection.
 
     Attributes:
-        continuous_run (bool): Indicates if the detector should run continuously.
         access_key (str): The access key for the Porcupine wake word engine.
         wake_word (str): The wake word that the detector should listen for.
         sensitivity (float): The sensitivity of the wake word detection.
@@ -132,6 +132,6 @@ class WakeWordDetector:
         self.audio_stream_manager.cleanup()
         self.porcupine.delete()
 
+
 def custom_action():
     print("Wake word detected!")
-
