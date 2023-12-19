@@ -9,7 +9,6 @@ from VoiceProcessingToolkit.voice_detection.audio_recorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStreamManager
-from VoiceProcessingToolkit.wake_word_detector.NotificationSoundManager import NotificationSoundManager
 
 # Initialize the audio data provider
 audio_data_provider = PyAudioDataProvider()
