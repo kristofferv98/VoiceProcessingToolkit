@@ -62,6 +62,7 @@ stop_event = threading.Event()
 
 def signal_handler(signum, frame):
     print("Shutdown signal received")
+    audio_data_provider.cleanup()
     stop_event.set()
 
 
