@@ -5,6 +5,7 @@ from collections import deque
 
 import pyaudio
 
+from .voice_activity_detector import VoiceActivityDetector
 from .audio_data_provider import PyAudioDataProvider
 from .voice_activity_detector import VoiceActivityDetector
 
