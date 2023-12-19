@@ -1,6 +1,5 @@
 import logging
 import os
-from abc import abstractmethod
 
 import pyaudio
 import threading
@@ -15,7 +14,7 @@ from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordD
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStreamManager
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Initialize the audio data provider
