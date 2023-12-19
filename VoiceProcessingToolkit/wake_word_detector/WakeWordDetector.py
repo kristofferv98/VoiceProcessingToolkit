@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     # Create an instance of WakeWordDetector with the dummy notification sound manager
     detector = WakeWordDetector(
-        access_key=os.getenv('PICOVOICE_APIKEY'),
+        access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
         sensitivity=0.5,
         action_function=print_detected,
