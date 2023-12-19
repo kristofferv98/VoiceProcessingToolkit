@@ -81,8 +81,15 @@ class WakeWordDetector:
                  notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
+        
         Args:
-            ...
+            access_key (str): The access key for the Porcupine wake word engine.
+            wake_word (str): The wake word that the detector should listen for.
+            sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
+            action_function (callable): The function to call when the wake word is detected.
+            audio_stream_manager (AudioStreamManager): Manages the audio stream.
+            notification_sound_manager (NotificationSoundManager): Plays a notification sound.
+            continuous_run (bool, optional): If True, the detector will run continuously until stopped. Defaults to False.
         """
         self.continuous_run = continuous_run
         self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
