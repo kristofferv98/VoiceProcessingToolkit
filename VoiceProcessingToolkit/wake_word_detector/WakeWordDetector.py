@@ -55,7 +55,7 @@ class WakeWordDetector:
         access_key (str): The access key for the Porcupine wake word engine.
         wake_word (str): The wake word that the detector should listen for.
         sensitivity (float): The sensitivity of the wake word detection.
-        action_function (callable): The function to call when the wake word is detected.
+        action_manager (ActionManager): Manages the actions to execute when the wake word is detected.
         audio_stream_manager (AudioStreamManager): Manages the audio stream.
         stop_event (threading.Event): Signals when to stop the detection loop.
         porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
@@ -91,13 +91,12 @@ class WakeWordDetector:
             access_key (str): The access key for the Porcupine wake word engine.
             wake_word (str): The wake word that the detector should listen for.
             sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
-            action_function (callable): The function to call when the wake word is detected.
+            action_manager (ActionManager): Manages the actions to execute when the wake word is detected.
             audio_stream_manager (AudioStreamManager): Manages the audio stream.
         """
         self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self.wake_word = wake_word
         self.sensitivity = sensitivity
-        self.action_function = action_function
         self.audio_stream_manager = audio_stream_manager
         self.stop_event = threading.Event()
         self.porcupine = None
@@ -161,14 +160,13 @@ def example_usage():
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-
     # Create an instance of ActionManager
     action_manager = ActionManager()
 
-    # Use the decorator to register the action function
     @register_action_decorator(action_manager)
     def action_with_notification():
         print("The wake word was detected!")
+        time.sleep(4.5)
 
     # Create an instance of WakeWordDetector with the ActionManager
     detector = WakeWordDetector(
