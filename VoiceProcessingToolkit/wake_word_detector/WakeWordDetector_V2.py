@@ -62,7 +62,7 @@ class WakeWordDetector:
             ...
         """
         self.continuous_run = continuous_run
-        self.access_key = access_key
+        self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.action_function = action_function
