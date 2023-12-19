@@ -34,19 +34,12 @@ Example:
     ```
 """
 
-import os
 import struct
 import threading
-
-import os
 import pvporcupine
 
 from .AudioStreamManager import AudioStreamManager
 from .NotificationSoundManager import NotificationSoundManager
-from .NotificationSoundManager import NotificationSoundManager
-
-# The WakeWordDetector class no longer initializes AudioStreamManager and NotificationSoundManager.
-# These should be initialized outside of this class and passed in as arguments to the constructor.
 
     def initialize_porcupine(self) -> None:
         """
@@ -58,16 +51,20 @@ from .NotificationSoundManager import NotificationSoundManager
     def voice_loop(self):
         """
         The main loop that listens for the wake word and triggers the action function.
+        Handles exceptions that might occur during audio stream reading and processing.
         """
-        while not self.stop_event.is_set():
-            pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length)
-            pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
-            if self.porcupine.process(pcm) >= 0:
-                self.notification_sound_manager.play()
-                if self.action_function:
-                    self.action_function()
-                if not self.continuous_run:
-                    break
+        try:
+            while not self.stop_event.is_set():
+                pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length, exception_on_overflow=False)
+                pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
+                if self.porcupine.process(pcm) >= 0:
+                    self.notification_sound_manager.play()
+                    if self.action_function:
+                        self.action_function()
+                    if not self.continuous_run:
+                        break
+        except Exception as e:
+            logger.error("An error occurred in the voice loop: %s", e)
 
     def run(self) -> None:
         """
