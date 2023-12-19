@@ -43,6 +43,7 @@ import pyaudio
 
 from AudioStreamManager import AudioStreamManager
 from NotificationSoundManager import NotificationSoundManager
+from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
 from ActionManager import ActionManager
 
 
@@ -160,7 +161,6 @@ def example_usage():
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
 
     # Create an instance of ActionManager
     action_manager = ActionManager()
