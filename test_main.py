@@ -1,4 +1,7 @@
 import asyncio
+
+import pyaudio
+
 from VoiceProcessingToolkit.voice_detection.cobra import CobraVAD
 from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
@@ -15,7 +18,7 @@ FRAMES_PER_BUFFER = 512
 audio_stream_manager = AudioStreamManager(SAMPLE_RATE, CHANNELS, FORMAT, FRAMES_PER_BUFFER)
 
 # Initialize the Cobra VAD with a dummy voice activity handler
-cobra_vad = CobraVAD(vad_engine=None, audio_data_provider=audio_stream_manager, voice_activity_handler=lambda x: None)
+cobra_vad = CobraVAD(vad_engine=None, audio_data_provider=PyAudioDataProvider(), voice_activity_handler="Jarvis")
 
 # Initialize the ActionManager for the wake word detector with a dummy action
 action_manager = ActionManager()
