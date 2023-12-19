@@ -135,5 +135,35 @@ class WakeWordDetector:
         self.porcupine.delete()
 
 
-def custom_action():
-    print("Wake word detected!")
+if __name__ == '__main__':
+    # Define a simple action function
+    def action_function():
+        print("Wake word detected!")
+
+    # Set up the required parameters for AudioStreamManager
+    rate = 16000  # Sample rate
+    channels = 1  # Number of audio channels
+    format = pyaudio.paInt16  # Audio format
+    frames_per_buffer = 512  # Number of frames per buffer
+
+    # Create an instance of AudioStreamManager
+    audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
+
+    # Path to the notification sound file
+    notification_sound_path = 'path/to/notification/sound.wav'
+
+    # Create an instance of NotificationSoundManager
+    notification_sound_manager = NotificationSoundManager(notification_sound_path)
+
+    # Create an instance of WakeWordDetector
+    detector = WakeWordDetector(
+        access_key='your-picovoice_api_key',
+        wake_word='jarvis',
+        sensitivity=0.5,
+        action_function=action_function,
+        audio_stream_manager=audio_stream_manager,
+        notification_sound_manager=notification_sound_manager
+    )
+
+    # Start the wake word detection loop
+    detector.run()
