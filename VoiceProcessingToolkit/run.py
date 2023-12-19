@@ -1,6 +1,11 @@
+import logging
+import os
+
 import pyaudio
 import threading
 import signal
+
+from dotenv import load_dotenv
 
 from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
 from VoiceProcessingToolkit.voice_detection.voice_activity_detector import VoiceActivityDetector
@@ -8,9 +13,12 @@ from VoiceProcessingToolkit.voice_detection.audio_recorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStreamManager
-
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 # Initialize the audio data provider
 audio_data_provider = PyAudioDataProvider()
+load_dotenv()
+accesskey = os.getenv('PICOVOICE_APIKEY', 'picovoice_api_key')
 
 
 # Define a callback function for the audio recorder
@@ -40,7 +48,7 @@ def wake_word_action():
 
 # Initialize the wake word detector
 wake_word_detector = WakeWordDetector(
-    access_key="your-picovoice_api_key",
+    access_key=accesskey,
     wake_word='jarvis',
     sensitivity=0.5,
     action_manager=action_manager,
