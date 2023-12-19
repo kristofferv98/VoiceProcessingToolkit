@@ -80,9 +80,9 @@ def start_voice_activity_detector():
         finally:
             stop_event.set()
 
-    vad_thread = threading.Thread(target=vad_run)
-    vad_thread.start()
-    return vad_thread
+    local_vad_thread = threading.Thread(target=vad_run)
+    local_vad_thread.start()
+    return local_vad_thread
 
 
 def start_wake_word_detector():
@@ -94,9 +94,9 @@ def start_wake_word_detector():
         finally:
             stop_event.set()
 
-    wake_word_thread = threading.Thread(target=wake_word_run)
-    wake_word_thread.start()
-    return wake_word_thread
+    local_wake_word_thread = threading.Thread(target=wake_word_run)
+    local_wake_word_thread.start()
+    return local_wake_word_thread
 
 
 # Start the voice activity detector and wake word detector threads
