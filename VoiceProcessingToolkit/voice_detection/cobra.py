@@ -55,7 +55,7 @@ class CobraVoiceRecorder:
         frame = self.stream.read(self.cobra_handle.frame_length, exception_on_overflow=False)
         return np.frombuffer(frame, dtype=np.int16)
 
-    def start_recording(self) -> Optional[str]:
+    def start_recording(self, callback: Optional[Callable[[str], None]] = None) -> None:
         # Use a temporary directory if no output directory is provided
         # Create a temporary directory and manage its lifecycle manually
         temp_dir = tempfile.TemporaryDirectory()
@@ -103,18 +103,10 @@ class CobraVoiceRecorder:
                                 frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
                             if recording_length >= self.min_recording_length:
                                 self.save_to_wav_file(frames_to_save, file_path)
-                                self.koala_processor.process_audio(file_path, processed_file_path)
                                 logging.info(f"Recording of {recording_length:.2f} seconds saved to {file_path}.")
-                                if processed_file_path:
-                                    logging.info(f"Audio processed and saved as {processed_file_path}.")
-                                    transcription_result = self.transcribe_audio(processed_file_path)
-                                else:
-                                    logging.error(f"Error: Processed file could not be created.")
-                                    transcription_result = None
-                                if transcription_result is not None:
-                                    return transcription_result
-                                else:
-                                    return "SAVE"
+                                if callback is not None:
+                                    callback(file_path)
+                                return
                             else:
                                 frames_to_save = []
                                 recording = False
