@@ -43,6 +43,7 @@ import pyaudio
 
 from AudioStreamManager import AudioStreamManager
 from NotificationSoundManager import NotificationSoundManager
+from ActionManager import ActionManager
 
 
 class WakeWordDetector:
@@ -78,8 +79,9 @@ class WakeWordDetector:
     """
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
-                 action_function: callable, audio_stream_manager: AudioStreamManager,
+                 action_manager: ActionManager, audio_stream_manager: AudioStreamManager,
                  play_notification_sound: bool = True) -> None:
+        self.action_manager = action_manager
         self.play_notification_sound = play_notification_sound
         """
         Initializes the WakeWordDetector with the provided parameters.
@@ -121,8 +123,7 @@ class WakeWordDetector:
                     notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
                     notification_sound_manager = NotificationSoundManager(notification_path)
                     notification_sound_manager.play()
-                if self.action_function:
-                    self.action_function()
+                self.action_manager.execute_actions()
                 self.stop_event.set()  # Stop the loop after the wake word is detected
 
     def run(self) -> None:
@@ -159,12 +160,20 @@ def example_usage():
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-    # Create an instance of WakeWordDetector
+    # Define a simple action function that prints a message
+    def action_with_notification():
+        print("The wake word was detected!")
+
+    # Create an instance of ActionManager and register the action function
+    action_manager = ActionManager()
+    action_manager.register_action(action_with_notification)
+
+    # Create an instance of WakeWordDetector with the ActionManager
     detector = WakeWordDetector(
         access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
         sensitivity=0.75,
-        action_function=action_with_notification,
+        action_manager=action_manager,
         audio_stream_manager=audio_stream_manager,
         play_notification_sound=True
     )
