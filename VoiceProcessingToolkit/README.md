@@ -51,7 +51,7 @@ print(result)
 For more detailed examples, see our [Examples](voice_processing_examples.py) file.
 
 ## Documentation
-For more detailed API documentation, please refer to [VoiceProcessingToolkit Documentation](#).
+For more detailed API documentation, please refer to [VoiceProcessingToolkit Documentation](wake_word_detector/DOCUMENTATION.md).
 
 ## Contributing
 We welcome contributions to the VoiceProcessingToolkit! If you have suggestions or would like to contribute code, please read our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on our code of conduct and the process for submitting pull requests.
