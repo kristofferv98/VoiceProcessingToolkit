@@ -22,25 +22,19 @@ Example:
     print("Transcription:", result)
     ```
 """
-import contextlib
 import logging
 import os
 import struct
 import threading
-from typing import Any
 
 import pvporcupine
-import pyaudio
-import pygame
 from dotenv import load_dotenv
 
-from VoiceProcessingToolkit.voice_detection import CobraVoiceRecorder
+from .AudioStreamManager import AudioStreamManager
+from .NotificationSoundManager import NotificationSoundManager
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables from a .env file if available
 load_dotenv()
 
 
