@@ -42,34 +42,8 @@ import pvporcupine
 from .AudioStreamManager import AudioStreamManager
 from .NotificationSoundManager import NotificationSoundManager
 
-class WakeWordDetector:
-    """
-    Main class for wake word detection.
-
-    Attributes:
-        ...
-
-    Methods:
-        ...
-    """
-
-    def __init__(self, access_key: str, wake_word: str, sensitivity: float, 
-                 action_function: callable, audio_stream_manager: AudioStreamManager, 
-                 notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None:
-        """
-        Initializes the WakeWordDetector with the provided parameters.
-        Args:
-            ...
-        """
-        self.continuous_run = continuous_run
-        self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
-        self.wake_word = wake_word
-        self.sensitivity = sensitivity
-        self.action_function = action_function
-        self.audio_stream_manager = audio_stream_manager
-        self.notification_sound_manager = notification_sound_manager
-        self.stop_event = threading.Event()
-        self.initialize_porcupine()
+# The WakeWordDetector class no longer initializes AudioStreamManager and NotificationSoundManager.
+# These should be initialized outside of this class and passed in as arguments to the constructor.
 
     def initialize_porcupine(self) -> None:
         """
