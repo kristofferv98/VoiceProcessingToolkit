@@ -133,7 +133,6 @@ class WakeWordDetector:
                     notification_sound_manager = NotificationSoundManager(notification_path)
                     notification_sound_manager.play()
                 asyncio.run(self.action_manager.execute_actions())
-                # Removed the stop event set to allow continuous wake word detection
 
     def run(self) -> None:
         """

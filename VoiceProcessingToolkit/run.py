@@ -46,6 +46,7 @@ action_manager = ActionManager()
 @register_action_decorator(action_manager)
 def wake_word_action():
     print("Wake word detected!")
+    start_voice_activity_detector()
 
 
 # Initialize the wake word detector
