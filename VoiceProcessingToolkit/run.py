@@ -65,6 +65,32 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
+def start_voice_activity_detector():
+    def vad_run():
+        try:
+            vad.run()
+        except Exception as e:
+            print(f"Voice Activity Detector error: {e}")
+        finally:
+            stop_event.set()
+
+    vad_thread = threading.Thread(target=vad_run)
+    vad_thread.start()
+    return vad_thread
+
+def start_wake_word_detector():
+    def wake_word_run():
+        try:
+            wake_word_detector.run()
+        except Exception as e:
+            print(f"Wake Word Detector error: {e}")
+        finally:
+            stop_event.set()
+
+    wake_word_thread = threading.Thread(target=wake_word_run)
+    wake_word_thread.start()
+    return wake_word_thread
+
 # Start the voice activity detector and wake word detector threads
 vad_thread = start_voice_activity_detector()
 wake_word_thread = start_wake_word_detector()
