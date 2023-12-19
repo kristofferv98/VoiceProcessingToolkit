@@ -23,13 +23,17 @@ The VoiceProcessingToolkit is an all-encompassing suite designed for sophisticat
 - Audio processing and noise reduction
 
 ## Installation
-Before installing VoiceProcessingToolkit, ensure you have Python 3.7 or higher and pip installed.
+To install VoiceProcessingToolkit, you'll need Python 3.7 or higher. You can check your Python version by running `python --version` in your terminal. If you don't have Python installed, please visit [python.org](https://www.python.org/downloads/) to download and install the latest version.
 
-To install the VoiceProcessingToolkit, run the following command:
+Once you have Python set up, you can install VoiceProcessingToolkit using pip, which is the Python package installer. If you don't have pip installed, you can find installation instructions [here](https://pip.pypa.io/en/stable/installation/).
+
+With Python and pip ready, install the VoiceProcessingToolkit by running the following command in your terminal:
 
 ```bash
 pip install VoiceProcessingToolkit
 ```
+
+This command will download and install the VoiceProcessingToolkit along with its required dependencies.
 
 ## Getting Started
 To quickly start using VoiceProcessingToolkit, install the package and try out the basic functionalities as shown below. For detailed examples, please refer to our [Examples](voice_processing_examples.py) file.
