@@ -87,6 +87,8 @@ def start_wake_word_detector():
 
 # Start the voice activity detector and wake word detector
 # Function to handle shutdown signal
+
+
 def signal_handler(signum, frame):
     print("Shutdown signal received")
     stop_event.set()
