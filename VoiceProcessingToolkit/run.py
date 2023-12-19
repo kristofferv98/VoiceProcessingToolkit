@@ -76,7 +76,4 @@ wake_word_thread.join()
 
 print("VoiceProcessingToolkit has been shut down gracefully.")
 
-"""
-Note: The actual implementation should handle the threading and synchronization between the components.
-This is a simplified example to demonstrate how the components could be initialized and used together.
-"""
+# Placeholder comment removed as the implementation is now complete.
