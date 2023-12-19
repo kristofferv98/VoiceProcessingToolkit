@@ -55,7 +55,6 @@ class WakeWordDetector:
         sensitivity (float): The sensitivity of the wake word detection.
         action_function (callable): The function to call when the wake word is detected.
         audio_stream_manager (AudioStreamManager): Manages the audio stream.
-        notification_sound_manager (object): An object with a play method that plays a notification sound.
         stop_event (threading.Event): Signals when to stop the detection loop.
         porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
 
@@ -147,9 +146,6 @@ def example_usage():
     # Define a simple action function that plays a notification sound and prints a message
     def action_with_notification():
         # Create an instance of NotificationSoundManager with the path to the notification sound
-        notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
-        notification_sound_manager = NotificationSoundManager(notification_path)
-        notification_sound_manager.play()
         print("The wake word was detected!")
         time.sleep(4.5)  # Wait for the notification sound to finish playing
 
