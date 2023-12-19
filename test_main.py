@@ -17,8 +17,12 @@ FRAMES_PER_BUFFER = 512
 # Initialize the shared AudioStreamManager
 audio_stream_manager = AudioStreamManager(SAMPLE_RATE, CHANNELS, FORMAT, FRAMES_PER_BUFFER)
 
-# Initialize the Cobra VAD with a dummy voice activity handler
-cobra_vad = CobraVAD(vad_engine=None, audio_data_provider=PyAudioDataProvider(), voice_activity_handler="Jarvis")
+# Initialize the Cobra VAD with a dummy voice activity handler function
+def dummy_voice_activity_handler(voice_data: str) -> None:
+    # This is where you would process the voice data
+    pass
+
+cobra_vad = CobraVAD(vad_engine=None, audio_data_provider=PyAudioDataProvider(), voice_activity_handler=dummy_voice_activity_handler)
 
 # Initialize the ActionManager for the wake word detector with a dummy action
 action_manager = ActionManager()
