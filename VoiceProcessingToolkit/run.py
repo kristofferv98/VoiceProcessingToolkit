@@ -29,9 +29,10 @@ def recording_callback(audio_file_path):
 # Initialize the audio recorder
 audio_recorder = AudioRecorder(callback=recording_callback)
 
-# Initialize the voice activity detector
+# Initialize the voice activity detector with a mock VAD engine
+mock_vad_engine = MockVAD(sample_rate=16000, frame_length=1024)  # Assuming these are the correct parameters
 vad = VoiceActivityDetector(
-    vad_engine=None,  # Placeholder for an actual VAD engine instance
+    vad_engine=mock_vad_engine,
     audio_data_provider=audio_data_provider,
     voice_activity_handler=audio_recorder.handle_voice_activity
 )
