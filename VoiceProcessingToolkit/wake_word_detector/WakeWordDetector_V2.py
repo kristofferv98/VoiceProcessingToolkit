@@ -20,7 +20,8 @@ Example:
     from wake_word_detector import WakeWordDetector, AudioStreamManager, NotificationSoundManager
 
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
-    notification_sound_manager = NotificationSoundManager('path/to/notification/sound.wav')
+    notification_sound_path = 'path/to/notification/sound.wav'  # Replace with actual path
+    notification_sound_manager = NotificationSoundManager(notification_sound_path)
     detector = WakeWordDetector(
         access_key='your-picovoice_api_key',
         wake_word='jarvis',
@@ -37,9 +38,11 @@ import os
 import struct
 import threading
 
+import os
 import pvporcupine
 
 from .AudioStreamManager import AudioStreamManager
+from .NotificationSoundManager import NotificationSoundManager
 from .NotificationSoundManager import NotificationSoundManager
 
 # The WakeWordDetector class no longer initializes AudioStreamManager and NotificationSoundManager.
