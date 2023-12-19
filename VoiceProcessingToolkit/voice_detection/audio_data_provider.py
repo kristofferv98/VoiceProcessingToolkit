@@ -2,8 +2,8 @@
 class AudioDataProvider:
     """
     Interface for providing audio data to the VAD.
-
-    Implement this interface in a separate module or file where the actual audio data handling is defined.
+    Responsibilities:
+    - Provide a consistent method to supply audio data frames to the VAD.
     """
 
     def get_audio_frame(self):

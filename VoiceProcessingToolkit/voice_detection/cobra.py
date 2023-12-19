@@ -1,22 +1,24 @@
 # === IMPORTS SECTION ===
+# Note: Ensure that only the necessary dependencies for the VAD process are imported.
+# Avoid importing classes that will be injected as dependencies.
 import logging
-from typing import List
-
 import numpy as np
 import pyaudio
 import pvcobra
-# Dependencies are now passed in, so we don't need to import KoalaAudioProcessor or AudioDataProvider here.
 
 logger = logging.getLogger(__name__)
+# Purpose: Import only essential libraries needed for voice activity detection.
+# Caution: Avoid importing unnecessary modules to keep the class focused on its primary responsibility.
 
 
 # === MAIN COBRA VAD CLASS DEFINITION ===
 class CobraVAD:
     """
     Handles voice activity detection using the Cobra VAD engine.
-
-    Ensure that instances of AudioDataProvider are created elsewhere and passed into this class.
-    Do not instantiate them directly within this class to maintain SRP and loose coupling.
+    Responsibilities:
+    - Initialize the Cobra VAD engine.
+    - Process audio data frames for voice activity detection.
+    - Invoke a handler function when voice activity is detected.
     """
 
     def __init__(self, vad_engine, audio_data_provider, voice_activity_handler):
@@ -51,6 +53,9 @@ class CobraVAD:
 # This entire __init__ method is removed because we are now passing in the dependencies.
 
     def get_next_audio_frame(self) -> np.ndarray:
+        # Method to get the next audio frame...
+        # Purpose: Retrieve the next frame of audio data from the stream.
+        # Caution: This method should only retrieve data and not process it.
         logging.debug("CobraVoiceRecorder: Reading the next audio frame")
         frame = self.stream.read(self.cobra_handle.frame_length, exception_on_overflow=False)
         return np.frombuffer(frame, dtype=np.int16)
@@ -135,6 +140,9 @@ class CobraVAD:
             logging.error(f"Failed to save recording to {file_path}: {e}")
 
     def cleanup(self) -> None:
+        # Method to clean up resources...
+        # Purpose: Properly close and dereference all resources like streams and engine instances.
+        # Caution: Ensure all resources are properly closed and dereferenced to prevent resource leaks.
         self.stream.stop_stream()
         self.stream.close()
         self.cobra_handle.delete()
