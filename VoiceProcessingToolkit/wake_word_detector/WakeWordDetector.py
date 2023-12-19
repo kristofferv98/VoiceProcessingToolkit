@@ -30,7 +30,6 @@ import threading
 from typing import Any
 
 import pvporcupine
-import pyaudio
 import pygame
 from dotenv import load_dotenv
 
@@ -135,17 +134,11 @@ class WakeWordDetector:
     def initialize_audio_stream(self) -> None:
         if hasattr(self, 'audio_stream') and self.audio_stream:
             self.audio_stream.close()
-        self.py_audio = pyaudio.PyAudio()
-        try:
-            self.audio_stream = self.py_audio.open(rate=self.porcupine.sample_rate, channels=1, format=pyaudio.paInt16,
-                                                   input=True, frames_per_buffer=self.porcupine.frame_length)
-        except Exception as e:
-            logging.error("Failed to initialize audio stream: %s", e)
-            logging.debug(
-                "Audio stream initialization parameters: rate=%d, channels=%d, format=%s, input=%s, "
-                "frames_per_buffer=%d",
-                self.porcupine.sample_rate, 1, pyaudio.paInt16, True, self.porcupine.frame_length)
-            raise
+        self.audio_stream_manager = AudioStreamManager(rate=self.porcupine.sample_rate,
+                                                       channels=1,
+                                                       format=pyaudio.paInt16,
+                                                       frames_per_buffer=self.porcupine.frame_length)
+        self.audio_stream = self.audio_stream_manager.get_stream()
 
     def initialize_notification_sound(self) -> None:
         with open(os.devnull, 'w') as f, contextlib.redirect_stdout(f):
@@ -189,10 +182,7 @@ class WakeWordDetector:
 
 
     def cleanup(self) -> None:
-        if self.audio_stream.is_active():
-            self.audio_stream.stop_stream()
-        self.audio_stream.close()
-        self.py_audio.terminate()
+        self.audio_stream_manager.cleanup()
         self.porcupine.delete()
 
     def run(self) -> str:
@@ -216,3 +206,24 @@ def custom_action():
     else:
         print("Wake word detected! No transcription obtained.")
     return transcription_text
+class AudioStreamManager:
+    def __init__(self, rate: int, channels: int, format: int, frames_per_buffer: int):
+        self.py_audio = pyaudio.PyAudio()
+        self.stream = self._initialize_stream(rate, channels, format, frames_per_buffer)
+
+    def _initialize_stream(self, rate: int, channels: int, format: int, frames_per_buffer: int):
+        try:
+            return self.py_audio.open(rate=rate, channels=channels, format=format,
+                                      input=True, frames_per_buffer=frames_per_buffer)
+        except Exception as e:
+            logging.error("Failed to initialize audio stream: %s", e)
+            raise
+
+    def get_stream(self):
+        return self.stream
+
+    def cleanup(self):
+        if self.stream.is_active():
+            self.stream.stop_stream()
+        self.stream.close()
+        self.py_audio.terminate()
