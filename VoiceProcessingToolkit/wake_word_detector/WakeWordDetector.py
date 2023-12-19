@@ -120,13 +120,16 @@ class WakeWordDetector:
                 self.notification_sound_manager.play()
                 if self.action_function:
                     self.action_function()
+                self.stop_event.set()  # Stop the loop after the wake word is detected
 
     def run(self) -> None:
         """
         Starts the wake word detection loop.
         """
-        self.voice_loop()
-        self.cleanup()
+        detection_thread = threading.Thread(target=self.voice_loop)
+        detection_thread.start()
+        detection_thread.join()  # Wait for the thread to finish
+        self.cleanup()  # Cleanup resources after the thread has finished
 
     def cleanup(self) -> None:
         """
