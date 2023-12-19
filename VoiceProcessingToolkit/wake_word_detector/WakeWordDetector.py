@@ -107,7 +107,6 @@ class WakeWordDetector:
             continuous_run (bool): Whether to run the detection loop continuously.
             transcription_function (callable): Function to call for transcribing after wake word detection.
         """
-        self.transcription_function = transcription_function or self.default_transcription_action
         self.continuous_run = continuous_run
         self.notification_sound = None
         self.audio_stream = None
@@ -174,9 +173,7 @@ class WakeWordDetector:
 
                     # Determine the correct function to call
                     if self.action_function and callable(self.action_function):
-                        transcription_text = self.action_function()
-                    else:
-                        transcription_text = self.transcription_function()
+                        self.action_function()
 
                     if self.continuous_run:
                         continue  # Continue the loop for continuous run
@@ -190,16 +187,6 @@ class WakeWordDetector:
 
         return transcription_text  # Return the result after the loop
 
-    def default_transcription_action(self) -> Any | None:
-        recorder = CobraVoiceRecorder(access_key=self.picovoice_api_key)
-        transcription_text = recorder.start_recording()  # Start recording and get transcription
-        if transcription_text:
-            logging.info("Transcription obtained")
-            logging.debug("Transcription Result: %s", transcription_text)
-            return transcription_text
-        else:
-            logging.info("No transcription obtained.")
-            return None  # Return None if no transcription
 
     def cleanup(self) -> None:
         if self.audio_stream.is_active():
