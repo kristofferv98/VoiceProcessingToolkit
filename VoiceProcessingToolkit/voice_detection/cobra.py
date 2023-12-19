@@ -42,13 +42,17 @@ class CobraVAD:
     def process_audio(self):
         """
         Process audio data to detect voice activity.
+        Continuously monitors the audio stream for voice activity.
         """
-        while True:
-            frame = self.audio_data_provider.get_audio_frame()
-            is_voice = self.vad_engine.process(frame)
-            if is_voice:
-                logging.info("Voice activity detected.")
-                self.voice_activity_handler()
+        try:
+            while True:
+                frame = self.audio_data_provider.get_audio_frame()
+                is_voice = self.vad_engine.process(frame)
+                if is_voice:
+                    logging.info("Voice activity detected.")
+                    self.voice_activity_handler()
+        except Exception as e:
+            logging.error(f"Error processing audio: {e}")
 
 # This entire __init__ method is removed because we are now passing in the dependencies.
 
