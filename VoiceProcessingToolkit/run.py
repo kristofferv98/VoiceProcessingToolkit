@@ -1,4 +1,7 @@
 import asyncio
+
+import pyaudio
+
 from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
 from VoiceProcessingToolkit.voice_detection.voice_activity_detector import VoiceActivityDetector
 from VoiceProcessingToolkit.voice_detection.audio_recorder import AudioRecorder
