@@ -30,6 +30,7 @@ import threading
 from typing import Any
 
 import pvporcupine
+import pyaudio
 import pygame
 from dotenv import load_dotenv
 
@@ -92,8 +93,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str = None, wake_word: str = "jarvis",
                  sensitivity: float = 0.75, action_function: callable = None,
-                 notification_sound_path: str = None, continuous_run: bool = False,
-                 transcription_function: callable = None) -> None:
+                 notification_sound_path: str = None, continuous_run: bool = False) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
 
