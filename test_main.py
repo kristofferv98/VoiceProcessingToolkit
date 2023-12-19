@@ -39,7 +39,7 @@ wake_word_detector = WakeWordDetector(
 )
 
 # Define a simple test routine
-def test_routine():
+def test_test_routine():
     # Start the Cobra VAD process
     asyncio.run(cobra_vad.process_audio())
 
