@@ -119,7 +119,7 @@ class WakeWordDetector:
             if self.porcupine.process(pcm) >= 0:
                 if self.action_function:
                     self.action_function()
-                self.notification_sound_manager.play()
+                # The notification sound line has been removed
                 self.stop_event.set()  # Stop the loop after the wake word is detected
 
     def run(self) -> None:
