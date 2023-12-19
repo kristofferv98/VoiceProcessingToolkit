@@ -91,12 +91,12 @@ class WakeWordDetector:
             audio_stream_manager (AudioStreamManager): Manages the audio stream.
             notification_sound_manager (NotificationSoundManager): Plays a notification sound.
         """
+        self.notification_sound_manager = notification_sound_manager or None
         self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.action_function = action_function
         self.audio_stream_manager = audio_stream_manager
-        # The notification_sound_manager is now optional and can be None
         self.stop_event = threading.Event()
         self.porcupine = None
         self.initialize_porcupine()
@@ -143,7 +143,8 @@ def example_usage():
     # Define a simple action function that plays a notification sound and prints a message
     def action_with_notification():
         # Create an instance of NotificationSoundManager with the path to the notification sound
-        notification_sound_manager = NotificationSoundManager('path/to/notification/sound.wav')
+        notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
+        notification_sound_manager = NotificationSoundManager(notification_path)
         # Play the notification sound
         notification_sound_manager.play()
         print("The wake word was detected!")
@@ -159,13 +160,15 @@ def example_usage():
 
     # Create an instance of WakeWordDetector without passing a notification sound manager
     detector = WakeWordDetector(
-        access_key="your-picovoice_api_key",
+        access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
         sensitivity=0.5,
         action_function=action_with_notification,
         audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=None  # No need to pass a notification sound manager here
+        notification_sound_manager=True  # No need to pass a notification sound manager here
     )
 
     # Start the wake word detection loop
     detector.run()
+
+example_usage()
