@@ -1,6 +1,7 @@
 
 import pyaudio
 import threading
+import signal
 
 from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
 from VoiceProcessingToolkit.voice_detection.voice_activity_detector import VoiceActivityDetector
@@ -47,11 +48,23 @@ wake_word_detector = WakeWordDetector(
 
 
 
+# Define a stop event for signaling the threads to stop
+stop_event = threading.Event()
+
 def start_voice_activity_detector():
     """
     Starts the voice activity detector in a separate thread.
     """
-    vad_thread = threading.Thread(target=vad.run)
+    def run_vad():
+        try:
+            while not stop_event.is_set():
+                vad.run()
+        except Exception as e:
+            logging.error(f"Voice activity detector encountered an error: {e}", exc_info=True)
+        finally:
+            vad.cleanup()
+
+    vad_thread = threading.Thread(target=run_vad)
     vad_thread.start()
     return vad_thread
 
@@ -59,13 +72,38 @@ def start_wake_word_detector():
     """
     Starts the wake word detector in a separate thread.
     """
-    wake_word_thread = threading.Thread(target=wake_word_detector.run)
+    def run_wake_word_detector():
+        try:
+            while not stop_event.is_set():
+                wake_word_detector.run()
+        except Exception as e:
+            logging.error(f"Wake word detector encountered an error: {e}", exc_info=True)
+        finally:
+            wake_word_detector.cleanup()
+
+    wake_word_thread = threading.Thread(target=run_wake_word_detector)
     wake_word_thread.start()
     return wake_word_thread
 
 # Start the voice activity detector and wake word detector
+# Function to handle shutdown signal
+def signal_handler(signum, frame):
+    print("Shutdown signal received")
+    stop_event.set()
+
+# Register the signal handler for graceful shutdown
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+# Start the voice activity detector and wake word detector threads
 vad_thread = start_voice_activity_detector()
 wake_word_thread = start_wake_word_detector()
+
+# Wait for the threads to finish
+vad_thread.join()
+wake_word_thread.join()
+
+print("VoiceProcessingToolkit has been shut down gracefully.")
 
 """
 Note: The actual implementation should handle the threading and synchronization between the components.
