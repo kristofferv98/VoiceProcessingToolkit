@@ -106,7 +106,7 @@ class CobraVoiceRecorder:
 
                 if inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.inactivity_limit:
                     logger.info("No voice detected for a while. Exiting...")
-                    return 'NO_VOICE_EXIT'
+                    # Removed the return statement that returned 'NO_VOICE_EXIT'
 
     def save_to_wav_file(self, frames: List[np.ndarray], file_path: str) -> None:
         logging.debug("CobraVoiceRecorder: Saving frames to WAV file: %s", file_path)
