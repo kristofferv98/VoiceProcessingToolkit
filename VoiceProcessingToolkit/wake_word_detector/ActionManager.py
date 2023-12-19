@@ -1,5 +1,5 @@
 import asyncio
-
+import logging
 
 class ActionManager:
     """
@@ -7,6 +7,7 @@ class ActionManager:
 
     Attributes:
         _actions (list): A list of action functions to be executed.
+        logger (logging.Logger): Logger for the ActionManager class.
     """
 
     def __init__(self):
@@ -14,6 +15,7 @@ class ActionManager:
         Initializes a new instance of ActionManager with an empty list of actions.
         """
         self._actions = []
+        self.logger = logging.getLogger(__name__)
 
     def register_action(self, action_function):
         """
