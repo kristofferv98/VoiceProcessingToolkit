@@ -140,9 +140,9 @@ class WakeWordDetector:
 
 
 if __name__ == '__main__':
-    # Define a simple action function
-    def action_function():
-        print("Wake word detected!")
+    # Define a simple action function that prints a message
+    def print_detected():
+        print("The wake word was detected!")
 
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
@@ -153,19 +153,15 @@ if __name__ == '__main__':
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-    # Path to the notification sound file
-    notification_sound_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
-    # Create an instance of NotificationSoundManager
-    notification_sound_manager = NotificationSoundManager(notification_sound_path)
-    api_key = os.getenv('PICOVOICE_APIKEY')
+    # Path to the notification sound file is not needed since we are not playing a sound
     # Create an instance of WakeWordDetector
     detector = WakeWordDetector(
-        access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
+        access_key=os.getenv('PICOVOICE_APIKEY'),
         wake_word='jarvis',
         sensitivity=0.5,
-        action_function=action_function,
+        action_function=print_detected,  # Pass the print function as the action
         audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=notification_sound_manager
+        notification_sound_manager=None  # No notification sound manager is passed
     )
 
     # Start the wake word detection loop
