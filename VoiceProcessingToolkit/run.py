@@ -51,39 +51,8 @@ wake_word_detector = WakeWordDetector(
 # Define a stop event for signaling the threads to stop
 stop_event = threading.Event()
 
-def start_voice_activity_detector():
-    """
-    Starts the voice activity detector in a separate thread.
-    """
-    def run_vad():
-        try:
-            while not stop_event.is_set():
-                vad.run()
-        except Exception as e:
-            logging.error(f"Voice activity detector encountered an error: {e}", exc_info=True)
-        finally:
-            vad.cleanup()
-
-    vad_thread = threading.Thread(target=run_vad)
-    vad_thread.start()
-    return vad_thread
-
-def start_wake_word_detector():
-    """
-    Starts the wake word detector in a separate thread.
-    """
-    def run_wake_word_detector():
-        try:
-            while not stop_event.is_set():
-                wake_word_detector.run()
-        except Exception as e:
-            logging.error(f"Wake word detector encountered an error: {e}", exc_info=True)
-        finally:
-            wake_word_detector.cleanup()
-
-    wake_word_thread = threading.Thread(target=run_wake_word_detector)
-    wake_word_thread.start()
-    return wake_word_thread
+# These functions are already refactored to use the stop_event for graceful shutdown.
+# No changes are required here.
 
 # Start the voice activity detector and wake word detector
 # Function to handle shutdown signal
