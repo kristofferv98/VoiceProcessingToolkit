@@ -30,7 +30,14 @@ class ActionManager:
         """
         # Ensure that each action is a coroutine before gathering
         coroutines = [action() if asyncio.iscoroutinefunction(action) else asyncio.to_thread(action) for action in self._actions]
-        results = await asyncio.gather(*coroutines, return_exceptions=True)
+        # Define a timeout for each action (in seconds)
+        action_timeout = 10
+        # Wrap each coroutine with a timeout
+        coroutines_with_timeout = [asyncio.wait_for(coro, timeout=action_timeout) for coro in coroutines]
+        try:
+            results = await asyncio.gather(*coroutines_with_timeout, return_exceptions=True)
+        except asyncio.TimeoutError as e:
+            logger.exception("An action has timed out after %s seconds.", action_timeout, exc_info=e)
         for result in results:
             if isinstance(result, Exception):
                 logger.exception("An exception occurred while executing an action: %s", result, exc_info=result)
