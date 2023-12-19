@@ -1,24 +1,73 @@
+# === IMPORTS SECTION ===
 import logging
-import os
-import tempfile
-import wave
-from collections import deque
-from typing import Optional, List, Callable
-from VoiceProcessingToolkit.audio_processing.koala import KoalaAudioProcessor
+from typing import List
 
 import numpy as np
-import pvcobra
 import pyaudio
+import pvcobra
+from VoiceProcessingToolkit.audio_processing.koala import KoalaAudioProcessor
+
+# === INTERFACES / ABSTRACT CLASSES SECTION ===
+class AudioDataProvider:
+    """
+    Interface for providing audio data to the VAD.
+
+    Implement this interface in a separate module or file where the actual audio data handling is defined.
+    """
+
+    def get_audio_frame(self):
+        """
+        Should be implemented to return a single frame of audio data.
+        """
+        raise NotImplementedError
 
 logger = logging.getLogger(__name__)
 
 
-class CobraVoiceRecorder:
+# === MAIN COBRA VAD CLASS DEFINITION ===
+class CobraVAD:
     """
-    CobraVoiceRecorder uses the Cobra VAD engine to record voice audio.
-    This class provides methods to start and stop voice recording, process audio frames,
-    save recordings to WAV files, and perform cleanup.
+    Handles voice activity detection using the Cobra VAD engine.
+
+    Ensure that instances of AudioDataProvider are created elsewhere and passed into this class.
+    Do not instantiate them directly within this class to maintain SRP and loose coupling.
     """
+
+    def __init__(self, audio_data_provider: AudioDataProvider, access_key: str):
+        """
+        Initialize the Cobra VAD.
+        Args:
+            audio_data_provider: An instance that provides audio data frames.
+            access_key: The access key for using Cobra VAD.
+        """
+        self.audio_data_provider = audio_data_provider
+        self.access_key = access_key
+        self.vad_engine = self._initialize_vad_engine()
+
+    def _initialize_vad_engine(self):
+        """
+        Internal method to initialize the Cobra VAD engine.
+        """
+        return pvcobra.create(access_key=self.access_key)
+
+    def process_audio(self):
+        """
+        Process audio data to detect voice activity.
+        """
+        while True:
+            frame = self.audio_data_provider.get_audio_frame()
+            is_voice = self.vad_engine.process(frame)
+            if is_voice:
+                logging.info("Voice activity detected.")
+                self.handle_voice_activity()
+
+    def handle_voice_activity(self):
+        """
+        Handle the detected voice activity.
+
+        Define a callback mechanism or signal handling here to notify other parts of the application.
+        """
+        pass
 
     def __init__(self, access_key: str = None) -> None:
         self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
