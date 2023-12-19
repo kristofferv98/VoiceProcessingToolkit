@@ -8,7 +8,7 @@ from typing import Callable, List
 import numpy as np
 import pyaudio
 
-from audio_data_provider import AudioDataProvider
+from .audio_data_provider import AudioDataProvider
 
 logger = logging.getLogger(__name__)
 
