@@ -35,8 +35,27 @@ pip install VoiceProcessingToolkit
 
 This command will download and install the VoiceProcessingToolkit along with its required dependencies.
 
-## Getting Started
-To quickly start using VoiceProcessingToolkit, install the package and try out the basic functionalities as shown below. For detailed examples, please refer to our [Examples](voice_processing_examples.py) file.
+## Command Line Interface (CLI)
+The VoiceProcessingToolkit provides a CLI for easy access to its features. Below are the available commands and options:
+
+### Wake Word Detection
+To start wake word detection, use the following command:
+```bash
+python cli.py wake-word --access-key YOUR_ACCESS_KEY --wake-word YOUR_WAKE_WORD [--sensitivity SENSITIVITY]
+```
+Replace `YOUR_ACCESS_KEY` with your Porcupine access key, `YOUR_WAKE_WORD` with the wake word you want to detect, and optionally adjust the `sensitivity`.
+
+### Text-to-Speech
+To convert text to speech, use the following command:
+```bash
+python cli.py tts "Your text here"
+```
+Replace "Your text here" with the text you want to convert to speech.
+
+For more information on the CLI commands and options, run `python cli.py -h`.
+
+## Getting Started with the API
+To start using VoiceProcessingToolkit through its API, install the package and try out the basic functionalities as shown below. For detailed examples, please refer to our [Examples](voice_processing_examples.py) file.
 
 ### Basic Usage
 Here's a quick example to get you started with the WakeWordDetector and Text-to-Speech:
