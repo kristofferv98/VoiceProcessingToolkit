@@ -44,7 +44,7 @@ import pvporcupine
 import pyaudio
 
 from .AudioStreamManager import AudioStreamManager
-from NotificationSoundManager import NotificationSoundManager
+from .NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
 from ActionManager import ActionManager
 
