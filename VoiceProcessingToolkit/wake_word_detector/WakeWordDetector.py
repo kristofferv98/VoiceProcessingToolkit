@@ -22,12 +22,14 @@ Example:
     print("Transcription:", result)
     ```
 """
+import contextlib
 import logging
 import os
 import struct
 import threading
 
 import pvporcupine
+import pygame
 from dotenv import load_dotenv
 
 from .AudioStreamManager import AudioStreamManager
@@ -55,7 +57,7 @@ def record_and_transcribe(wake_word: str = 'jarvis', sensitivity: float = 0.75,
 
     # Initialize and run the WakeWordDetector for a single transcription
     detector = WakeWordDetector(
-        picovoice_api_key=picovoice_api_key,
+        access_key=picovoice_api_key,
         wake_word=wake_word,
         sensitivity=sensitivity,
         notification_sound_path=notification_sound_path,
@@ -106,7 +108,7 @@ class WakeWordDetector:
         self.py_audio = None
         self.porcupine = None
         self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
-        if not self.picovoice_api_key:
+        if not self.access_key:
             raise ValueError(
                 "Porcupine access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
         self.wake_word = wake_word
@@ -120,7 +122,7 @@ class WakeWordDetector:
         self.initialize_notification_sound()
 
     def initialize_porcupine(self) -> None:
-        self.porcupine = pvporcupine.create(access_key=self.picovoice_api_key, keywords=[self.wake_word],
+        self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
                                             sensitivities=[self.sensitivity])
         logger.debug("Porcupine initialized with wake word '%s' and sensitivity %.2f", self.wake_word,
                      self.sensitivity)
