@@ -79,7 +79,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_function: callable, audio_stream_manager: AudioStreamManager,
-                 notification_sound_manager: object = None) -> None:
+                 ) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
         
@@ -89,9 +89,7 @@ class WakeWordDetector:
             sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
             action_function (callable): The function to call when the wake word is detected.
             audio_stream_manager (AudioStreamManager): Manages the audio stream.
-            notification_sound_manager (NotificationSoundManager): Plays a notification sound.
         """
-        self.notification_sound_manager = notification_sound_manager or None
         self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self.wake_word = wake_word
         self.sensitivity = sensitivity
@@ -158,14 +156,13 @@ def example_usage():
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-    # Create an instance of WakeWordDetector without passing a notification sound manager
+    # Create an instance of WakeWordDetector
     detector = WakeWordDetector(
         access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
         sensitivity=0.5,
         action_function=action_with_notification,
-        audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=True  # No need to pass a notification sound manager here
+        audio_stream_manager=audio_stream_manager
     )
 
     # Start the wake word detection loop
