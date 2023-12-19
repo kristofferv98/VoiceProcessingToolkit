@@ -1,4 +1,7 @@
+import logging
 import pyaudio
+
+logger = logging.getLogger(__name__)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +16,7 @@ class AudioStreamManager:
             return self.py_audio.open(rate=rate, channels=channels, format=format,
                                       input=True, frames_per_buffer=frames_per_buffer)
         except Exception as e:
-            logger.error("Failed to initialize audio stream: %s", e)
+            logger.exception("Failed to initialize audio stream.", exc_info=e)
             raise
 
     def get_stream(self):

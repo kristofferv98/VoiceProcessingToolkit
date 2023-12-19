@@ -1,7 +1,10 @@
 import contextlib
+import logging
 import os
 
 import pygame
+
+logger = logging.getLogger(__name__)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,7 +23,7 @@ class NotificationSoundManager:
             self.notification_sound.set_volume(0.3)
             logger.debug("Notification sound initialized with volume 0.3")
         except pygame.error as e:
-            logger.error("Failed to load notification sound: %s", e)
+            logger.exception("Failed to load notification sound.", exc_info=e)
             logger.debug("Notification sound path: %s", self.sound_file_path)
             raise
 

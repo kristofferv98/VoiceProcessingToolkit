@@ -34,6 +34,7 @@ Example:
 """
 
 import asyncio
+import logging
 import os
 import struct
 import threading
@@ -41,6 +42,8 @@ import time
 
 import pvporcupine
 import pyaudio
+
+logger = logging.getLogger(__name__)
 
 from AudioStreamManager import AudioStreamManager
 from NotificationSoundManager import NotificationSoundManager
@@ -161,17 +164,17 @@ def example_usage():
 
     @register_action_decorator(action_manager)
     def action_with_notification():
-        print("Sync function is running...")
+        logger.info("Sync function is running...")
         time.sleep(4.5)
-        print("Action function completed!")
+        logger.info("Action function completed!")
     # Define a simple action function that prints a message
 
 
     @register_action_decorator(action_manager)
     async def async_action_1():
-        print("Async function is running...")
+        logger.info("Async function is running...")
         await asyncio.sleep(1)  # Simulate an async wait
-        print("Async function completed!")
+        logger.info("Async function completed!")
 
 
     # Create an instance of WakeWordDetector with the ActionManager
