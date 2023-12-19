@@ -31,9 +31,10 @@ def recording_callback(audio_file_path):
 # Initialize the audio recorder
 audio_recorder = AudioRecorder(callback=recording_callback)
 
-# Initialize the voice activity detector with the actual PyAudioDataProvider
+# Initialize the voice activity detector with a proper VAD engine instance (replace `YourVadEngineClass` with the actual VAD engine class)
+vad_engine_instance = YourVadEngineClass()  # You need to replace this with the actual VAD engine class
 vad = VoiceActivityDetector(
-    vad_engine=PyAudioDataProvider(),
+    vad_engine=vad_engine_instance,
     audio_data_provider=audio_data_provider,
     voice_activity_handler=audio_recorder.handle_voice_activity
 )
