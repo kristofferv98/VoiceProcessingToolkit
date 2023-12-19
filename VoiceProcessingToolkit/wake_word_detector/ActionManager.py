@@ -21,12 +21,11 @@ class ActionManager:
         """
         self._actions.append(action_function)
 
-    def execute_actions(self):
+    async def execute_actions(self):
         """
-        Executes all registered action functions in the order they were added.
+        Executes all registered action functions concurrently.
         """
-        for action in self._actions:
-            action()
+        await asyncio.gather(*(action() for action in self._actions))
 
 def register_action_decorator(action_manager):
     def decorator(action_function):

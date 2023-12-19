@@ -33,6 +33,7 @@ Example:
     ```
 """
 
+import asyncio
 import os
 import struct
 import threading
@@ -124,7 +125,7 @@ class WakeWordDetector:
                     notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
                     notification_sound_manager = NotificationSoundManager(notification_path)
                     notification_sound_manager.play()
-                self.action_manager.execute_actions()
+                asyncio.run(self.action_manager.execute_actions())
                 self.stop_event.set()  # Stop the loop after the wake word is detected
 
     def run(self) -> None:
