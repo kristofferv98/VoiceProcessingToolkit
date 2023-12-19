@@ -78,7 +78,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_function: callable, audio_stream_manager: AudioStreamManager,
-                 notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None:
+                 notification_sound_manager: NotificationSoundManager) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
         
@@ -89,9 +89,7 @@ class WakeWordDetector:
             action_function (callable): The function to call when the wake word is detected.
             audio_stream_manager (AudioStreamManager): Manages the audio stream.
             notification_sound_manager (NotificationSoundManager): Plays a notification sound.
-            continuous_run (bool, optional): If True, the detector will run continuously until stopped. Defaults to False.
         """
-        self.continuous_run = continuous_run
         self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self.wake_word = wake_word
         self.sensitivity = sensitivity
@@ -119,8 +117,6 @@ class WakeWordDetector:
                 self.notification_sound_manager.play()
                 if self.action_function:
                     self.action_function()
-                if not self.continuous_run:
-                    break
 
     def run(self) -> None:
         """
