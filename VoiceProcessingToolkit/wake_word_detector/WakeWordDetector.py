@@ -146,11 +146,37 @@ class WakeWordDetector:
 
 
 def example_usage():
-    # Define a simple action function that plays a notification sound and prints a message
-    def action_with_notification():
-        # Create an instance of NotificationSoundManager with the path to the notification sound
+    # Define a simple action function that prints a message
+    @register_action_decorator(action_manager)
+    async def action_with_notification():
         print("The wake word was detected!")
-        time.sleep(4.5)  # Wait for the notification sound to finish playing
+        await asyncio.sleep(4.5)  # Simulate an async wait
+
+    # Define additional async action functions for stress testing
+    @register_action_decorator(action_manager)
+    async def async_action_1():
+        print("Async action 1 is running...")
+        await asyncio.sleep(1)  # Simulate an async wait
+
+    @register_action_decorator(action_manager)
+    async def async_action_2():
+        print("Async action 2 is running...")
+        await asyncio.sleep(2)  # Simulate an async wait
+
+    @register_action_decorator(action_manager)
+    async def async_action_3():
+        print("Async action 3 is running...")
+        await asyncio.sleep(3)  # Simulate an async wait
+
+    @register_action_decorator(action_manager)
+    async def async_action_4():
+        print("Async action 4 is running...")
+        await asyncio.sleep(4)  # Simulate an async wait
+
+    @register_action_decorator(action_manager)
+    async def async_action_5():
+        print("Async action 5 is running...")
+        await asyncio.sleep(5)  # Simulate an async wait
 
 
     # Set up the required parameters for AudioStreamManager
