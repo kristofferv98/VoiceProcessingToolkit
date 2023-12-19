@@ -67,5 +67,7 @@ def start_wake_word_detector():
 vad_thread = start_voice_activity_detector()
 wake_word_thread = start_wake_word_detector()
 
-# Note: The actual implementation should handle the threading and synchronization between the components.
-# This is a simplified example to demonstrate how the components could be initialized and used together.
+"""
+Note: The actual implementation should handle the threading and synchronization between the components.
+This is a simplified example to demonstrate how the components could be initialized and used together.
+"""
