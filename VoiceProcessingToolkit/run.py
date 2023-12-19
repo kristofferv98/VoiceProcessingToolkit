@@ -95,7 +95,6 @@ def start_voice_activity_detector():
     local_vad_thread.start()
     return local_vad_thread
 
-@abstractmethod
 def wake_word_run():
     try:
         wake_word_detector.run()
