@@ -7,19 +7,7 @@ import pyaudio
 import pvcobra
 from VoiceProcessingToolkit.audio_processing.koala import KoalaAudioProcessor
 
-# === INTERFACES / ABSTRACT CLASSES SECTION ===
-class AudioDataProvider:
-    """
-    Interface for providing audio data to the VAD.
-
-    Implement this interface in a separate module or file where the actual audio data handling is defined.
-    """
-
-    def get_audio_frame(self):
-        """
-        Should be implemented to return a single frame of audio data.
-        """
-        raise NotImplementedError
+from .audio_data_provider import AudioDataProvider
 
 logger = logging.getLogger(__name__)
 
