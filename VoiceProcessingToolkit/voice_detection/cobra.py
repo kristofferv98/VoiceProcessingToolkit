@@ -4,14 +4,11 @@ import tempfile
 import wave
 from collections import deque
 from typing import Optional, List, Callable
+from VoiceProcessingToolkit.audio_processing.koala import KoalaAudioProcessor
 
 import numpy as np
 import pvcobra
 import pyaudio
-from dotenv import load_dotenv
-
-from VoiceProcessingToolkit.audio_processing.koala import KoalaAudioProcessor
-from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +54,8 @@ class CobraVoiceRecorder:
 
     def start_recording(self, callback: Optional[Callable[[str], None]] = None) -> None:
         """
-        Starts the voice recording process. The recording stops when the voice stops or when the inactivity limit is reached.
+        Starts the voice recording process. The recording stops when the voice stops or when the inactivity limit is
+        reached.
 
         Args:
             callback (Optional[Callable[[str], None]]): A function to call with the path to the recorded WAV file.
@@ -87,7 +85,8 @@ class CobraVoiceRecorder:
                         silent_frames += 1
                         frames_to_save.append(audio_frame)
                         if silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.silence_limit:
-                            recording_length = len(frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+                            recording_length = len(
+                                frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
                             if recording_length >= self.min_recording_length:
                                 self.save_to_wav_file(frames_to_save, file_path)
                                 logger.info(f"Recording of {recording_length:.2f} seconds saved to {file_path}.")
@@ -97,7 +96,8 @@ class CobraVoiceRecorder:
                             else:
                                 frames_to_save = []
                                 recording = False
-                                logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
+                                logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum "
+                                            f"length. Not saved.")
                     else:
                         if len(self.audio_buffer) == self.audio_buffer.maxlen:
                             self.audio_buffer.popleft()
@@ -131,16 +131,7 @@ class CobraVoiceRecorder:
         except Exception as e:
             logging.error(f"Failed to save recording to {file_path}: {e}")
 
-
     def cleanup(self) -> None:
         self.stream.stop_stream()
         self.stream.close()
         self.cobra_handle.delete()
-
-
-if __name__ == '__main__':
-    load_dotenv()
-    # The basicConfig call is removed because logging is now configured above
-    recorder = CobraVoiceRecorder(access_key=os.getenv('PICOVOICE_APIKEY'))
-    result = recorder.start_recording()
-    print(f"Recording Result: {result}")
