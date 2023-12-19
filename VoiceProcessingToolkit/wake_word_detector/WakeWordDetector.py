@@ -36,6 +36,7 @@ Example:
 import os
 import struct
 import threading
+import time
 
 import pvporcupine
 import pyaudio
@@ -143,9 +144,10 @@ def example_usage():
         # Create an instance of NotificationSoundManager with the path to the notification sound
         notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
         notification_sound_manager = NotificationSoundManager(notification_path)
-        # Play the notification sound
         notification_sound_manager.play()
         print("The wake word was detected!")
+        time.sleep(0.45)  # Wait for the wake word to finish playing
+
 
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
@@ -160,7 +162,7 @@ def example_usage():
     detector = WakeWordDetector(
         access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
-        sensitivity=0.5,
+        sensitivity=0.75,
         action_function=action_with_notification,
         audio_stream_manager=audio_stream_manager
     )
