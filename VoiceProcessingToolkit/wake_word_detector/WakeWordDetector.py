@@ -98,33 +98,21 @@ class WakeWordDetector:
                      self.sensitivity)
 
 
-    def voice_loop(self) -> str:
-        frame_count = 0
-        transcription_text = None  # Declare it here to use throughout the method
-
+    def voice_loop(self):
         while not self.stop_event.is_set():
             try:
                 pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length, exception_on_overflow=False)
                 pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
                 if self.porcupine.process(pcm) >= 0:
-                    self.notification_sound_manager.play()
                     logging.info("Wake word detected")
-
-                    # Determine the correct function to call
                     if self.action_function and callable(self.action_function):
                         self.action_function()
-
-                    if self.continuous_run:
-                        continue  # Continue the loop for continuous run
-                    else:
-                        return transcription_text  # Return the result and break out of the loop
-
-                frame_count += 1
+                    if not self.continuous_run:
+                        break
             except Exception as e:
                 logging.exception("Error in voice loop: %s", e)
-                self.initialize_audio_stream()
-
-        return transcription_text  # Return the result after the loop
+                self.audio_stream_manager.cleanup()
+                self.audio_stream_manager = self.initialize_audio_stream_manager()
 
 
     def cleanup(self) -> None:
