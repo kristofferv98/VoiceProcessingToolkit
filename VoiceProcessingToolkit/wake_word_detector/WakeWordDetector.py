@@ -79,7 +79,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_function: callable, audio_stream_manager: AudioStreamManager,
-                 notification_sound_manager: object) -> None:
+                 notification_sound_manager: object = None) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
         
@@ -96,7 +96,7 @@ class WakeWordDetector:
         self.sensitivity = sensitivity
         self.action_function = action_function
         self.audio_stream_manager = audio_stream_manager
-        self.notification_sound_manager = notification_sound_manager
+        # The notification_sound_manager is now optional and can be None
         self.stop_event = threading.Event()
         self.porcupine = None
         self.initialize_porcupine()
@@ -139,11 +139,14 @@ class WakeWordDetector:
         self.porcupine.delete()
 
 
-if __name__ == '__main__':
-    # Define a simple action function that prints a message
-    def print_detected():
+def example_usage():
+    # Define a simple action function that plays a notification sound and prints a message
+    def action_with_notification():
+        # Create an instance of NotificationSoundManager with the path to the notification sound
+        notification_sound_manager = NotificationSoundManager('path/to/notification/sound.wav')
+        # Play the notification sound
+        notification_sound_manager.play()
         print("The wake word was detected!")
-
 
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
@@ -154,24 +157,14 @@ if __name__ == '__main__':
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-
-    # Create a dummy NotificationSoundManager that does nothing on play
-    class DummyNotificationSoundManager:
-        def play(self):
-            pass
-
-
-    # Create an instance of the dummy NotificationSoundManager
-    dummy_notification_sound_manager = DummyNotificationSoundManager()
-
-    # Create an instance of WakeWordDetector with the dummy notification sound manager
+    # Create an instance of WakeWordDetector without passing a notification sound manager
     detector = WakeWordDetector(
-        access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
+        access_key="your-picovoice_api_key",
         wake_word='jarvis',
         sensitivity=0.5,
-        action_function=print_detected,
+        action_function=action_with_notification,
         audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=dummy_notification_sound_manager  # Pass the dummy notification sound manager
+        notification_sound_manager=None  # No need to pass a notification sound manager here
     )
 
     # Start the wake word detection loop
