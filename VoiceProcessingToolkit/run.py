@@ -1,6 +1,6 @@
-import asyncio
 
 import pyaudio
+import threading
 
 from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
 from VoiceProcessingToolkit.voice_detection.voice_activity_detector import VoiceActivityDetector
@@ -45,9 +45,7 @@ wake_word_detector = WakeWordDetector(
     play_notification_sound=True
 )
 
-import threading
 
-# ...
 
 def start_voice_activity_detector():
     """
