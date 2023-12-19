@@ -22,14 +22,12 @@ Example:
     print("Transcription:", result)
     ```
 """
-import contextlib
 import logging
 import os
 import struct
 import threading
 
 import pvporcupine
-import pygame
 from dotenv import load_dotenv
 
 from .AudioStreamManager import AudioStreamManager
@@ -40,33 +38,6 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
-def record_and_transcribe(wake_word: str = 'jarvis', sensitivity: float = 0.75,
-                          notification_sound_path: str = None) -> str:
-    """
-    A simplified function to perform a single run of wake word detection and transcription.
-
-    Args:
-        wake_word (str): The wake word to listen for.
-        sensitivity (float): The sensitivity of wake word detection.
-        notification_sound_path (str): Path to the notification sound file.
-
-    Returns:
-        str: The transcription result or None if no transcription was obtained.
-    """
-    picovoice_api_key = os.getenv('PICOVOICE_APIKEY', 'picovoice_api_key')
-
-    # Initialize and run the WakeWordDetector for a single transcription
-    detector = WakeWordDetector(
-        access_key=picovoice_api_key,
-        wake_word=wake_word,
-        sensitivity=sensitivity,
-        notification_sound_path=notification_sound_path,
-        continuous_run=False
-    )
-
-    transcription_result = detector.run()
-    detector.cleanup()
-    return transcription_result
 
 
 
@@ -81,7 +52,6 @@ class WakeWordDetector:
         action_function (callable): Custom function to call when wake word is detected.
         notification_sound_path (str): Path to notification sound file.
         continuous_run (bool): Whether to run the detection loop continuously.
-        transcription_function (callable): Function to call for transcribing after wake word detection.
 
     Methods:
         run: Starts the wake word detection loop and returns the transcription result.
