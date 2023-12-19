@@ -153,15 +153,22 @@ if __name__ == '__main__':
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-    # Path to the notification sound file is not needed since we are not playing a sound
-    # Create an instance of WakeWordDetector
+    # Create a dummy NotificationSoundManager that does nothing on play
+    class DummyNotificationSoundManager:
+        def play(self):
+            pass
+
+    # Create an instance of the dummy NotificationSoundManager
+    dummy_notification_sound_manager = DummyNotificationSoundManager()
+
+    # Create an instance of WakeWordDetector with the dummy notification sound manager
     detector = WakeWordDetector(
         access_key=os.getenv('PICOVOICE_APIKEY'),
         wake_word='jarvis',
         sensitivity=0.5,
-        action_function=print_detected,  # Pass the print function as the action
+        action_function=print_detected,
         audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=None  # No notification sound manager is passed
+        notification_sound_manager=dummy_notification_sound_manager  # Pass the dummy notification sound manager
     )
 
     # Start the wake word detection loop
