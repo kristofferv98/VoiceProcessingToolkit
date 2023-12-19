@@ -23,8 +23,8 @@ class CobraVoiceRecorder:
     save recordings to WAV files, and perform cleanup.
     """
 
-    def __init__(self, access_key: Optional[str] = None) -> None:
-        self.access_key = access_key or os.environ.get('PICOVOICE_APIKEY')
+    def __init__(self, access_key: str = None) -> None:
+        self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
         if not self.access_key:
             raise ValueError("Cobra access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
         self.cobra_handle = pvcobra.create(access_key=self.access_key)

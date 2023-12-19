@@ -91,7 +91,7 @@ class WakeWordDetector:
         run: Starts the wake word detection loop and returns the transcription result.
     """
 
-    def __init__(self, picovoice_api_key: str = None, wake_word: str = "jarvis",
+    def __init__(self, access_key: str = None, wake_word: str = "jarvis",
                  sensitivity: float = 0.75, action_function: callable = None,
                  notification_sound_path: str = None, continuous_run: bool = False,
                  transcription_function: callable = None) -> None:
@@ -99,7 +99,7 @@ class WakeWordDetector:
         Initializes the WakeWordDetector with the provided parameters.
 
         Args:
-            picovoice_api_key (str): Access key for Porcupine.
+            access_key (str): Access key for Porcupine, can be provided or set as an environment variable 'PICOVOICE_APIKEY'.
             wake_word (str): Wake word to listen for.
             sensitivity (float): Sensitivity of wake word detection.
             action_function (callable): Custom function to call when wake word is detected.
@@ -113,8 +113,7 @@ class WakeWordDetector:
         self.audio_stream = None
         self.py_audio = None
         self.porcupine = None
-        # The API key for Porcupine can be provided as an argument or set as an environment variable 'PICOVOICE_APIKEY'.
-        self.picovoice_api_key = picovoice_api_key if picovoice_api_key is not None else os.getenv('PICOVOICE_APIKEY')
+        self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
         if not self.picovoice_api_key:
             raise ValueError(
                 "Porcupine access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")

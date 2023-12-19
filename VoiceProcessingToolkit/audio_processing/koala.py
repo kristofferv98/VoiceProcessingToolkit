@@ -13,7 +13,8 @@ class KoalaAudioProcessor:
     """
 
     def __init__(self, access_key: str = None, library_path: str = None, model_path: str = None) -> None:
-        self.koala = create(access_key=access_key, model_path=model_path, library_path=library_path)
+        self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
+        self.koala = create(access_key=self.access_key, model_path=model_path, library_path=library_path)
 
     def process_audio(self, input_filename: str, output_filename: str) -> None:
         # Define the directory relative to the current script's location
