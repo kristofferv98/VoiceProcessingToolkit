@@ -15,6 +15,7 @@ from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManage
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStreamManager
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 # Initialize the audio data provider
 audio_data_provider = PyAudioDataProvider()
 load_dotenv()
