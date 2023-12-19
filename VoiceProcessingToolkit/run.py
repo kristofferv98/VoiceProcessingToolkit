@@ -30,13 +30,11 @@ def recording_callback(audio_file_path):
 # Initialize the audio recorder
 audio_recorder = AudioRecorder(callback=recording_callback)
 
-from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
-
 # Initialize the voice activity detector with the actual PyAudioDataProvider
 vad = VoiceActivityDetector(
     vad_engine=PyAudioDataProvider(),
     audio_data_provider=audio_data_provider,
-    voice_activity_handler=voice_activity_handler
+    voice_activity_handler=audio_recorder.handle_voice_activity
 )
 
 # Initialize the action manager
