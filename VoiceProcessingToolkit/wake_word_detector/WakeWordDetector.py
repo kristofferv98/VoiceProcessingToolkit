@@ -111,9 +111,13 @@ class WakeWordDetector:
         """
         Initializes the Porcupine wake word engine.
         """
-        if self.porcupine is None:
-            self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
-                                                sensitivities=[self.sensitivity])
+        try:
+            if self.porcupine is None:
+                self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
+                                                    sensitivities=[self.sensitivity])
+        except pvporcupine.PorcupineError as e:
+            logger.exception("Failed to initialize Porcupine with the given parameters.", exc_info=e)
+            raise
 
     def voice_loop(self):
         """

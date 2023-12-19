@@ -15,8 +15,11 @@ class AudioStreamManager:
         try:
             return self.py_audio.open(rate=rate, channels=channels, format=format,
                                       input=True, frames_per_buffer=frames_per_buffer)
+        except pyaudio.PyAudioError as e:
+            logger.exception("Failed to initialize audio stream due to PyAudio error.", exc_info=e)
+            raise
         except Exception as e:
-            logger.exception("Failed to initialize audio stream.", exc_info=e)
+            logger.exception("An unexpected error occurred while initializing the audio stream.", exc_info=e)
             raise
 
     def get_stream(self):
