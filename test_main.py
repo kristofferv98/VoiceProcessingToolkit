@@ -52,4 +52,4 @@ def test_test_routine():
 
 # Run the test routine
 if __name__ == '__main__':
-    test_routine()
+    test_test_routine()
