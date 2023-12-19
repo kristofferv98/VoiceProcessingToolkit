@@ -35,7 +35,7 @@ class ActionManager:
         results = await asyncio.gather(*coroutines, return_exceptions=True)
         for result in results:
             if isinstance(result, Exception):
-                logger.exception("An exception occurred while executing an action: %s", result, exc_info=result)
+                self.logger.exception("An exception occurred while executing an action: %s", result, exc_info=result)
 
 def register_action_decorator(action_manager):
     def decorator(action_function):
