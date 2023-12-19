@@ -56,29 +56,23 @@ class CobraVoiceRecorder:
         return np.frombuffer(frame, dtype=np.int16)
 
     def start_recording(self, callback: Optional[Callable[[str], None]] = None) -> None:
-        # Use a temporary directory if no output directory is provided
-        # Create a temporary directory and manage its lifecycle manually
-        temp_dir = tempfile.TemporaryDirectory()
-        wav_mp3_directory = temp_dir.name
-        file_path = os.path.join(wav_mp3_directory, "recorded_voice.wav")
-        processed_file_path = os.path.join(wav_mp3_directory, "processed_voice.wav")
+        """
+        Starts the voice recording process. The recording stops when the voice stops or when the inactivity limit is reached.
 
-        recording = False
-        silent_frames = 0
-        inactivity_frames = 0
-        frames_to_save = []
+        Args:
+            callback (Optional[Callable[[str], None]]): A function to call with the path to the recorded WAV file.
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, "recorded_voice.wav")
 
-        try:
+            recording = False
+            silent_frames = 0
+            inactivity_frames = 0
+            frames_to_save = []
+
             while True:
                 audio_frame = self.get_next_audio_frame()
-                try:
-                    voice_probability = self.cobra_handle.process(audio_frame)
-                except pvcobra.CobraError as e:
-                    logging.exception("Cobra processing error: %s", e)
-                    raise
-                except Exception as e:
-                    logging.exception("Unexpected error during Cobra processing: %s", e)
-                    raise
+                voice_probability = self.cobra_handle.process(audio_frame)
 
                 if voice_probability > self.voice_threshold:
                     inactivity_frames = 0
@@ -86,44 +80,33 @@ class CobraVoiceRecorder:
                     if not recording:
                         recording = True
                         frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
-                        logging.info("Voice Detected - Starting Recording")
+                        logger.info("Voice Detected - Starting Recording")
                     frames_to_save.append(audio_frame)
                 else:
-                    if len(self.audio_buffer) == self.audio_buffer.maxlen:
-                        self.audio_buffer.popleft()
-                    self.audio_buffer.append(audio_frame)
-                    inactivity_frames += 1
                     if recording:
                         silent_frames += 1
                         frames_to_save.append(audio_frame)
-                        if (
-                                silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
-                                self.silence_limit):
-                            recording_length = len(
-                                frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+                        if silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.silence_limit:
+                            recording_length = len(frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
                             if recording_length >= self.min_recording_length:
                                 self.save_to_wav_file(frames_to_save, file_path)
-                                logging.info(f"Recording of {recording_length:.2f} seconds saved to {file_path}.")
+                                logger.info(f"Recording of {recording_length:.2f} seconds saved to {file_path}.")
                                 if callback is not None:
                                     callback(file_path)
                                 return
                             else:
                                 frames_to_save = []
                                 recording = False
-                                logging.info(
-                                    f"Recording of {recording_length:.2f} seconds is under the minimum length. Not "
-                                    f"saved.")
+                                logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
+                    else:
+                        if len(self.audio_buffer) == self.audio_buffer.maxlen:
+                            self.audio_buffer.popleft()
+                        self.audio_buffer.append(audio_frame)
+                    inactivity_frames += 1
 
-                if (
-                        inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
-                        self.inactivity_limit):
-                    logging.info("No voice detected for a while. Exiting...")
+                if inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.inactivity_limit:
+                    logger.info("No voice detected for a while. Exiting...")
                     return 'NO_VOICE_EXIT'
-        except Exception as e:
-            logging.exception("An error occurred during recording: %s", e)
-        finally:
-            self.cleanup()
-            temp_dir.cleanup()  # Clean up the temporary directory
 
     def save_to_wav_file(self, frames: List[np.ndarray], file_path: str) -> None:
         logging.debug("CobraVoiceRecorder: Saving frames to WAV file: %s", file_path)
