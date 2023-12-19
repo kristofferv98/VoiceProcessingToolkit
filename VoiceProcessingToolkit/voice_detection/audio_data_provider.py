@@ -22,10 +22,33 @@ class PyAudioDataProvider(AudioDataProvider):
         """
         frame = self.stream.read(self.stream.get_read_available(), exception_on_overflow=False)
         return np.frombuffer(frame, dtype=np.int16)
+# === INTERFACE DEFINITION ===
+from abc import ABC, abstractmethod
+
+class AudioDataProvider(ABC):
+    """
+    AudioDataProvider is an interface for providing audio data frames.
+    """
+
+    @abstractmethod
+    def get_audio_frame(self):
+        """
+        Returns a single frame of audio data.
+        """
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        """
+        Clean up any resources used by the provider.
+        """
+        pass
+
+# === PYAUDIO DATA PROVIDER IMPLEMENTATION ===
 import pyaudio
 import numpy as np
 
-class PyAudioDataProvider:
+class PyAudioDataProvider(AudioDataProvider):
     """
     PyAudioDataProvider provides audio data frames using PyAudio.
     """
