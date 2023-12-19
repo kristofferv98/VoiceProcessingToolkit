@@ -16,7 +16,6 @@ class CobraVAD:
     """
     Handles voice activity detection using the Cobra VAD engine.
     Responsibilities:
-    - Initialize the Cobra VAD engine.
     - Process audio data frames for voice activity detection.
     - Invoke a handler function when voice activity is detected.
     """
@@ -29,15 +28,17 @@ class CobraVAD:
             audio_data_provider: An instance that provides audio data frames.
             voice_activity_handler: A callable that handles detected voice activity.
         """
+        if not isinstance(vad_engine, pvcobra.VoiceActivityDetector):
+            raise TypeError("vad_engine must be an instance of pvcobra.VoiceActivityDetector")
+        if not isinstance(audio_data_provider, AudioDataProvider):
+            raise TypeError("audio_data_provider must be an instance of AudioDataProvider")
+        if not callable(voice_activity_handler):
+            raise TypeError("voice_activity_handler must be callable")
+
         self.vad_engine = vad_engine
         self.audio_data_provider = audio_data_provider
         self.voice_activity_handler = voice_activity_handler
 
-    def _initialize_vad_engine(self):
-        """
-        Internal method to initialize the Cobra VAD engine.
-        """
-        return pvcobra.create(access_key=self.access_key)
 
     # The existing process_audio method is correct as per the plan and does not need changes.
 
@@ -62,7 +63,7 @@ class CobraVAD:
             frames_to_save = []
 
             while True:
-                audio_frame = self.get_next_audio_frame()
+                audio_frame = self.audio_data_provider.get_audio_frame()
                 voice_probability = self.cobra_handle.process(audio_frame)
 
                 if voice_probability > self.voice_threshold:
