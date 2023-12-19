@@ -45,8 +45,29 @@ wake_word_detector = WakeWordDetector(
     play_notification_sound=True
 )
 
-# Start the voice activity detector in a separate thread or process
-# Start the wake word detector in a separate thread or process
+import threading
+
+# ...
+
+def start_voice_activity_detector():
+    """
+    Starts the voice activity detector in a separate thread.
+    """
+    vad_thread = threading.Thread(target=vad.run)
+    vad_thread.start()
+    return vad_thread
+
+def start_wake_word_detector():
+    """
+    Starts the wake word detector in a separate thread.
+    """
+    wake_word_thread = threading.Thread(target=wake_word_detector.run)
+    wake_word_thread.start()
+    return wake_word_thread
+
+# Start the voice activity detector and wake word detector
+vad_thread = start_voice_activity_detector()
+wake_word_thread = start_wake_word_detector()
 
 # Note: The actual implementation should handle the threading and synchronization between the components.
 # This is a simplified example to demonstrate how the components could be initialized and used together.
