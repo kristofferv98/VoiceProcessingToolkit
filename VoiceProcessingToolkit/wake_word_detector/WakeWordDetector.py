@@ -80,7 +80,8 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_function: callable, audio_stream_manager: AudioStreamManager,
-                 ) -> None:
+                 play_notification_sound: bool = True) -> None:
+        self.play_notification_sound = play_notification_sound
         """
         Initializes the WakeWordDetector with the provided parameters.
         
@@ -116,9 +117,13 @@ class WakeWordDetector:
             pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length)
             pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
             if self.porcupine.process(pcm) >= 0:
+                if self.play_notification_sound:
+                    # Create an instance of NotificationSoundManager with the path to the notification sound
+                    notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
+                    notification_sound_manager = NotificationSoundManager(notification_path)
+                    notification_sound_manager.play()
                 if self.action_function:
                     self.action_function()
-                # The notification sound line has been removed
                 self.stop_event.set()  # Stop the loop after the wake word is detected
 
     def run(self) -> None:
@@ -164,7 +169,8 @@ def example_usage():
         wake_word='jarvis',
         sensitivity=0.75,
         action_function=action_with_notification,
-        audio_stream_manager=audio_stream_manager
+        audio_stream_manager=audio_stream_manager,
+        play_notification_sound=True
     )
 
     # Start the wake word detection loop
