@@ -28,7 +28,9 @@ class ActionManager:
         """
         Executes all registered action functions concurrently.
         """
-        await asyncio.gather(*(action() for action in self._actions))
+        # Ensure that each action is a coroutine before gathering
+        coroutines = [action() if asyncio.iscoroutinefunction(action) else asyncio.to_thread(action) for action in self._actions]
+        await asyncio.gather(*coroutines)
 
 def register_action_decorator(action_manager):
     def decorator(action_function):
