@@ -131,19 +131,6 @@ class CobraVoiceRecorder:
         except Exception as e:
             logging.error(f"Failed to save recording to {file_path}: {e}")
 
-    def transcribe_audio(self, audio_file_path: str) -> Optional[str]:
-        logging.debug("CobraVoiceRecorder: Starting transcription for audio file: %s", audio_file_path)
-        """
-        Transcribes the recorded audio file using the WhisperTranscriber.
-
-        Args:
-            audio_file_path (str): Path to the recorded audio file.
-
-        Returns:
-            str: The transcription result or None if transcription fails.
-        """
-        transcriber = WhisperTranscriber()
-        return transcriber.transcribe_audio(audio_file_path)
 
     def cleanup(self) -> None:
         self.stream.stop_stream()
