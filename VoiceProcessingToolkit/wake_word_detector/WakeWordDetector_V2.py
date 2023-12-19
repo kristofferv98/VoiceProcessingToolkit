@@ -97,13 +97,15 @@ class WakeWordDetector:
         self.audio_stream_manager = audio_stream_manager
         self.notification_sound_manager = notification_sound_manager
         self.stop_event = threading.Event()
+        self.porcupine = None
         self.initialize_porcupine()
 
     def initialize_porcupine(self) -> None:
         """
         Initializes the Porcupine wake word engine.
         """
-        self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
+        if self.porcupine is None:
+            self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
                                             sensitivities=[self.sensitivity])
 
     def voice_loop(self):
