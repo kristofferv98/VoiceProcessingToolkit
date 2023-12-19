@@ -146,38 +146,6 @@ class WakeWordDetector:
 
 
 def example_usage():
-    # Define a simple action function that prints a message
-    @register_action_decorator(action_manager)
-    async def action_with_notification():
-        print("The wake word was detected!")
-        await asyncio.sleep(4.5)  # Simulate an async wait
-
-    # Define additional async action functions for stress testing
-    @register_action_decorator(action_manager)
-    async def async_action_1():
-        print("Async action 1 is running...")
-        await asyncio.sleep(1)  # Simulate an async wait
-
-    @register_action_decorator(action_manager)
-    async def async_action_2():
-        print("Async action 2 is running...")
-        await asyncio.sleep(2)  # Simulate an async wait
-
-    @register_action_decorator(action_manager)
-    async def async_action_3():
-        print("Async action 3 is running...")
-        await asyncio.sleep(3)  # Simulate an async wait
-
-    @register_action_decorator(action_manager)
-    async def async_action_4():
-        print("Async action 4 is running...")
-        await asyncio.sleep(4)  # Simulate an async wait
-
-    @register_action_decorator(action_manager)
-    async def async_action_5():
-        print("Async action 5 is running...")
-        await asyncio.sleep(5)  # Simulate an async wait
-
 
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
@@ -193,8 +161,18 @@ def example_usage():
 
     @register_action_decorator(action_manager)
     def action_with_notification():
-        print("The wake word was detected!")
+        print("Sync function is running...")
         time.sleep(4.5)
+        print("Action function completed!")
+    # Define a simple action function that prints a message
+
+
+    @register_action_decorator(action_manager)
+    async def async_action_1():
+        print("Async function is running...")
+        await asyncio.sleep(1)  # Simulate an async wait
+        print("Async function completed!")
+
 
     # Create an instance of WakeWordDetector with the ActionManager
     detector = WakeWordDetector(
@@ -209,4 +187,3 @@ def example_usage():
     # Start the wake word detection loop
     detector.run()
 
-example_usage()

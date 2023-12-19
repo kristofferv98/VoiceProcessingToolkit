@@ -1,3 +1,6 @@
+import contextlib
+import os
+
 import pygame
 import logging
 
