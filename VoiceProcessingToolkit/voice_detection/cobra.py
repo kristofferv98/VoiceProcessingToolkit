@@ -5,9 +5,7 @@ from typing import List
 import numpy as np
 import pyaudio
 import pvcobra
-from VoiceProcessingToolkit.audio_processing.koala import KoalaAudioProcessor
-
-from .audio_data_provider import AudioDataProvider
+# Dependencies are now passed in, so we don't need to import KoalaAudioProcessor or AudioDataProvider here.
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +19,17 @@ class CobraVAD:
     Do not instantiate them directly within this class to maintain SRP and loose coupling.
     """
 
-    def __init__(self, audio_data_provider: AudioDataProvider, access_key: str):
+    def __init__(self, vad_engine, audio_data_provider, voice_activity_handler):
         """
         Initialize the Cobra VAD.
         Args:
+            vad_engine: An instance of the Cobra VAD engine.
             audio_data_provider: An instance that provides audio data frames.
-            access_key: The access key for using Cobra VAD.
+            voice_activity_handler: A callable that handles detected voice activity.
         """
+        self.vad_engine = vad_engine
         self.audio_data_provider = audio_data_provider
-        self.access_key = access_key
-        self.vad_engine = self._initialize_vad_engine()
+        self.voice_activity_handler = voice_activity_handler
 
     def _initialize_vad_engine(self):
         """
@@ -47,42 +46,9 @@ class CobraVAD:
             is_voice = self.vad_engine.process(frame)
             if is_voice:
                 logging.info("Voice activity detected.")
-                self.handle_voice_activity()
+                self.voice_activity_handler()
 
-    def handle_voice_activity(self):
-        """
-        Handle the detected voice activity.
-
-        Define a callback mechanism or signal handling here to notify other parts of the application.
-        """
-        pass
-
-    def __init__(self, access_key: str = None) -> None:
-        self.access_key = access_key if access_key is not None else os.getenv('PICOVOICE_APIKEY')
-        if not self.access_key:
-            raise ValueError("Cobra access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
-        self.cobra_handle = pvcobra.create(access_key=self.access_key)
-
-        self.pyaudio_instance = pyaudio.PyAudio()
-        try:
-            self.stream = self.pyaudio_instance.open(format=pyaudio.paInt16, channels=1,
-                                                     rate=self.cobra_handle.sample_rate,
-                                                     input=True, frames_per_buffer=self.cobra_handle.frame_length)
-        except Exception as e:
-            logger.exception("Failed to initialize PyAudio stream: %s", e)
-            raise
-        self.audio_buffer = deque(maxlen=int(self.cobra_handle.sample_rate * 2 / self.cobra_handle.frame_length))
-        self.koala_processor = KoalaAudioProcessor(access_key=self.access_key)
-        self.file_check_thread = None
-        self.stop_check = False
-
-        # Configuration
-        self.voice_threshold = 0.7
-        self.silence_limit = 2
-        self.inactivity_limit = 2
-        self.min_recording_length = 3
-        self.audio_buffer = deque(
-            maxlen=2 * self.cobra_handle.sample_rate // self.cobra_handle.frame_length)
+# This entire __init__ method is removed because we are now passing in the dependencies.
 
     def get_next_audio_frame(self) -> np.ndarray:
         logging.debug("CobraVoiceRecorder: Reading the next audio frame")
