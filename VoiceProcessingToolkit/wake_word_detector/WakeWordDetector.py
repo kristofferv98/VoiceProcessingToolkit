@@ -139,7 +139,7 @@ class WakeWordDetector:
         self.porcupine.delete()
 
 
-if __name__ == '__main__':
+def example_usage():
     # Define a simple action function that prints a message
     def print_detected():
         print("The wake word was detected!")
@@ -173,3 +173,6 @@ if __name__ == '__main__':
 
     # Start the wake word detection loop
     detector.run()
+
+if __name__ == '__main__':
+    example_usage()
