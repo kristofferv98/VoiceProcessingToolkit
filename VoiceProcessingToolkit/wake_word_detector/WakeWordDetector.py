@@ -146,7 +146,7 @@ def example_usage():
         notification_sound_manager = NotificationSoundManager(notification_path)
         notification_sound_manager.play()
         print("The wake word was detected!")
-        time.sleep(0.45)  # Wait for the wake word to finish playing
+        time.sleep(4.5)  # Wait for the notification sound to finish playing
 
 
     # Set up the required parameters for AudioStreamManager
