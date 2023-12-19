@@ -62,26 +62,17 @@ class WakeWordDetector:
             sensitivities=[0.75]
         )
 
-        self.py_audio = pyaudio.PyAudio()
-        self.audio_stream = self.py_audio.open(
+from voice_detection.audio_data_provider import PyAudioDataProvider
+
+        self.audio_data_provider = PyAudioDataProvider(
             rate=self.porcupine.sample_rate,
             channels=1,
-            format=pyaudio.paInt16,
-            input=True,
+            audio_format=pyaudio.paInt16,
             frames_per_buffer=self.porcupine.frame_length
         )
 
     def init_audio_stream(self):
-        if self.audio_stream is not None:
-            self.audio_stream.close()
-
-        self.audio_stream = self.py_audio.open(
-            rate=self.porcupine.sample_rate,
-            channels=1,
-            format=pyaudio.paInt16,
-            input=True,
-            frames_per_buffer=self.porcupine.frame_length * 2
-        )
+        # This method might not be necessary anymore if the PyAudioDataProvider handles stream reinitialization internally.
 
     def typing_loop(self):
         try:
@@ -95,7 +86,7 @@ class WakeWordDetector:
         try:
             while True:
                 try:
-                    pcm = self.audio_stream.read(self.porcupine.frame_length)
+                    pcm = self.audio_data_provider.get_audio_frame()
                     pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
                     keyword_index = self.porcupine.process(pcm)
                     if keyword_index >= 0:
@@ -134,7 +125,6 @@ class WakeWordDetector:
 
     def cleanup(self):
         """Release resources."""
-        self.audio_stream.close()
-        self.py_audio.terminate()
+        self.audio_data_provider.cleanup()
         self.porcupine.delete()
 
