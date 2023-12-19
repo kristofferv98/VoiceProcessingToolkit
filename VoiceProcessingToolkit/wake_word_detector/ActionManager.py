@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+
 class ActionManager:
     """
     Manages a list of actions (functions) to be executed.
@@ -31,14 +32,17 @@ class ActionManager:
         Executes all registered action functions concurrently.
         """
         # Ensure that each action is a coroutine before gathering
-        coroutines = [action() if asyncio.iscoroutinefunction(action) else asyncio.to_thread(action) for action in self._actions]
+        coroutines = [action() if asyncio.iscoroutinefunction(action) else asyncio.to_thread(action) for action in
+                      self._actions]
         results = await asyncio.gather(*coroutines, return_exceptions=True)
         for result in results:
             if isinstance(result, Exception):
                 self.logger.exception("An exception occurred while executing an action: %s", result, exc_info=result)
 
+
 def register_action_decorator(action_manager):
     def decorator(action_function):
         action_manager.register_action(action_function)
         return action_function
+
     return decorator

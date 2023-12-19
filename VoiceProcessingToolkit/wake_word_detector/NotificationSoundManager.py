@@ -5,6 +5,7 @@ import pygame
 
 logger = logging.getLogger(__name__)
 
+
 class NotificationSoundManager:
     _mixer_initialized = False
 

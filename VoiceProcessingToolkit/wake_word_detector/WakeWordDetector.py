@@ -129,7 +129,7 @@ class WakeWordDetector:
             if self.porcupine.process(pcm) >= 0:
                 if self.play_notification_sound:
                     # Create an instance of NotificationSoundManager with the path to the notification sound
-                    notification_path = os.path.join(os.path.dirname(__file__), 'path', 'to', 'correct', 'notification.wav')
+                    notification_path = os.path.join(os.path.dirname(__file__), 'MP3', 'notification.wav')
                     notification_sound_manager = NotificationSoundManager(notification_path)
                     notification_sound_manager.play()
                 asyncio.run(self.action_manager.execute_actions())

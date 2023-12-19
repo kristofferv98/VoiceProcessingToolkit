@@ -1,123 +1,68 @@
-# === IMPLEMENTATION OF AUDIO DATA PROVIDER INTERFACE ===
-
 import pyaudio
 import numpy as np
-
-class PyAudioDataProvider(AudioDataProvider):
-    """
-    PyAudioDataProvider provides audio data frames using PyAudio.
-    """
-
-    def __init__(self, stream):
-        """
-        Initialize the PyAudioDataProvider with an audio stream.
-        Args:
-            stream: An instance of PyAudio stream to read audio data from.
-        """
-        self.stream = stream
-
-    def get_audio_frame(self):
-        """
-        Returns a single frame of audio data from the stream.
-        """
-        frame = self.stream.read(self.stream.get_read_available(), exception_on_overflow=False)
-        return np.frombuffer(frame, dtype=np.int16)
-# === INTERFACE DEFINITION ===
 from abc import ABC, abstractmethod
 
-class AudioDataProvider(ABC):
-    """
-    AudioDataProvider is an interface for providing audio data frames.
-    """
 
+class AudioDataProvider(ABC):
     @abstractmethod
     def get_audio_frame(self):
-        """
-        Returns a single frame of audio data.
-        """
+        """Returns a single frame of audio data."""
         pass
 
     @abstractmethod
     def cleanup(self):
-        """
-        Clean up any resources used by the provider.
-        """
+        """Cleans up any resources used by the provider."""
         pass
 
-# === PYAUDIO DATA PROVIDER IMPLEMENTATION ===
-import pyaudio
-import numpy as np
 
 class PyAudioDataProvider(AudioDataProvider):
-    """
-    PyAudioDataProvider provides audio data frames using PyAudio.
-    """
-
-    def __init__(self, rate, channels, format, frames_per_buffer):
-        """
-        Initialize the PyAudioDataProvider with audio stream parameters.
-        Args:
-            rate: The sample rate.
-            channels: The number of audio channels.
-            format: The sample format.
-            frames_per_buffer: The number of frames per buffer.
-        """
+    def __init__(self, rate=16000, channels=1, audio_format=pyaudio.paInt16, frames_per_buffer=1024):
+        self.rate = rate
+        self.channels = channels
+        self.audio_format = audio_format
+        self.frames_per_buffer = frames_per_buffer
         self.py_audio = pyaudio.PyAudio()
-        self.stream = self.py_audio.open(
-            rate=rate,
-            channels=channels,
-            format=format,
-            frames_per_buffer=frames_per_buffer,
-            input=True
-        )
+        self.stream = None
+        self.open_stream()
+
+    def open_stream(self):
+        """Opens the audio stream with the specified parameters."""
+        try:
+            self.stream = self.py_audio.open(
+                rate=self.rate,
+                channels=self.channels,
+                format=self.audio_format,
+                input=True,
+                frames_per_buffer=self.frames_per_buffer
+            )
+        except pyaudio.PyAudio as e:
+            print(f"Could not open audio stream: {e}")
+            self.cleanup()
 
     def get_audio_frame(self):
-        """
-        Returns a single frame of audio data from the stream.
-        """
-        frame = self.stream.read(self.stream.get_read_available(), exception_on_overflow=False)
-        return np.frombuffer(frame, dtype=np.int16)
+        """Returns a single frame of audio data from the stream."""
+        if not self.stream:
+            raise IOError("Audio stream is not open")
+
+        try:
+            # Check if there is enough data to read to prevent overflow/underflow
+            if self.stream.get_read_available() >= self.frames_per_buffer:
+                frame = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
+                return np.frombuffer(frame, dtype=np.int16)
+        except IOError as e:
+            print(f"Error reading audio frame: {e}")
+        return None
 
     def cleanup(self):
-        """
-        Clean up the audio stream and PyAudio instance.
-        """
-        self.stream.stop_stream()
-        self.stream.close()
+        """Cleans up the audio stream and PyAudio instance."""
+        if self.stream and not self.stream.is_stopped():
+            self.stream.stop_stream()
+        if self.stream and not self.stream.is_closed():
+            self.stream.close()
         self.py_audio.terminate()
-# === IMPLEMENTATION OF AUDIO DATA PROVIDER INTERFACE ===
 
-import pyaudio
-import numpy as np
+    def __enter__(self):
+        return self
 
-class PyAudioDataProvider:
-    """
-    PyAudioDataProvider provides audio data frames using PyAudio.
-    """
-
-    def __init__(self, format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024):
-        """
-        Initialize the PyAudioDataProvider with audio stream parameters.
-        Args:
-            format: The sample format.
-            channels: The number of audio channels.
-            rate: The sample rate.
-            frames_per_buffer: The number of frames per buffer.
-        """
-        self.py_audio = pyaudio.PyAudio()
-        self.stream = self.py_audio.open(format=format, channels=channels, rate=rate, input=True, frames_per_buffer=frames_per_buffer)
-
-    def get_audio_frame(self):
-        """
-        Returns a single frame of audio data from the stream.
-        """
-        frame = self.stream.read(frames_per_buffer)
-        return np.frombuffer(frame, dtype=np.int16)
-
-    def cleanup(self):
-        """
-        Clean up the audio stream and PyAudio instance.
-        """
-        self.stream.stop_stream()
-        self.stream.close()
-        self.py_audio.terminate()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.cleanup()

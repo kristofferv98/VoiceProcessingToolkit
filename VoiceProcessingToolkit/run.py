@@ -1,5 +1,6 @@
 import logging
 import os
+from abc import abstractmethod
 
 import pyaudio
 import threading
@@ -13,7 +14,8 @@ from VoiceProcessingToolkit.voice_detection.audio_recorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStreamManager
-logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize the audio data provider
@@ -93,15 +95,14 @@ def start_voice_activity_detector():
     local_vad_thread.start()
     return local_vad_thread
 
-
-def start_wake_word_detector():
-    def wake_word_run():
-        try:
-            wake_word_detector.run()
-        except Exception as e:
-            print(f"Wake Word Detector error: {e}")
-        finally:
-            stop_event.set()
+@abstractmethod
+def wake_word_run():
+    try:
+        wake_word_detector.run()
+    except Exception as e:
+        print(f"Wake Word Detector error: {e}")
+    finally:
+        stop_event.set()
 
     local_wake_word_thread = threading.Thread(target=wake_word_run)
     local_wake_word_thread.start()
@@ -110,7 +111,7 @@ def start_wake_word_detector():
 
 # Start the voice activity detector and wake word detector threads
 vad_thread = start_voice_activity_detector()
-wake_word_thread = start_wake_word_detector()
+wake_word_thread = wake_word_run()
 
 # Wait for the threads to finish
 vad_thread.join()

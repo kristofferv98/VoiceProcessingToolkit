@@ -1,0 +1,6 @@
+recursive-include voice_processing_lib *.md
+include LICENSE
+include CONTRIBUTORS.md
+include CHANGELOG.md
+recursive-include voice_processing_lib *.py
+recursive-include voice_processing_lib/wake_word_detector/Wav_MP3 *.wav
