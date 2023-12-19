@@ -20,8 +20,7 @@ Example:
     from wake_word_detector import WakeWordDetector, AudioStreamManager, NotificationSoundManager
 
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
-    notification_sound_path = 'path/to/notification/sound.wav'  # Replace with actual path
-    notification_sound_manager = NotificationSoundManager(notification_sound_path)
+    notification_sound_manager = NotificationSoundManager('path/to/notification/sound.wav')
     detector = WakeWordDetector(
         access_key='your-picovoice_api_key',
         wake_word='jarvis',
@@ -34,12 +33,43 @@ Example:
     ```
 """
 
+import os
 import struct
 import threading
+
 import pvporcupine
 
 from .AudioStreamManager import AudioStreamManager
 from .NotificationSoundManager import NotificationSoundManager
+
+class WakeWordDetector:
+    """
+    Main class for wake word detection.
+
+    Attributes:
+        ...
+
+    Methods:
+        ...
+    """
+
+    def __init__(self, access_key: str, wake_word: str, sensitivity: float,
+                 action_function: callable, audio_stream_manager: AudioStreamManager,
+                 notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None:
+        """
+        Initializes the WakeWordDetector with the provided parameters.
+        Args:
+            ...
+        """
+        self.continuous_run = continuous_run
+        self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
+        self.wake_word = wake_word
+        self.sensitivity = sensitivity
+        self.action_function = action_function
+        self.audio_stream_manager = audio_stream_manager
+        self.notification_sound_manager = notification_sound_manager
+        self.stop_event = threading.Event()
+        self.initialize_porcupine()
 
     def initialize_porcupine(self) -> None:
         """
@@ -51,20 +81,16 @@ from .NotificationSoundManager import NotificationSoundManager
     def voice_loop(self):
         """
         The main loop that listens for the wake word and triggers the action function.
-        Handles exceptions that might occur during audio stream reading and processing.
         """
-        try:
-            while not self.stop_event.is_set():
-                pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length, exception_on_overflow=False)
-                pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
-                if self.porcupine.process(pcm) >= 0:
-                    self.notification_sound_manager.play()
-                    if self.action_function:
-                        self.action_function()
-                    if not self.continuous_run:
-                        break
-        except Exception as e:
-            logger.error("An error occurred in the voice loop: %s", e)
+        while not self.stop_event.is_set():
+            pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length)
+            pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
+            if self.porcupine.process(pcm) >= 0:
+                self.notification_sound_manager.play()
+                if self.action_function:
+                    self.action_function()
+                if not self.continuous_run:
+                    break
 
     def run(self) -> None:
         """
