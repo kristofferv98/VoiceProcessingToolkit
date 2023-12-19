@@ -107,7 +107,7 @@ class WakeWordDetector:
         """
         if self.porcupine is None:
             self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
-                                            sensitivities=[self.sensitivity])
+                                                sensitivities=[self.sensitivity])
 
     def voice_loop(self):
         """
@@ -139,10 +139,11 @@ class WakeWordDetector:
         self.porcupine.delete()
 
 
-def example_usage(play_notification_sound=True):
+if __name__ == '__main__':
     # Define a simple action function that prints a message
     def print_detected():
         print("The wake word was detected!")
+
 
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
@@ -153,26 +154,25 @@ def example_usage(play_notification_sound=True):
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
+
     # Create a dummy NotificationSoundManager that does nothing on play
     class DummyNotificationSoundManager:
         def play(self):
             pass
 
+
     # Create an instance of the dummy NotificationSoundManager
     dummy_notification_sound_manager = DummyNotificationSoundManager()
 
-    # Create an instance of WakeWordDetector with the option to play or not play the notification sound
+    # Create an instance of WakeWordDetector with the dummy notification sound manager
     detector = WakeWordDetector(
         access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
         sensitivity=0.5,
         action_function=print_detected,
         audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=dummy_notification_sound_manager,
-        )
+        notification_sound_manager=dummy_notification_sound_manager  # Pass the dummy notification sound manager
+    )
 
     # Start the wake word detection loop
     detector.run()
-
-if __name__ == '__main__':
-    example_usage()
