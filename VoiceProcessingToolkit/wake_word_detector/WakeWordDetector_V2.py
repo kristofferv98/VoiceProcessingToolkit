@@ -47,10 +47,33 @@ class WakeWordDetector:
     Main class for wake word detection.
 
     Attributes:
-        ...
+        continuous_run (bool): Indicates if the detector should run continuously.
+        access_key (str): The access key for the Porcupine wake word engine.
+        wake_word (str): The wake word that the detector should listen for.
+        sensitivity (float): The sensitivity of the wake word detection.
+        action_function (callable): The function to call when the wake word is detected.
+        audio_stream_manager (AudioStreamManager): Manages the audio stream.
+        notification_sound_manager (NotificationSoundManager): Plays a notification sound.
+        stop_event (threading.Event): Signals when to stop the detection loop.
+        porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
 
     Methods:
-        ...
+        __init__(self, access_key: str, wake_word: str, sensitivity: float,
+                 action_function: callable, audio_stream_manager: AudioStreamManager,
+                 notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None
+            Initializes the WakeWordDetector with the provided parameters.
+
+        initialize_porcupine(self) -> None
+            Initializes the Porcupine wake word engine.
+
+        voice_loop(self)
+            The main loop that listens for the wake word and triggers the action function.
+
+        run(self) -> None
+            Starts the wake word detection loop.
+
+        cleanup(self) -> None
+            Cleans up the resources used by the wake word detector.
     """
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
