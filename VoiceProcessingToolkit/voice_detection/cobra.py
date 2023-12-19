@@ -20,7 +20,13 @@ class CobraVAD:
     - Invoke a handler function when voice activity is detected.
     """
 
-    def __init__(self, vad_engine, audio_data_provider, voice_activity_handler):
+    def __init__(self, vad_engine: pvcobra.VoiceActivityDetector, audio_data_provider: AudioDataProvider, voice_activity_handler: Callable[[str], None]):
+        if not isinstance(vad_engine, pvcobra.VoiceActivityDetector):
+            raise TypeError("vad_engine must be an instance of pvcobra.VoiceActivityDetector")
+        if not isinstance(audio_data_provider, AudioDataProvider):
+            raise TypeError("audio_data_provider must be an instance of AudioDataProvider")
+        if not callable(voice_activity_handler):
+            raise TypeError("voice_activity_handler must be callable")
         """
         Initialize the Cobra VAD.
         Args:
@@ -115,22 +121,30 @@ class CobraVAD:
             logging.error("No file path specified for saving the WAV file.")
             return
 
-        try:
-            with wave.open(file_path, 'wb') as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(self.pyaudio_instance.get_sample_size(pyaudio.paInt16))
-                wf.setframerate(self.cobra_handle.sample_rate)
-                wf.writeframes(b''.join(frames))
-            logging.info(f"Saved recording to {file_path}")
-        except Exception as e:
-            logging.error(f"Failed to save recording to {file_path}: {e}")
+        if frames:
+            try:
+                with wave.open(file_path, 'wb') as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(self.pyaudio_instance.get_sample_size(pyaudio.paInt16))
+                    wf.setframerate(self.cobra_handle.sample_rate)
+                    wf.writeframes(b''.join(frames))
+                logging.info(f"Saved recording to {file_path}")
+            except Exception as e:
+                logging.error(f"Failed to save recording to {file_path}: {e}")
+        else:
+            logging.warning("No frames to save to WAV file.")
 
     def cleanup(self) -> None:
         """
         Clean up resources, ensuring all acquired resources are released.
         """
-        try:
-            self.audio_data_provider.cleanup()
-            self.vad_engine.delete()
-        except Exception as e:
-            logging.error(f"Error during cleanup: {e}")
+        if self.audio_data_provider:
+            try:
+                self.audio_data_provider.cleanup()
+            except Exception as e:
+                logging.error(f"Error during audio_data_provider cleanup: {e}")
+        if self.vad_engine:
+            try:
+                self.vad_engine.delete()
+            except Exception as e:
+                logging.error(f"Error during vad_engine cleanup: {e}")
