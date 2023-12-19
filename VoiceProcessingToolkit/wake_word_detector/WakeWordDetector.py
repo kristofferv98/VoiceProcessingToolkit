@@ -139,7 +139,7 @@ class WakeWordDetector:
         self.porcupine.delete()
 
 
-def example_usage():
+def example_usage(play_notification_sound=True):
     # Define a simple action function that prints a message
     def print_detected():
         print("The wake word was detected!")
@@ -161,14 +161,15 @@ def example_usage():
     # Create an instance of the dummy NotificationSoundManager
     dummy_notification_sound_manager = DummyNotificationSoundManager()
 
-    # Create an instance of WakeWordDetector with the dummy notification sound manager
+    # Create an instance of WakeWordDetector with the option to play or not play the notification sound
     detector = WakeWordDetector(
         access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
         wake_word='jarvis',
         sensitivity=0.5,
         action_function=print_detected,
         audio_stream_manager=audio_stream_manager,
-        notification_sound_manager=dummy_notification_sound_manager  # Pass the dummy notification sound manager
+        notification_sound_manager=dummy_notification_sound_manager,
+        play_notification_sound=play_notification_sound  # Control the playback of the notification sound
     )
 
     # Start the wake word detection loop
