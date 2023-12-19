@@ -59,9 +59,9 @@ class WakeWordDetector:
         run: Starts the wake word detection loop and returns the transcription result.
     """
 
-    def __init__(self, access_key: str = None, wake_word: str = "jarvis",
-                 sensitivity: float = 0.75, action_function: callable = None,
-                 notification_sound_path: str = None, continuous_run: bool = False) -> None:
+    def __init__(self, access_key: str, wake_word: str, sensitivity: float, action_function: callable,
+                 audio_stream_manager: AudioStreamManager, notification_sound_manager: NotificationSoundManager,
+                 continuous_run: bool = False) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
 
@@ -89,8 +89,7 @@ class WakeWordDetector:
         self.notification_sound_path = notification_sound_path or default_sound_path
         self.stop_event = threading.Event()  # Initialize the stop event
         self.initialize_porcupine()
-        self.initialize_audio_stream()
-        self.initialize_notification_sound()
+        # Removed the initialization of AudioStreamManager and NotificationSoundManager
 
     def initialize_porcupine(self) -> None:
         self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
@@ -98,26 +97,6 @@ class WakeWordDetector:
         logger.debug("Porcupine initialized with wake word '%s' and sensitivity %.2f", self.wake_word,
                      self.sensitivity)
 
-    def initialize_audio_stream(self) -> None:
-        if hasattr(self, 'audio_stream') and self.audio_stream:
-            self.audio_stream.close()
-        self.audio_stream_manager = AudioStreamManager(rate=self.porcupine.sample_rate,
-                                                       channels=1,
-                                                       format=pyaudio.paInt16,
-                                                       frames_per_buffer=self.porcupine.frame_length)
-        self.audio_stream = self.audio_stream_manager.get_stream()
-
-    def initialize_notification_sound(self) -> None:
-        with open(os.devnull, 'w') as f, contextlib.redirect_stdout(f):
-            pygame.mixer.init()
-        try:
-            self.notification_sound = pygame.mixer.Sound(self.notification_sound_path)
-            self.notification_sound.set_volume(0.3)
-            logging.debug("Notification sound initialized with volume 0.3")
-        except pygame.error as e:
-            logging.error("Failed to load notification sound: %s", e)
-            logging.debug("Notification sound path: %s", self.notification_sound_path)
-            raise
 
     def voice_loop(self) -> str:
         frame_count = 0
@@ -125,10 +104,10 @@ class WakeWordDetector:
 
         while not self.stop_event.is_set():
             try:
-                pcm = self.audio_stream.read(self.porcupine.frame_length, exception_on_overflow=False)
+                pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length, exception_on_overflow=False)
                 pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
                 if self.porcupine.process(pcm) >= 0:
-                    self.notification_sound.play()
+                    self.notification_sound_manager.play()
                     logging.info("Wake word detected")
 
                     # Determine the correct function to call
@@ -149,7 +128,7 @@ class WakeWordDetector:
 
 
     def cleanup(self) -> None:
-        self.audio_stream_manager.cleanup()
+        # The cleanup of the audio stream is now handled by the audio_stream_manager passed in
         self.porcupine.delete()
 
     def run(self) -> str:
