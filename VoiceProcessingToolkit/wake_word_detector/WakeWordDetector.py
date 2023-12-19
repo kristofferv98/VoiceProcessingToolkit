@@ -160,13 +160,15 @@ def example_usage():
     # Create an instance of AudioStreamManager
     audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
 
-    # Define a simple action function that prints a message
+from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
+
+    # Create an instance of ActionManager
+    action_manager = ActionManager()
+
+    # Use the decorator to register the action function
+    @register_action_decorator(action_manager)
     def action_with_notification():
         print("The wake word was detected!")
-
-    # Create an instance of ActionManager and register the action function
-    action_manager = ActionManager()
-    action_manager.register_action(action_with_notification)
 
     # Create an instance of WakeWordDetector with the ActionManager
     detector = WakeWordDetector(
