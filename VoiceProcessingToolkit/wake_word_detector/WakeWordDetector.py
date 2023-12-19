@@ -43,12 +43,12 @@ import time
 import pvporcupine
 import pyaudio
 
-logger = logging.getLogger(__name__)
-
 from AudioStreamManager import AudioStreamManager
 from NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
 from ActionManager import ActionManager
+
+logger = logging.getLogger(__name__)
 
 
 class WakeWordDetector:
@@ -153,15 +153,14 @@ class WakeWordDetector:
 
 
 def example_usage():
-
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
     channels = 1  # Number of audio channels
-    format = pyaudio.paInt16  # Audio format
+    audio_format = pyaudio.paInt16  # Audio format
     frames_per_buffer = 512  # Number of frames per buffer
 
     # Create an instance of AudioStreamManager
-    audio_stream_manager = AudioStreamManager(rate, channels, format, frames_per_buffer)
+    audio_stream_manager = AudioStreamManager(rate, channels, audio_format, frames_per_buffer)
 
     # Create an instance of ActionManager
     action_manager = ActionManager()
@@ -171,15 +170,14 @@ def example_usage():
         logger.info("Sync function is running...")
         time.sleep(4.5)
         logger.info("Action function completed!")
-    # Define a simple action function that prints a message
 
+    # Define a simple action function that prints a message
 
     @register_action_decorator(action_manager)
     async def async_action_1():
         logger.info("Async function is running...")
         await asyncio.sleep(1)  # Simulate an async wait
         logger.info("Async function completed!")
-
 
     # Create an instance of WakeWordDetector with the ActionManager
     detector = WakeWordDetector(
@@ -193,4 +191,3 @@ def example_usage():
 
     # Start the wake word detection loop
     detector.run()
-
