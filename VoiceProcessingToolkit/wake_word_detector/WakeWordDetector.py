@@ -49,34 +49,35 @@ from ActionManager import ActionManager
 
 class WakeWordDetector:
     """
-    Main class for wake word detection.
+    Detects a specified wake word using the Porcupine engine and executes registered actions upon detection.
 
     Attributes:
         access_key (str): The access key for the Porcupine wake word engine.
         wake_word (str): The wake word that the detector should listen for.
-        sensitivity (float): The sensitivity of the wake word detection.
-        action_manager (ActionManager): Manages the actions to execute when the wake word is detected.
-        audio_stream_manager (AudioStreamManager): Manages the audio stream.
-        stop_event (threading.Event): Signals when to stop the detection loop.
+        sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
+        audio_stream_manager (AudioStreamManager): Manages the audio stream from the microphone.
+        action_manager (ActionManager): Manages the actions to be executed when the wake word is detected.
+        play_notification_sound (bool): Indicates whether to play a notification sound upon detection.
+        stop_event (threading.Event): An event to signal the detection loop to stop.
         porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
 
     Methods:
         __init__(self, access_key: str, wake_word: str, sensitivity: float,
-                 action_function: callable, audio_stream_manager: AudioStreamManager,
-                 notification_sound_manager: NotificationSoundManager, continuous_run: bool = False) -> None
+                 audio_stream_manager: AudioStreamManager, action_manager: ActionManager,
+                 play_notification_sound: bool = True) -> None
             Initializes the WakeWordDetector with the provided parameters.
 
         initialize_porcupine(self) -> None
-            Initializes the Porcupine wake word engine.
+            Initializes the Porcupine wake word engine with the specified wake word and sensitivity.
 
         voice_loop(self)
-            The main loop that listens for the wake word and triggers the action function.
+            The main loop that listens for the wake word and triggers the registered actions.
 
         run(self) -> None
-            Starts the wake word detection loop.
+            Starts the wake word detection loop in a separate thread.
 
         cleanup(self) -> None
-            Cleans up the resources used by the wake word detector.
+            Cleans up the resources used by the wake word detector, including the audio stream and Porcupine instance.
     """
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
