@@ -15,7 +15,7 @@ class VoiceActivityDetector:
     def run(self):
         while True:
             frame = self.audio_data_provider.get_audio_frame()
-            print("This is each frame")
+            # print("This is each frame")  # Debug statement commented out
             if frame is None:
                 continue
 
