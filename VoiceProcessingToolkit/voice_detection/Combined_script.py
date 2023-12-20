@@ -100,6 +100,8 @@ class AudioRecorder:
 
 # Example usage
 audio_data_provider = AudioDataProvider()
+FRAME_LENGTH = 1024  # This value should be the expected frame length for CobraVAD
+SAMPLE_RATE = 16000  # This value should be the sample rate in Hz for audio data
 cobra_vad = CobraVAD(access_key="YOUR_ACCESS_KEY", frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
 audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
 
