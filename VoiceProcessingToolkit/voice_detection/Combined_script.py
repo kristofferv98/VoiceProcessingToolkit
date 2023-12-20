@@ -41,8 +41,9 @@ class CobraVAD:
         if len(pcm) != self.frame_length:
             raise ValueError("Invalid frame length. Expected %d but received %d" % (self.frame_length, len(pcm)))
 
+        pcm_array = (c_short * len(pcm))(*pcm)
         result = c_float()
-        status = self.cobra_handle.process_func(self.cobra_handle._handle, (c_short * len(pcm))(*pcm), byref(result))
+        status = self.cobra_handle.process_func(self.cobra_handle._handle, pcm_array, byref(result))
         if status is not self.cobra_handle.PicovoiceStatuses.SUCCESS:
             raise self.cobra_handle._PICOVOICE_STATUS_TO_EXCEPTION[status](
                 message='Processing failed',
