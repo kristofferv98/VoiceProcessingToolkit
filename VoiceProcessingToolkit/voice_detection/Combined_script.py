@@ -34,7 +34,12 @@ class AudioDataProvider:
 # Cobra VAD Class
 class CobraVAD:
     def __init__(self, access_key, frame_length, sample_rate):
-        self.cobra_handle = pvcobra.create(access_key=access_key)
+        self.cobra_handle = None
+        try:
+            self.cobra_handle = pvcobra.create(access_key=access_key)
+        except pvcobra.CobraError as e:
+            print(f"Failed to initialize CobraVAD: {e}")
+            raise
         self.frame_length = frame_length
         self.sample_rate = sample_rate
 
@@ -53,7 +58,7 @@ class CobraVAD:
         return result.value
 
     def __del__(self):
-        if self.cobra_handle is not None:
+        if hasattr(self, 'cobra_handle') and self.cobra_handle is not None:
             self.cobra_handle.delete()
 
 # Audio Recorder Class
@@ -102,7 +107,9 @@ class AudioRecorder:
 audio_data_provider = AudioDataProvider()
 FRAME_LENGTH = 1024  # This value should be the expected frame length for CobraVAD
 SAMPLE_RATE = 16000  # This value should be the sample rate in Hz for audio data
-cobra_vad = CobraVAD(access_key="YOUR_ACCESS_KEY", frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
+# Example usage
+audio_data_provider = AudioDataProvider()
+cobra_vad = CobraVAD(access_key="ACTUAL_ACCESS_KEY", frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
 audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
 
 # Start recording process
