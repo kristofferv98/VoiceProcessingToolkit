@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import pyaudio
 import numpy as np
 import threading
