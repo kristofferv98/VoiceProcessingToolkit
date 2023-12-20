@@ -15,25 +15,37 @@ class AudioDataProvider:
         self.rate = rate
         self.frames_per_buffer = frames_per_buffer
         self.stream = None
+        self.py_audio = None
+        self.is_recording = False
+        self.frames = []
+        self.lock = threading.Lock()
+        self.recording_thread = None
+        self.vad_engine = None
+        self.output_directory = None
+        self.min_recording_length = None
+        self.voice_activity_threshold = 0.5
+        self.recording_timeout = 5
 
     def start_stream(self):
-        self.stream = pyaudio.PyAudio().open(
+        self.py_audio = pyaudio.PyAudio()
+        self.stream = self.py_audio.open(
             format=self.format,
             channels=self.channels,
             rate=self.rate,
             input=True,
             frames_per_buffer=self.frames_per_buffer
         )
+        self.is_recording = True
 
-    def get_next_audio_frame(self, audio_data_provider):
-        return audio_data_provider.get_next_frame()
+    def get_next_audio_frame(self):
+        return self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
 
-    def record_loop(self, audio_data_provider):
+    def record_loop(self):
         while self.is_recording:
-            frame = self.get_next_audio_frame(audio_data_provider)
+            frame = self.get_next_audio_frame()
             if frame is not None:
                 voice_prob = self.vad_engine.process(np.frombuffer(frame, dtype=np.int16))
-                if voice_prob > 0.5:  # Assuming 0.5 as the threshold for voice activity
+                if voice_prob > self.voice_activity_threshold:
                     with self.lock:
                         self.frames.append(frame)
                 else:
@@ -61,22 +73,6 @@ class CobraVAD:
         self.frame_length = frame_length
         self.sample_rate = sample_rate
 
-    def process(self, pcm):
-        if len(pcm) != self.frame_length:
-            raise ValueError("Invalid frame length. Expected %d but received %d" % (self.frame_length, len(pcm)))
-
-        result = c_float()
-        status = self.cobra_handle.process_func(self.cobra_handle._handle, (c_short * len(pcm))(*pcm), byref(result))
-        if status is not self.cobra_handle.PicovoiceStatuses.SUCCESS:
-            raise self.cobra_handle._PICOVOICE_STATUS_TO_EXCEPTION[status](
-                message='Processing failed',
-                message_stack=self.cobra_handle._get_error_stack())
-
-        return result.value
-
-    def __del__(self):
-        if self.cobra_handle is not None:
-            self.cobra_handle.delete()
 
             raise ValueError("Invalid frame length. Expected %d but received %d" % (self.frame_length, len(pcm)))
 
@@ -93,14 +89,7 @@ class CobraVAD:
 
 
 class AudioRecorder:
-    def __init__(self, vad_engine, output_directory, min_recording_length=3):
-        self.vad_engine = vad_engine
-        self.output_directory = output_directory
-        self.min_recording_length = min_recording_length
-        self.is_recording = False
-        self.frames = []
-        self.lock = threading.Lock()
-        self.recording_thread = None
+    # Removed entire AudioRecorder class as its functionality is merged into AudioDataProvider
 
     def start_recording(self):
         self.is_recording = True
@@ -141,7 +130,23 @@ class AudioRecorder:
 audio_data_provider = AudioDataProvider()
 cobra_vad = CobraVAD(access_key="YOUR_ACCESS_KEY", frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
 audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
+audio_data_provider = AudioDataProvider()
+cobra_vad = CobraVAD(access_key="YOUR_ACCESS_KEY", frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
+audio_data_provider.vad_engine = cobra_vad
+audio_data_provider.output_directory = "output_directory_path"
+audio_data_provider.min_recording_length = 3
+audio_data_provider.voice_activity_threshold = 0.5
+audio_data_provider.recording_timeout = 5
 
 # Start recording process
 audio_data_provider.start_stream()
-audio_recorder.start_recording(audio_data_provider)
+audio_data_provider.start_recording()
+    def cleanup(self):
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+        if self.py_audio:
+            self.py_audio.terminate()
+        if self.vad_engine:
+            self.vad_engine.__del__()
+
