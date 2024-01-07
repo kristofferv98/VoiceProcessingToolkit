@@ -4,7 +4,6 @@ import logging
 import os
 import tempfile
 
-import pygame
 import requests
 
 
@@ -103,13 +102,6 @@ class ElevenLabsTextToSpeech:
 
                 # Initialize pygame mixer and play audio file if playback is enabled
                 if config.playback_enabled:
-                    # Initialize pygame mixer and suppress the default stdout message
-                    with contextlib.redirect_stdout(None):
-                        pygame.mixer.init()
-                    pygame.mixer.music.load(output_file)
-                    pygame.mixer.music.play()
-                    while pygame.mixer.music.get_busy():
-                        pygame.time.Clock().tick(10)
 
                 return output_file
             else:
