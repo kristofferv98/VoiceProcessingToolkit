@@ -90,11 +90,11 @@ class WakeWordDetector:
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
                  play_notification_sound: bool = True) -> None:
-        self.notification_sound_manager = self.notification_sound_manager = NotificationSoundManager(
+        self._notification_sound_manager = NotificationSoundManager(
             '/Users/kristoffervatnehol/PycharmProjects/VoiceProcessingToolkit/VoiceProcessingToolkit'
             '/wake_word_detector/Wav_MP3/notification.wav')
-        self.action_manager = action_manager
-        self.play_notification_sound = play_notification_sound
+        self._action_manager = action_manager
+        self._play_notification_sound = play_notification_sound
         """
         Initializes the WakeWordDetector with the provided parameters.
         
@@ -105,12 +105,12 @@ class WakeWordDetector:
             action_manager (ActionManager): Manages the actions to execute when the wake word is detected.
             audio_stream_manager (AudioStreamManager): Manages the audio stream.
         """
-        self.access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
-        self.wake_word = wake_word
-        self.sensitivity = sensitivity
-        self.audio_stream_manager = audio_stream_manager
-        self.stop_event = threading.Event()
-        self.porcupine = None
+        self._access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
+        self._wake_word = wake_word
+        self._sensitivity = sensitivity
+        self._audio_stream_manager = audio_stream_manager
+        self._stop_event = threading.Event()
+        self._porcupine = None
         self.initialize_porcupine()
 
     def initialize_porcupine(self) -> None:
@@ -118,9 +118,9 @@ class WakeWordDetector:
         Initializes the Porcupine wake word engine.
         """
         try:
-            if self.porcupine is None:
-                self.porcupine = pvporcupine.create(access_key=self.access_key, keywords=[self.wake_word],
-                                                    sensitivities=[self.sensitivity])
+            if self._porcupine is None:
+                self._porcupine = pvporcupine.create(access_key=self._access_key, keywords=[self._wake_word],
+                                                     sensitivities=[self._sensitivity])
         except pvporcupine.PorcupineError as e:
             logger.exception("Failed to initialize Porcupine with the given parameters.", exc_info=e)
             raise
@@ -129,16 +129,16 @@ class WakeWordDetector:
         """
         The main loop that listens for the wake word and triggers the action function.
         """
-        while not self.stop_event.is_set():
-            pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length)
-            pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
-            if self.porcupine.process(pcm) >= 0:
+        while not self._stop_event.is_set():
+            pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+            pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
+            if self._porcupine.process(pcm) >= 0:
                 self.handle_wake_word_detection()
 
     def handle_wake_word_detection(self):
-        if self.play_notification_sound:
-            self.notification_sound_manager.play()
-        action_thread = threading.Thread(target=lambda: asyncio.run(self.action_manager.execute_actions()))
+        if self._play_notification_sound:
+            self._notification_sound_manager.play()
+        action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
         # Removed the stop event set to allow continuous wake word detection
 
@@ -155,8 +155,8 @@ class WakeWordDetector:
         """
         Cleans up the resources used by the wake word detector.
         """
-        self.audio_stream_manager.cleanup()
-        self.porcupine.delete()
+        self._audio_stream_manager.cleanup()
+        self._porcupine.delete()
 
 
 def example_usage():
