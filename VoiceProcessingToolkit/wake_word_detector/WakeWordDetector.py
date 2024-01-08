@@ -134,8 +134,8 @@ class WakeWordDetector:
                 self.handle_wake_word_detection()
 
     def handle_wake_word_detection(self):
-        if self.play_notification_sound and self.notification_sound_manager.sound_data:
-            self.notification_sound_manager.play(preloaded_sound=self.notification_sound_manager.sound_data)
+        if self.play_notification_sound:
+            self.notification_sound_manager.play()
         action_thread = threading.Thread(target=lambda: asyncio.run(self.action_manager.execute_actions()))
         action_thread.start()
         # Removed the stop event set to allow continuous wake word detection
