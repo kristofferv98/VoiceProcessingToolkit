@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 # Audio Data Provider Class
 class AudioDataProvider:
-    def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024):
+    def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
         self.audio_format = audio_format
         self.channels = channels
         self.rate = rate
@@ -180,11 +180,11 @@ class AudioRecorder:
 
 if __name__ == '__main__':
     # dotenv from load_dotenv
+    logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
     audio_data_provider = AudioDataProvider()
     audio_data_provider.start_stream()
     audio_recorder = AudioRecorder(output_directory=os.path.join(os.path.dirname(__file__), 'Wav_MP3'))
     audio_recorder.start_recording(audio_data_provider)
-    input("Press ENTER to stop recording.")
     audio_recorder.stop_recording()
     audio_recorder.cleanup()
