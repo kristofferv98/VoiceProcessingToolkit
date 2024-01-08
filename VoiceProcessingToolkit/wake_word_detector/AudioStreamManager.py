@@ -4,7 +4,7 @@ import pyaudio
 logger = logging.getLogger(__name__)
 
 
-class AudioStreamManager:
+class AudioStream:
     def __init__(self, rate: int, channels: int, audio_format: int, frames_per_buffer: int):
         self.py_audio = pyaudio.PyAudio()
         self.stream = self._initialize_stream(rate, channels, audio_format, frames_per_buffer)
