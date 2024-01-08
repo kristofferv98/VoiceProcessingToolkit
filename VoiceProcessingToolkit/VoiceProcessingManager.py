@@ -10,6 +10,7 @@ from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 
+from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 logger = logging.getLogger(__name__)
 
 
@@ -18,6 +19,10 @@ class VoiceProcessingManager:
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
+        self.voice_threshold = voice_threshold
+        self.silence_limit = silence_limit
+        self.inactivity_limit = inactivity_limit
+        self.min_recording_length = min_recording_length
         self.audio_stream_manager = None
         self.wake_word_detector = None
         self.voice_recorder = None
@@ -41,7 +46,8 @@ class VoiceProcessingManager:
             play_notification_sound=True
         )
         # Initialize VoiceRecorder
-        self.voice_recorder = AudioRecorder(output_directory=self.output_directory)
+        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
+                                            voice_threshold=self.voice_threshold, silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit, min_recording_length=self.min_recording_length)
         # Register the voice recording action
         self.register_voice_recording_action()
 
