@@ -17,29 +17,29 @@ load_dotenv()
 # Audio Data Provider Class
 class AudioDataProvider:
     def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
-        self.audio_format = audio_format
-        self.channels = channels
-        self.rate = rate
-        self.frames_per_buffer = frames_per_buffer
-        self.stream = None
-        self._py_audio = pyaudio.PyAudio()  # PyAudio instance is now private
+        self._audio_format = audio_format
+        self._channels = channels
+        self._rate = rate
+        self._frames_per_buffer = frames_per_buffer
+        self._stream = None
+        self._py_audio = pyaudio.PyAudio()
 
     def start_stream(self):
-        self.stream = self._py_audio.open(
-            format=self.audio_format,
-            channels=self.channels,
-            rate=self.rate,
+        self._stream = self._py_audio.open(
+            format=self._audio_format,
+            channels=self._channels,
+            rate=self._rate,
             input=True,
-            frames_per_buffer=self.frames_per_buffer
+            frames_per_buffer=self._frames_per_buffer
         )
 
     def get_next_frame(self):
-        return self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
+        return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
 
     def stop_stream(self):
-        if self.stream:
-            self.stream.stop_stream()
-            self.stream.close()
+        if self._stream:
+            self._stream.stop_stream()
+            self._stream.close()
             self._py_audio.terminate()
 
 
