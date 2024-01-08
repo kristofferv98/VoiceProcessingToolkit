@@ -107,45 +107,69 @@ class AudioRecorder:
         self.recording_thread.start()
         self.logger.info("Recording started.")
 
+class AudioRecorder:
+    ...
     def record_loop(self, audio_data_provider):
-        recording = False
-        frames_to_save = []
-        inactivity_frames = 0
-        silent_frames = 0
+        self.recording = False
+        self.frames_to_save = []
+        self.silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
-            if frame is not None:
-                audio_frame = np.frombuffer(frame, dtype=np.int16)
-                voice_probability = self.vad_engine.process(audio_frame)
+            self.process_frame(frame)
+            if self.should_stop_recording():
+                self.finalize_recording()
+                break
 
-                if voice_probability > self.VOICE_THRESHOLD:
-                    inactivity_frames = 0
-                    silent_frames = 0
-                    if not recording:
-                        recording = True
-                        frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
-                        self.logger.info("Voice Detected - Starting Recording")
-                    frames_to_save.append(frame)
-                else:
-                    if len(self.audio_buffer) == self.audio_buffer.maxlen:
-                        self.audio_buffer.popleft()
-                    self.audio_buffer.append(frame)
-                    inactivity_frames += 1
-                    if recording:
-                        silent_frames += 1
-                        frames_to_save.append(frame)
-                        if (silent_frames * self.vad_engine.frame_length / self.vad_engine.sample_rate > self.SILENCE_LIMIT):
-                            recording_length = len(frames_to_save) * self.vad_engine.frame_length / self.vad_engine.sample_rate
-                            if recording_length >= self.MIN_RECORDING_LENGTH:
-                                self.save_to_wav_file(frames_to_save)
-                                self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
-                                return "SAVE"
-                            else:
-                                frames_to_save = []
-                                recording = False
-                                self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
-        if self.frames:
-            self.save_to_wav_file(self.frames)
+    def process_frame(self, frame):
+        if frame is not None:
+            voice_activity_detected = self.detect_voice_activity(frame)
+            self.manage_recording_state(frame, voice_activity_detected)
+
+    def detect_voice_activity(self, frame):
+        audio_frame = np.frombuffer(frame, dtype=np.int16)
+        voice_probability = self.vad_engine.process(audio_frame)
+        return voice_probability > self.VOICE_THRESHOLD
+
+    def manage_recording_state(self, frame, voice_activity_detected):
+        if voice_activity_detected:
+            self.silent_frames = 0
+            if not self.recording:
+                self.start_new_recording(frame)
+            self.frames_to_save.append(frame)
+        else:
+            self.buffer_audio_frame(frame)
+            self.silent_frames += 1
+            if self.recording:
+                self.frames_to_save.append(frame)
+                self.check_silence_duration()
+
+    def start_new_recording(self, frame):
+        self.recording = True
+        self.frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
+        self.logger.info("Voice Detected - Starting Recording")
+
+    def buffer_audio_frame(self, frame):
+        if len(self.audio_buffer) == self.audio_buffer.maxlen:
+            self.audio_buffer.popleft()
+        self.audio_buffer.append(frame)
+
+    def check_silence_duration(self):
+        if (self.silent_frames * self.vad_engine.frame_length / self.vad_engine.sample_rate > self.SILENCE_LIMIT):
+            self.finalize_recording()
+
+    def finalize_recording(self):
+        recording_length = len(self.frames_to_save) * self.vad_engine.frame_length / self.vad_engine.sample_rate
+        if recording_length >= self.MIN_RECORDING_LENGTH:
+            self.save_to_wav_file(self.frames_to_save)
+            self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
+        else:
+            self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
+        self.recording = False
+        self.frames_to_save = []
+
+    def should_stop_recording(self):
+        # Logic to determine if recording should stop
+        return not self.is_recording
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
