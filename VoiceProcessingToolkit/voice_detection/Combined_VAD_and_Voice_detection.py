@@ -17,17 +17,22 @@ class AudioDataProvider:
     def __init__(self, format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024):
         self.format = format
         self.channels = channels
-        self.rate = rate
-        self.frames_per_buffer = frames_per_buffer
+class AudioDataProvider:
+    def __init__(self, format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024):
+        self.rate = None
+        self.frames_per_buffer = None
         self.stream = None
 
+    def start_stream(self, rate, frames_per_buffer):
+        self.rate = rate
+        self.frames_per_buffer = frames_per_buffer
     def start_stream(self):
         self.stream = pyaudio.PyAudio().open(
             format=self.format,
             channels=self.channels,
-            rate=self.rate,
+            rate=rate,
             input=True,
-            frames_per_buffer=self.frames_per_buffer
+            frames_per_buffer=frames_per_buffer
         )
 
     def get_next_frame(self):
@@ -178,12 +183,10 @@ api_key = os.getenv("PICOVOICE_APIKEY")
 
 # Example usage
 audio_data_provider = AudioDataProvider()
-FRAME_LENGTH = 1024
-SAMPLE_RATE = 16000
 # Example usage
 cobra_vad = CobraVAD(access_key=api_key, frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
 audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
 
 # Start recording process
-audio_data_provider.start_stream()
+audio_data_provider.start_stream(cobra_vad.sample_rate, cobra_vad.frame_length)
 audio_recorder.start_recording(audio_data_provider)
