@@ -73,7 +73,7 @@ class AudioRecorder:
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
-            if self.should_stop_recording():
+            if self.should_stop_recording() or (self.inactivity_frames * self.vad_engine.frame_length / self.vad_engine.sample_rate > self.INACTIVITY_LIMIT):
                 self.finalize_recording()
                 break
             self.check_inactivity_duration()
