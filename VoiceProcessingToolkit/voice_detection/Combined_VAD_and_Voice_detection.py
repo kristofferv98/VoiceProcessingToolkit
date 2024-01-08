@@ -64,6 +64,21 @@ class AudioRecorder:
         self.audio_data_provider = None
 
 
+    def perform_recording(self):
+        """
+        Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
+        """
+        self.audio_data_provider = AudioDataProvider()
+        self.start_recording(self.audio_data_provider)
+        try:
+            while self.is_recording:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            self.logger.info("Recording interrupted by user.")
+        finally:
+            self.stop_recording()
+            self.cleanup()
+
     def start_recording(self, audio_data_provider):
         self.audio_data_provider = audio_data_provider
         self.audio_data_provider.start_stream()
@@ -205,14 +220,5 @@ class AudioRecorder:
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
-    audio_data_provider = AudioDataProvider()
     audio_recorder = AudioRecorder(output_directory='Wav_MP3')
-    audio_recorder.start_recording(audio_data_provider)
-    try:
-        while audio_recorder.is_recording:
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        audio_recorder.stop_recording()
-        audio_recorder.cleanup()
+    audio_recorder.perform_recording()
