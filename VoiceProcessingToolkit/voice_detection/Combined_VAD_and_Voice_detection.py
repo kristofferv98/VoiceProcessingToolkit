@@ -43,7 +43,7 @@ class AudioRecorder:
     def __init__(self, vad_engine, output_directory, min_recording_length=3):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
-        self.MIN_RECORDING_LENGTH = 3
+        self.MIN_RECORDING_LENGTH = min_recording_length
         self.cobra_handle = None
         self.cobra_handle = vad_engine
         self.vad_engine = vad_engine
@@ -58,11 +58,12 @@ class AudioRecorder:
         self.frames = []
         self.lock = threading.Lock()
         self.recording_thread = None
-        self.BUFFER_LENGTH = 3  # Length of the buffer in seconds
+        self.BUFFER_LENGTH = 2  # The size of the internal circular buffer in seconds.
         self.audio_buffer = collections.deque(
-            maxlen=self.BUFFER_LENGTH * self.vad_engine.sample_rate // self.vad_engine.frame_length)
-        self.VOICE_THRESHOLD = 0.5  # Threshold for voice activity detection
-        self.INACTIVITY_LIMIT = 3  # Duration of inactivity in seconds to stop recording
+            maxlen=self.BUFFER_LENGTH * self.cobra_handle.sample_rate // self.cobra_handle.frame_length)
+        self.VOICE_THRESHOLD = 0.8  # Threshold for voice activity detection
+        self.SILENCE_LIMIT = 2  # Silence limit in seconds.
+        self.INACTIVITY_LIMIT = 2  # Inactivity limit in seconds.
 
     def start_recording(self, audio_data_provider):
         self.is_recording = True
@@ -74,14 +75,17 @@ class AudioRecorder:
     def record_loop(self, audio_data_provider):
         self.recording = False
         self.frames_to_save = []
-        self.silent_frames = 0
+        silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
-            if self.should_stop_recording() or (self.inactivity_frames * self.vad_engine.frame_length / self.vad_engine.sample_rate > self.INACTIVITY_LIMIT):
+            if self.should_stop_recording() or (self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT):
                 self.finalize_recording()
                 break
-            self.check_inactivity_duration()
+            if self.recording:
+                silent_frames += 1
+                if (silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.SILENCE_LIMIT):
+                    self.finalize_recording()
 
     def process_frame(self, frame):
         if frame is not None:
