@@ -82,6 +82,7 @@ class AudioRecorder:
         frames_to_save = []
         inactivity_frames = 0
         silent_frames = 0
+        self.logger.debug("Entering record loop.")
         try:
             while self.is_recording:
                 audio_frame = audio_data_provider.get_next_frame()
@@ -118,7 +119,10 @@ class AudioRecorder:
 
                 if inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
                     self.logger.info("No voice detected for a while. Exiting...")
+                    if recording:
+                        self.finalize_recording()
                     return 'NO_VOICE_EXIT'
+            self.logger.debug("Exiting record loop normally.")
         except KeyboardInterrupt:
             if frames_to_save:
                 recording_length = self.calculate_recording_length(frames_to_save)
@@ -133,6 +137,7 @@ class AudioRecorder:
         finally:
             if self.is_recording:
                 self.stop_recording()
+        self.logger.debug("Record loop has ended.")
 
     def process_frame(self, frame):
         if frame is not None:
@@ -212,6 +217,7 @@ class AudioRecorder:
 
     def stop_recording(self):
         self.is_recording = False
+        self.logger.debug("Stopping recording...")
         if self.recording_thread:
             self.recording_thread.join()
             self.py_audio.terminate()
