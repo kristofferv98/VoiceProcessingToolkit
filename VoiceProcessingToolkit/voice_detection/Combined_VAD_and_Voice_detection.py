@@ -120,7 +120,6 @@ class AudioRecorder:
     def save_to_wav_file(self, frames):
         recording_length = len(frames) * self.frame_length / self.sample_rate
         if recording_length < self.MIN_RECORDING_LENGTH:
-        if duration < self.MIN_RECORDING_LENGTH:
             return 'UNDER_MIN_LENGTH'
 
         recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
