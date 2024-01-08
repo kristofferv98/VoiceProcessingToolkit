@@ -51,9 +51,20 @@ class VoiceProcessingManager:
             if self.recording_thread is None or not self.recording_thread.is_alive():
                 self.recording_thread = threading.Thread(target=self.voice_recorder.perform_recording)
                 self.recording_thread.start()
+                self.recording_thread.join()  # Wait for the recording to finish
+                recorded_file = self.voice_recorder.get_last_saved_file()  # Retrieve the path of the last saved file
+                if recorded_file:
+                    logger.info(f"Voice recording saved to {recorded_file}")
             else:
                 logger.warning("A recording is already in progress.")
-            logger.info(f"Voice recording saved to {recorded_file}")
+
+    def get_last_saved_file(self):
+        """
+        Retrieves the path of the last saved audio file from the voice recorder.
+        Returns:
+            str: The path to the last saved audio file.
+        """
+        return self.voice_recorder.get_last_saved_file()
 
     def run(self):
         try:
