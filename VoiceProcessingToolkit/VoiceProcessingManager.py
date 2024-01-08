@@ -60,6 +60,25 @@ class VoiceProcessingManager:
         self.setup()
         self.recording_thread = None
 
+    def start_and_transcribe(self):
+        """
+        Starts the wake word detection, records upon detection, and returns the transcription.
+
+        Returns:
+            str: The transcription of the recorded audio.
+        """
+        transcription = None
+        try:
+            self.wake_word_detector.run()
+            recorded_file = self.voice_recorder.last_saved_file
+            if recorded_file:
+                transcription = self.transcriber.transcribe_audio(recorded_file)
+        except Exception as e:
+            logger.exception("An error occurred during voice processing.", exc_info=e)
+        finally:
+            self.cleanup()
+        return transcription
+
     def setup(self):
         # Initialize AudioStream
         self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
@@ -111,14 +130,8 @@ class VoiceProcessingManager:
         """
         Starts the wake word detection and handles the voice processing workflow.
         """
-        try:
-            self.wake_word_detector.run()
-        except KeyboardInterrupt:
-            logger.info("Voice processing stopped by user.")
-        except Exception as e:
-            logger.exception("An error occurred during voice processing.", exc_info=e)
-        finally:
-            self.cleanup()
+        transcription = self.start_and_transcribe()
+        return transcription
 
     def cleanup(self):
         """
@@ -134,16 +147,9 @@ if __name__ == '__main__':
     load_dotenv()
     # set the
     logging.basicConfig(level=logging.INFO)
-    def start_voice_processing():
-        manager = VoiceProcessingManager()
-        try:
-            manager.run()
-        except Exception as e:
-            logger.exception("An error occurred during voice processing.", exc_info=e)
-        finally:
-            manager.cleanup()
-            logger.info("Voice processing has been stopped.")
-
-    start_voice_processing()
+    manager = VoiceProcessingManager()
+    transcription = manager.start_and_transcribe()
+    if transcription:
+        logger.info(f"Transcription: {transcription}")
 
 
