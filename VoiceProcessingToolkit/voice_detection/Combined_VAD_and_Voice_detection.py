@@ -184,9 +184,10 @@ api_key = os.getenv("PICOVOICE_APIKEY")
 # Example usage
 audio_data_provider = AudioDataProvider()
 # Example usage
-cobra_vad = CobraVAD(access_key=api_key, frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
+cobra_vad = CobraVAD(access_key=api_key, frame_length=audio_data_provider.frames_per_buffer, sample_rate=audio_data_provider.rate)
 audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
 
 # Start recording process
+audio_data_provider.start_stream(cobra_vad.sample_rate, cobra_vad.frame_length)
 audio_data_provider.start_stream(cobra_vad.sample_rate, cobra_vad.frame_length)
 audio_recorder.start_recording(audio_data_provider)
