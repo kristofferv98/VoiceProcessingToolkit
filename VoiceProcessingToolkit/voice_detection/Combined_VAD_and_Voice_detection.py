@@ -91,7 +91,9 @@ class AudioRecorder:
         self.frames = []
         self.lock = threading.Lock()
         self.recording_thread = None
-        self.audio_buffer = collections.deque(maxlen=10)  # Buffer to store frames before voice is detected
+        self.BUFFER_LENGTH = 3  # Length of the buffer in seconds
+        self.audio_buffer = collections.deque(
+            maxlen=self.BUFFER_LENGTH * self.vad_engine.sample_rate // self.vad_engine.frame_length)
         self.VOICE_THRESHOLD = 0.5  # Threshold for voice activity
         self.SILENCE_LIMIT = 3  # Duration of silence in seconds to stop recording
 
