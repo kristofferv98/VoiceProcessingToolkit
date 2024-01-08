@@ -87,6 +87,7 @@ class WakeWordDetector:
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
                  play_notification_sound: bool = True) -> None:
+        self.notification_sound_manager = notification_sound_manager
         self.action_manager = action_manager
         self.play_notification_sound = play_notification_sound
         """
@@ -127,12 +128,13 @@ class WakeWordDetector:
             pcm = self.audio_stream_manager.get_stream().read(self.porcupine.frame_length)
             pcm = struct.unpack_from("h" * self.porcupine.frame_length, pcm)
             if self.porcupine.process(pcm) >= 0:
-                if self.play_notification_sound:
-                    # Create an instance of NotificationSoundManager with the path to the notification sound
-                    notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
-                    notification_sound_manager = NotificationSoundManager(notification_path)
-                    notification_sound_manager.play()
-                asyncio.run(self.action_manager.execute_actions())
+                self.handle_wake_word_detection()
+
+    def handle_wake_word_detection(self):
+        if self.play_notification_sound and self.notification_sound_manager.sound_data:
+            self.notification_sound_manager.play(preloaded_sound=self.notification_sound_manager.sound_data)
+        action_thread = threading.Thread(target=lambda: asyncio.run(self.action_manager.execute_actions()))
+        action_thread.start()
                 # Removed the stop event set to allow continuous wake word detection
 
     def run(self) -> None:
@@ -190,4 +192,3 @@ def example_usage():
 
     # Start the wake word detection loop
     detector.run()
-

@@ -11,6 +11,16 @@ class NotificationSoundManager:
 
     def __init__(self, sound_file_path: str):
         self.sound_file_path = sound_file_path
+        self.sound_data = None
+        self._initialize_mixer()
+        self._load_sound()
+
+    def _load_sound(self):
+        with wave.open(self.sound_file_path, 'rb') as wave_file:
+            self.sound_data = wave_file.readframes(wave_file.getnframes())
+
+    def __init__(self, sound_file_path: str):
+        self.sound_file_path = sound_file_path
         self.notification_sound = None
         if not NotificationSoundManager._mixer_initialized:
             with open(os.devnull, 'w') as f, contextlib.redirect_stdout(f):
@@ -30,6 +40,11 @@ class NotificationSoundManager:
             logger.exception("An unexpected error occurred while initializing the notification sound.", exc_info=e)
             raise
 
-    def play(self):
+    def play(self, preloaded_sound=None):
+        if preloaded_sound is not None:
+            sound = pygame.mixer.Sound(buffer=preloaded_sound)
+        else:
+            sound = pygame.mixer.Sound(self.sound_file_path)
+        sound.play()
         if self.notification_sound:
             self.notification_sound.play()
