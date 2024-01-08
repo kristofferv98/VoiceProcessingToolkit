@@ -49,6 +49,11 @@ class AudioRecorder:
         self.vad_engine = vad_engine
         self.output_directory = output_directory
         self.min_recording_length = min_recording_length
+        self.MIN_RECORDING_LENGTH = min_recording_length
+        self.cobra_handle = vad_engine
+        self.vad_engine = vad_engine
+        self.output_directory = output_directory
+        self.inactivity_frames = 0
         self.is_recording = False
         self.frames = []
         self.lock = threading.Lock()
@@ -56,8 +61,8 @@ class AudioRecorder:
         self.BUFFER_LENGTH = 3  # Length of the buffer in seconds
         self.audio_buffer = collections.deque(
             maxlen=self.BUFFER_LENGTH * self.vad_engine.sample_rate // self.vad_engine.frame_length)
-        self.VOICE_THRESHOLD = 0.5  # Threshold for voice activity
-        self.SILENCE_LIMIT = 3  # Duration of silence in seconds to stop recording
+        self.VOICE_THRESHOLD = 0.5  # Threshold for voice activity detection
+        self.INACTIVITY_LIMIT = 3  # Duration of inactivity in seconds to stop recording
 
     def start_recording(self, audio_data_provider):
         self.is_recording = True
