@@ -105,7 +105,7 @@ class AudioRecorder:
             if voice_activity_detected:
                 self.inactivity_frames = 0
                 if not self.is_recording:
-                    self.start_new_recording(frame)
+                    self.start_new_recording()
                 self.frames_to_save.append(frame)
             else:
                 self.buffer_audio_frame(frame)
@@ -117,7 +117,7 @@ class AudioRecorder:
                             self.INACTIVITY_LIMIT):
                         self.finalize_recording()
 
-    def start_new_recording(self, frame):
+    def start_new_recording(self):
         self.recording = True
         self.frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
         self.logger.info("Voice Detected - Starting Recording")
