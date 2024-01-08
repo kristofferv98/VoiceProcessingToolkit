@@ -40,17 +40,17 @@ class AudioDataProvider:
 
 # Cobra VAD Class
 class CobraVAD:
-    def __init__(self, access_key, frame_length, sample_rate):
+    def __init__(self, config):
         self.cobra_handle = None
         self.logger = logging.getLogger(__name__)
         try:
-            self.cobra_handle = pvcobra.create(access_key=access_key)
+            self.cobra_handle = pvcobra.create(access_key=config.access_key)
             self.logger.info("CobraVAD initialized successfully.")
         except pvcobra.CobraError as e:
             self.logger.error(f"Failed to initialize CobraVAD: {e}")
             raise
-        self.frame_length = frame_length
-        self.sample_rate = sample_rate
+        self.frame_length = config.frame_length
+        self.sample_rate = config.sample_rate
 
     def process(self, pcm):
         if len(pcm) != self.frame_length:
