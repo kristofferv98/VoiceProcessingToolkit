@@ -129,7 +129,8 @@ class AudioRecorder:
 
     def check_inactivity_duration(self):
         if (
-                self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT):
+                self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
+                self.INACTIVITY_LIMIT):
             self.finalize_recording()
 
     def finalize_recording(self):
