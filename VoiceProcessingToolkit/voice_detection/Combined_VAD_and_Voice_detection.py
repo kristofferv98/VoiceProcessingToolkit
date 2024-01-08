@@ -206,6 +206,7 @@ class AudioRecorder:
 
 if __name__ == '__main__':
     # dotenv from load_dotenv
+if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
     audio_data_provider = AudioDataProvider()
@@ -216,4 +217,5 @@ if __name__ == '__main__':
             time.sleep(0.1)
     except KeyboardInterrupt:
         pass
-    audio_recorder.stop_recording()
+    finally:
+        audio_recorder.stop_recording()
