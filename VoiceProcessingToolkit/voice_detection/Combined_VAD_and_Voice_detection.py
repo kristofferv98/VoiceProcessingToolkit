@@ -169,7 +169,8 @@ class AudioRecorder:
         recordings_dir = os.path.join(self.output_directory)
         if not os.path.exists(recordings_dir):
             os.makedirs(recordings_dir)
-        filename = os.path.join(recordings_dir, "recording.wav")
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = os.path.join(recordings_dir, f"recording_{timestamp}.wav")
 
         try:
             with wave.open(str(filename), 'wb') as wf:
