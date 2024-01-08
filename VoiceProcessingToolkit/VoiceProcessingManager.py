@@ -14,14 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 class VoiceProcessingManager:
-    """
-    Manages the voice processing workflow including wake word detection, voice recording, and transcription.
-
-class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
         """
+        Manages the voice processing workflow including wake word detection, voice recording, and transcription.
+
+    class VoiceProcessingManager:
+        def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
+                     audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
+                     voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
         Initializes the VoiceProcessingManager with the provided parameters.
 
         Args:
@@ -96,10 +98,10 @@ class VoiceProcessingManager:
                         transcription = self.transcriber.transcribe_audio(recorded_file)
                         if transcription:
                             logger.info(f"Transcription: {transcription}")
+                            return transcription
                     except Exception as e:
                         logger.error(f"Failed to transcribe audio: {e}")
-                    if transcription:
-                        logger.info(f"Transcription: {transcription}")
+
                 if recorded_file:
                     logger.info(f"Voice recording saved to {recorded_file}")
             else:
@@ -134,3 +136,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     manager = VoiceProcessingManager()
     manager.run()
+
+
