@@ -91,6 +91,9 @@ class AudioRecorder:
         self.frames = []
         self.lock = threading.Lock()
         self.recording_thread = None
+        self.audio_buffer = collections.deque(maxlen=10)  # Buffer to store frames before voice is detected
+        self.VOICE_THRESHOLD = 0.5  # Threshold for voice activity
+        self.SILENCE_LIMIT = 3  # Duration of silence in seconds to stop recording
 
     def start_recording(self, audio_data_provider):
         self.is_recording = True
@@ -99,24 +102,42 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
-        inactivity_limit_in_frames = self.INACTIVITY_LIMIT * self.vad_engine.sample_rate / self.vad_engine.frame_length
+        recording = False
+        frames_to_save = []
+        inactivity_frames = 0
+        silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             if frame is not None:
-                voice_prob = self.vad_engine.process(np.frombuffer(frame, dtype=np.int16))
-                if voice_prob > 0.5:  # Assuming 0.5 as the threshold for voice activity
-                    with self.lock:
-                        self.frames.append(frame)
-                    self.logger.debug("Voice detected, frame appended.")
+                audio_frame = np.frombuffer(frame, dtype=np.int16)
+                voice_probability = self.vad_engine.process(audio_frame)
+
+                if voice_probability > self.VOICE_THRESHOLD:
                     inactivity_frames = 0
+                    silent_frames = 0
+                    if not recording:
+                        recording = True
+                        frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
+                        self.logger.info("Voice Detected - Starting Recording")
+                    frames_to_save.append(frame)
                 else:
-                    if self.should_stop_recording():
-                        self.is_recording = False
-                        self.logger.info("Voice activity ended, stopping recording.")
-                    elif inactivity_frames > inactivity_limit_in_frames:
-                        self.logger.info("No voice detected for a while. Exiting...")
-                        self.is_recording = False
-                        break
+                    if len(self.audio_buffer) == self.audio_buffer.maxlen:
+                        self.audio_buffer.popleft()
+                    self.audio_buffer.append(frame)
+                    inactivity_frames += 1
+                    if recording:
+                        silent_frames += 1
+                        frames_to_save.append(frame)
+                        if (silent_frames * self.vad_engine.frame_length / self.vad_engine.sample_rate > self.SILENCE_LIMIT):
+                            recording_length = len(frames_to_save) * self.vad_engine.frame_length / self.vad_engine.sample_rate
+                            if recording_length >= self.MIN_RECORDING_LENGTH:
+                                self.save_to_wav_file(frames_to_save)
+                                self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
+                                return "SAVE"
+                            else:
+                                frames_to_save = []
+                                recording = False
+                                self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
         if self.frames:
             self.save_to_wav_file(self.frames)
 
