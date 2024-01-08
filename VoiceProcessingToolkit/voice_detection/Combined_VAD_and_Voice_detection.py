@@ -99,6 +99,7 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
+        inactivity_limit_in_frames = self.INACTIVITY_LIMIT * self.vad_engine.sample_rate / self.vad_engine.frame_length
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             if frame is not None:
@@ -107,11 +108,17 @@ class AudioRecorder:
                     with self.lock:
                         self.frames.append(frame)
                     self.logger.debug("Voice detected, frame appended.")
+                    inactivity_frames = 0
                 else:
                     if self.should_stop_recording():
                         self.is_recording = False
                         self.logger.info("Voice activity ended, stopping recording.")
-        self.save_to_wav_file(self.frames)
+                    elif inactivity_frames > inactivity_limit_in_frames:
+                        self.logger.info("No voice detected for a while. Exiting...")
+                        self.is_recording = False
+                        break
+        if self.frames:
+            self.save_to_wav_file(self.frames)
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
