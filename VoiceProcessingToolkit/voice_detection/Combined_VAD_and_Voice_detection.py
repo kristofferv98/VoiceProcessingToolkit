@@ -42,7 +42,6 @@ class AudioRecorder:
     def __init__(self, vad_engine, output_directory, min_recording_length=3):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
-        self.cobra_handle = None
         self.cobra_handle = vad_engine
         self.output_directory = output_directory
         self.inactivity_frames = 0
