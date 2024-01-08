@@ -42,14 +42,14 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
-    def __init__(self, output_directory, access_key=None):
+    def __init__(self, output_directory=None, access_key=None):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
         self.access_key = access_key or os.environ.get('PICOVOICE_APIKEY')
         if not self.access_key:
             raise ValueError("Cobra access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
         self.vad_engine = self.cobra_handle = pvcobra.create(access_key=self.access_key)
-        self.output_directory = output_directory
+        self.output_directory = output_directory or os.path.join(os.path.dirname(__file__), 'Wav_MP3')
         self.inactivity_frames = 0
         self.is_recording = False
         self.recording = False
@@ -200,7 +200,6 @@ class AudioRecorder:
 
 
 if __name__ == '__main__':
-
     # dotenv from load_dotenv
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
@@ -208,5 +207,4 @@ if __name__ == '__main__':
     audio_data_provider.start_stream()
     audio_recorder = AudioRecorder(output_directory='Wav_MP3')
     audio_recorder.start_recording(audio_data_provider)
-    input("Press Enter to stop recording...")
     audio_recorder.stop_recording()
