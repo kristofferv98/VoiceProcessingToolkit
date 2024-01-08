@@ -26,14 +26,14 @@ picovoice_api_key = os.getenv('PICOVOICE_APIKEY')
 rate = 16000
 channels = 1
 audio_format = pyaudio.paInt16
-frames_per_buffer = 512
+frames_per_buffer = 1024
 
 # Initialize the audio data provider
 audio_data_provider = AudioDataProvider(format=audio_format, channels=channels, rate=rate,
                                         frames_per_buffer=frames_per_buffer)
 audio_data_manager = AudioStream(rate, channels, audio_format, frames_per_buffer)
 # Cobra VAD and Audio Recorder setup
-frame_length = 1024
+frame_length = frames_per_buffer
 sample_rate = 16000
 cobra_vad = CobraVAD(access_key=picovoice_api_key, frame_length=frame_length, sample_rate=sample_rate)
 audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
