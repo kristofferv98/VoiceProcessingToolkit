@@ -5,6 +5,7 @@ import threading
 import pyaudio
 from dotenv import load_dotenv
 
+from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
@@ -20,6 +21,7 @@ class VoiceProcessingManager:
         self.audio_stream_manager = None
         self.wake_word_detector = None
         self.voice_recorder = None
+        self.transcriber = WhisperTranscriber()
         self.action_manager = ActionManager()
         self.setup()
         self.recording_thread = None
@@ -53,6 +55,11 @@ class VoiceProcessingManager:
                 self.recording_thread.start()
                 self.recording_thread.join()  # Wait for the recording to finish
                 recorded_file = self.voice_recorder.last_saved_file
+                if recorded_file:
+                    # Transcribe the recorded audio
+                    transcription = self.transcriber.transcribe_audio(recorded_file)
+                    if transcription:
+                        logger.info(f"Transcription: {transcription}")
                 if recorded_file:
                     logger.info(f"Voice recording saved to {recorded_file}")
             else:
