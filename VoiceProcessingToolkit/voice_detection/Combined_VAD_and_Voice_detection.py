@@ -172,7 +172,7 @@ class AudioRecorder:
         filename = os.path.join(recordings_dir, "recording.wav")
 
         try:
-            with wave.open(filename, 'wb') as wf:
+            with wave.open(str(filename), 'wb') as wf:
                 wf.setnchannels(1)
                 wf.setsampwidth(self.py_audio.get_sample_size(pyaudio.paInt16))
                 wf.setframerate(self.cobra_handle.sample_rate)
