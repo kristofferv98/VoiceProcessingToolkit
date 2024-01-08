@@ -79,7 +79,7 @@ class VoiceProcessingManager:
         self.audio_stream_manager.cleanup()
         if self.recording_thread and self.recording_thread.is_alive():
             self.recording_thread.join()
-        self.voice_recorder.cleanup()
+            self.voice_recorder.cleanup()
 
 
 if __name__ == '__main__':
