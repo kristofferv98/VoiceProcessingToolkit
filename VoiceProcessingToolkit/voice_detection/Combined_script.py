@@ -72,7 +72,7 @@ class CobraVAD:
 class AudioRecorder:
     def __init__(self, vad_engine, output_directory, min_recording_length=3):
         self.p = None
-        self.MIN_RECORDING_LENGTH = 3
+        self.MIN_RECORDING_LENGTH = min_recording_length
         self.cobra_handle = None
         self.vad_engine = vad_engine
         self.output_directory = output_directory
@@ -105,7 +105,7 @@ class AudioRecorder:
         pass
 
     def save_to_wav_file(self, frames):
-        duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+        duration = len(frames) * self.vad_engine.frame_length / self.vad_engine.sample_rate
         if duration < self.MIN_RECORDING_LENGTH:
             return 'UNDER_MIN_LENGTH'
 
@@ -114,8 +114,8 @@ class AudioRecorder:
 
         with wave.open(filename, 'wb') as wf:
             wf.setnchannels(1)
-            wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
-            wf.setframerate(self.cobra_handle.sample_rate)
+            wf.setsampwidth(pyaudio.PyAudio().get_sample_size(pyaudio.paInt16))
+            wf.setframerate(self.vad_engine.sample_rate)
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
         return 'SAVE'
