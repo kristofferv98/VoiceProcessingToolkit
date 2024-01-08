@@ -43,12 +43,12 @@ import time
 import pvporcupine
 import pyaudio
 
-from .AudioStreamManager import AudioStreamManager
-from .NotificationSoundManager import NotificationSoundManager
-from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
-from .ActionManager import ActionManager
-
 logger = logging.getLogger(__name__)
+
+from wake_word_detector.AudioStreamManager import AudioStream
+from wake_word_detector.NotificationSoundManager import NotificationSoundManager
+from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
+from wake_word_detector.ActionManager import ActionManager
 
 
 class WakeWordDetector:
@@ -85,7 +85,7 @@ class WakeWordDetector:
     """
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
-                 action_manager: ActionManager, audio_stream_manager: AudioStreamManager,
+                 action_manager: ActionManager, audio_stream_manager: AudioStream,
                  play_notification_sound: bool = True) -> None:
         self.action_manager = action_manager
         self.play_notification_sound = play_notification_sound
@@ -129,10 +129,11 @@ class WakeWordDetector:
             if self.porcupine.process(pcm) >= 0:
                 if self.play_notification_sound:
                     # Create an instance of NotificationSoundManager with the path to the notification sound
-                    notification_path = os.path.join(os.path.dirname(__file__), 'MP3', 'notification.wav')
+                    notification_path = os.path.join(os.path.dirname(__file__), 'Wav_MP3', 'notification.wav')
                     notification_sound_manager = NotificationSoundManager(notification_path)
                     notification_sound_manager.play()
                 asyncio.run(self.action_manager.execute_actions())
+                # Removed the stop event set to allow continuous wake word detection
 
     def run(self) -> None:
         """
@@ -155,11 +156,11 @@ def example_usage():
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
     channels = 1  # Number of audio channels
-    audio_format = pyaudio.paInt16  # Audio format
+    format = pyaudio.paInt16  # Audio format
     frames_per_buffer = 512  # Number of frames per buffer
 
     # Create an instance of AudioStreamManager
-    audio_stream_manager = AudioStreamManager(rate, channels, audio_format, frames_per_buffer)
+    audio_stream_manager = AudioStream(rate, channels, format, frames_per_buffer)
 
     # Create an instance of ActionManager
     action_manager = ActionManager()
@@ -170,17 +171,16 @@ def example_usage():
         time.sleep(4.5)
         logger.info("Action function completed!")
 
-    # Define a simple action function that prints a message
-
     @register_action_decorator(action_manager)
     async def async_action_1():
         logger.info("Async function is running...")
         await asyncio.sleep(1)  # Simulate an async wait
         logger.info("Async function completed!")
 
+    PICOVOICE_APIKEY = os.getenv('PICOVOICE_APIKEY')
     # Create an instance of WakeWordDetector with the ActionManager
     detector = WakeWordDetector(
-        access_key="b2UbNJ2N5xNROBsICABolmKQwtQN7ARTRTSB+U0lZg+kDieYqcx7nw==",
+        access_key=PICOVOICE_APIKEY,
         wake_word='jarvis',
         sensitivity=0.75,
         action_manager=action_manager,
@@ -190,3 +190,4 @@ def example_usage():
 
     # Start the wake word detection loop
     detector.run()
+
