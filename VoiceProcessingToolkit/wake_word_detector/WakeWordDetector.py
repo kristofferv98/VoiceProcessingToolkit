@@ -41,6 +41,8 @@ import threading
 import time
 import pvporcupine
 import pyaudio
+from dotenv import load_dotenv
+
 from wake_word_detector.AudioStreamManager import AudioStream
 from wake_word_detector.NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
@@ -156,6 +158,7 @@ class WakeWordDetector:
 
 
 def example_usage():
+    load_dotenv()
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
     channels = 1  # Number of audio channels

@@ -1,6 +1,8 @@
 import contextlib
 import logging
 import os
+import wave
+
 import pygame
 
 logger = logging.getLogger(__name__)
@@ -8,12 +10,6 @@ logger = logging.getLogger(__name__)
 
 class NotificationSoundManager:
     _mixer_initialized = False
-
-    def __init__(self, sound_file_path: str):
-        self.sound_file_path = sound_file_path
-        self.sound_data = None
-        self._initialize_mixer()
-        self._load_sound()
 
     def _load_sound(self):
         with wave.open(self.sound_file_path, 'rb') as wave_file:
