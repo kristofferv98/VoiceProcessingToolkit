@@ -76,6 +76,7 @@ class AudioRecorder:
             if self.should_stop_recording():
                 self.finalize_recording()
                 break
+            self.check_inactivity_duration()
 
     def process_frame(self, frame):
         if frame is not None:
@@ -89,13 +90,13 @@ class AudioRecorder:
 
     def manage_recording_state(self, frame, voice_activity_detected):
         if voice_activity_detected:
-            self.silent_frames = 0
+            self.inactivity_frames = 0
             if not self.recording:
                 self.start_new_recording(frame)
             self.frames_to_save.append(frame)
         else:
             self.buffer_audio_frame(frame)
-            self.silent_frames += 1
+            self.inactivity_frames += 1
             if self.recording:
                 self.frames_to_save.append(frame)
                 self.check_silence_duration()
@@ -110,8 +111,8 @@ class AudioRecorder:
             self.audio_buffer.popleft()
         self.audio_buffer.append(frame)
 
-    def check_silence_duration(self):
-        if (self.silent_frames * self.vad_engine.frame_length / self.vad_engine.sample_rate > self.SILENCE_LIMIT):
+    def check_inactivity_duration(self):
+        if (self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT):
             self.finalize_recording()
 
     def finalize_recording(self):
