@@ -53,6 +53,8 @@ class VoiceProcessingManager:
                 self.recording_thread.start()
                 self.recording_thread.join()  # Wait for the recording to finish
                 recorded_file = self.voice_recorder.get_last_saved_file()  # Retrieve the path of the last saved file
+                self.recording_thread.join()  # Wait for the recording to finish
+                recorded_file = self.voice_recorder.get_last_saved_file()  # Retrieve the path of the last saved file
                 if recorded_file:
                     logger.info(f"Voice recording saved to {recorded_file}")
             else:
