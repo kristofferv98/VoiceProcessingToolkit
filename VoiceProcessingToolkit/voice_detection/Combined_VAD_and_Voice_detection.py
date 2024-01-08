@@ -135,12 +135,13 @@ class AudioRecorder:
             self.finalize_recording()
 
     def finalize_recording(self):
-        recording_length = len(self.frames_to_save) * self.vad_engine.frame_length / self.vad_engine.sample_rate
+        frame_count = len(self.frames_to_save)
+        recording_length = frame_count * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
         if recording_length >= self.MIN_RECORDING_LENGTH:
             self.save_to_wav_file(self.frames_to_save)
             self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
         else:
-            self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
+            self.logger.info(f"Recording of {recording_length:.2f} seconds with {frame_count} frames is under the minimum length ({self.MIN_RECORDING_LENGTH} seconds). Not saved.")
         self.recording = False
         self.frames_to_save = []
 
