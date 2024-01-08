@@ -79,9 +79,11 @@ class AudioRecorder:
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
-            if self.should_stop_recording() or (
-                    self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
-                    self.INACTIVITY_LIMIT):
+            if self.should_stop_recording():
+                self.finalize_recording()
+                break
+            if (self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT):
+                self.logger.info("No voice detected for a while. Exiting...")
                 self.finalize_recording()
                 break
             if self.recording:
