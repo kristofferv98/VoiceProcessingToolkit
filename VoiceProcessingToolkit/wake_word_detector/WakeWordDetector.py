@@ -1,5 +1,4 @@
 """
-"""
 WakeWordDetector Library
 ------------------------
 
@@ -33,7 +32,6 @@ Example:
     detector.run()
     ```
 """
-"""
 
 import asyncio
 import logging
@@ -50,7 +48,6 @@ from wake_word_detector.NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
 from wake_word_detector.ActionManager import ActionManager
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -59,14 +56,14 @@ class WakeWordDetector:
     Detects a specified wake word using the Porcupine engine and executes registered actions upon detection.
 
     Attributes:
-        access_key (str): The access key for the Porcupine wake word engine.
-        wake_word (str): The wake word that the detector should listen for.
-        sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
-        audio_stream_manager (AudioStreamManager): Manages the audio stream from the microphone.
-        action_manager (ActionManager): Manages the actions to be executed when the wake word is detected.
-        play_notification_sound (bool): Indicates whether to play a notification sound upon detection.
-        stop_event (threading.Event): An event to signal the detection loop to stop.
-        porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
+        _access_key (str): The access key for the Porcupine wake word engine.
+        _wake_word (str): The wake word that the detector should listen for.
+        _sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
+        _audio_stream_manager (AudioStreamManager): Manages the audio stream from the microphone.
+        _action_manager (ActionManager): Manages the actions to be executed when the wake word is detected.
+        _play_notification_sound (bool): Indicates whether to play a notification sound upon detection.
+        _stop_event (threading.Event): An event to signal the detection loop to stop.
+        _porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
 
     Methods:
         __init__(self, access_key: str, wake_word: str, sensitivity: float,
@@ -208,6 +205,7 @@ def main():
         logger.info("Wake word detection stopped by user.")
     except Exception as e:
         logger.exception("An error occurred during wake word detection.", exc_info=e)
+
 
 if __name__ == "__main__":
     main()
