@@ -11,8 +11,8 @@ import threading
 
 # Audio Data Provider Class
 class AudioDataProvider:
-    def __init__(self, format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024):
-        self.format = format
+    def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=1024):
+        self.audio_format = audio_format
         self.channels = channels
         self.rate = rate
         self.frames_per_buffer = frames_per_buffer
@@ -21,7 +21,7 @@ class AudioDataProvider:
 
     def start_stream(self):
         self.stream = self.py_audio.open(
-            format=self.format,
+            format=self.audio_format,
             channels=self.channels,
             rate=self.rate,
             input=True,
