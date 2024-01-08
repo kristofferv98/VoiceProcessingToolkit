@@ -8,7 +8,7 @@ import threading
 import pyaudio
 from dotenv import load_dotenv
 
-from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
+from voice_detection.audio_data_provider import PyAudioDataProvider
 from wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from wake_word_detector.AudioStreamManager import AudioStreamManager
 from wake_word_detector.WakeWordDetector import WakeWordDetector
