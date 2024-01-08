@@ -148,15 +148,17 @@ class AudioRecorder:
             self.finalize_recording()
 
     def finalize_recording(self):
+        result = False
         if self.frames_to_save:
             recording_length = len(self.frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
             if recording_length >= self.MIN_RECORDING_LENGTH:
-                self.save_to_wav_file(self.frames_to_save)
+                result = self.save_to_wav_file(self.frames_to_save)
                 self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
             else:
                 self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
         self.recording = False
         self.frames_to_save = []
+        return result
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
@@ -165,7 +167,7 @@ class AudioRecorder:
     def save_to_wav_file(self, frames):
         duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
         if duration < self.MIN_RECORDING_LENGTH:
-            return 'UNDER_MIN_LENGTH'
+            return False
 
         recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
 
@@ -181,7 +183,7 @@ class AudioRecorder:
             wf.setframerate(self.cobra_handle.sample_rate)
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
-        return 'SAVE'
+        return filename
 
     def stop_recording(self):
         self.is_recording = False
