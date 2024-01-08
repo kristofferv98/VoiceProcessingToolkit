@@ -103,6 +103,7 @@ class AudioRecorder:
             self.finalize_recording()
             return True
         return False
+
     def process_frame(self, frame):
         if frame is not None:
             voice_activity_detected = self.detect_voice_activity(frame)
@@ -166,21 +167,20 @@ class AudioRecorder:
         if duration < self.MIN_RECORDING_LENGTH:
             return 'UNDER_MIN_LENGTH'
 
-        recordings_dir = os.path.join(self.output_directory)
+        recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
+
+        # Check if the directory exists, if not, create it
         if not os.path.exists(recordings_dir):
             os.makedirs(recordings_dir)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        filename = os.path.join(recordings_dir, f"recording_{timestamp}.wav")
 
-        try:
-            with wave.open(str(filename), 'wb') as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(self.py_audio.get_sample_size(pyaudio.paInt16))
-                wf.setframerate(self.cobra_handle.sample_rate)
-                wf.writeframes(b''.join(frames))
-            logging.info(f"Saved to {filename}")
-        except IOError as e:
-            logging.error(f"Could not save recording to {filename}: {e}")
+        filename = os.path.join(recordings_dir, "recording.wav")
+
+        with wave.open(filename, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(self.py_audio.get_sample_size(pyaudio.paInt16))
+            wf.setframerate(self.cobra_handle.sample_rate)
+            wf.writeframes(b''.join(frames))
+        logging.info(f"Saved to {filename}")
         return 'SAVE'
 
     def stop_recording(self):
