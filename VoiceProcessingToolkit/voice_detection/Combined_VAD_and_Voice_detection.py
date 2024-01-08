@@ -75,7 +75,7 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
-        silent_frames = 0
+        self.silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
@@ -88,9 +88,9 @@ class AudioRecorder:
                     self.frames_to_save.append(frame)
                 else:
                     self.inactivity_frames += 1
-                    silent_frames += 1
+                    self.silent_frames += 1
                     self.frames_to_save.append(frame)
-                    if self.should_finalize_recording(silent_frames):
+                    if self.should_stop_recording():
                         break
 
     def should_finalize_recording(self, silent_frames):
@@ -159,6 +159,11 @@ class AudioRecorder:
         self.recording = False
         self.frames_to_save = []
         return result
+
+    def should_stop_recording(self):
+        silence_duration = self.silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+        inactivity_duration = self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+        return silence_duration > self.SILENCE_LIMIT or inactivity_duration > self.INACTIVITY_LIMIT
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
