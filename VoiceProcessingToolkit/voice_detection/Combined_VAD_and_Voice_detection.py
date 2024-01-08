@@ -98,17 +98,19 @@ class AudioRecorder:
         return voice_probability > self.VOICE_THRESHOLD
 
     def manage_recording_state(self, frame, voice_activity_detected):
-        if voice_activity_detected:
-            self.inactivity_frames = 0
-            if not self.recording:
-                self.start_new_recording(frame)
-            self.frames_to_save.append(frame)
-        else:
-            self.buffer_audio_frame(frame)
-            self.inactivity_frames += 1
-            if self.recording:
+        with self.lock:
+            if voice_activity_detected:
+                self.inactivity_frames = 0
+                if not self.is_recording:
+                    self.start_new_recording(frame)
                 self.frames_to_save.append(frame)
-                self.check_silence_duration()
+            else:
+                self.buffer_audio_frame(frame)
+                self.inactivity_frames += 1
+                if self.is_recording:
+                    self.frames_to_save.append(frame)
+                    if (self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT):
+                        self.finalize_recording()
 
     def start_new_recording(self, frame):
         self.recording = True
