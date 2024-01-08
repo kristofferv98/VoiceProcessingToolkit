@@ -85,6 +85,7 @@ class AudioRecorder:
         self.p = None
         self.MIN_RECORDING_LENGTH = 3
         self.cobra_handle = None
+        self.cobra_handle = vad_engine
         self.vad_engine = vad_engine
         self.output_directory = output_directory
         self.min_recording_length = min_recording_length
