@@ -2,12 +2,13 @@ import logging
 import os
 import signal
 import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import threading
 
 import pyaudio
 from dotenv import load_dotenv
 
-from voice_detection.audio_data_provider import PyAudioDataProvider
+from VoiceProcessingToolkit.voice_detection.audio_data_provider import PyAudioDataProvider
 from wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from wake_word_detector.AudioStreamManager import AudioStreamManager
 from wake_word_detector.WakeWordDetector import WakeWordDetector
@@ -131,4 +132,4 @@ print("VoiceProcessingToolkit has been shut down gracefully.")
 # Placeholder comment removed as the implementation is now complete.
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
