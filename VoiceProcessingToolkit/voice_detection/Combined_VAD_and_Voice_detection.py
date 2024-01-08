@@ -164,8 +164,7 @@ class AudioRecorder:
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
         return 'SAVE'
-        self.logger.info(f"Recording saved to {filename}.")
-        return 'SAVE'
+
 
     def stop_recording(self):
         self.is_recording = False
@@ -173,18 +172,3 @@ class AudioRecorder:
             self.recording_thread.join()
         self.logger.info("Recording stopped.")
 
-
-load_dotenv()
-api_key = os.getenv("PICOVOICE_APIKEY")
-
-# Example usage
-audio_data_provider = AudioDataProvider()
-FRAME_LENGTH = 1024
-SAMPLE_RATE = 16000
-# Example usage
-cobra_vad = CobraVAD(access_key=api_key, frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
-audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
-
-# Start recording process
-audio_data_provider.start_stream()
-audio_recorder.start_recording(audio_data_provider)
