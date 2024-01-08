@@ -90,7 +90,7 @@ class AudioRecorder:
                     else:
                         self.inactivity_frames += 1
                         silent_frames += 1
-                        if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
+                        if self.should_finalize_recording(silent_frames):
                             self.logger.info("Inactivity limit exceeded. Finalizing recording...")
                             return
                             break
@@ -163,6 +163,7 @@ class AudioRecorder:
                 self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
         self.recording = False
         self.frames_to_save = []
+        self.is_recording = False
         return result
 
     def should_stop_recording(self):
