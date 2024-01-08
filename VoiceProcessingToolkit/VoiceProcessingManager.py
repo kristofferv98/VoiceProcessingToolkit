@@ -5,8 +5,6 @@ import threading
 import pyaudio
 from dotenv import load_dotenv
 
-from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
-from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, ElevenLabsConfig
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
@@ -17,10 +15,6 @@ logger = logging.getLogger(__name__)
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3'):
         self.wake_word = wake_word
-        self.transcriber = WhisperTranscriber()
-        self.tts_config = ElevenLabsConfig()
-        self.text_to_speech = ElevenLabsTextToSpeech(config=self.tts_config)
-        self.transcription_thread = None
         self.sensitivity = sensitivity
         self.output_directory = output_directory
         self.audio_stream_manager = None
@@ -59,21 +53,6 @@ class VoiceProcessingManager:
                 self.recording_thread.start()
                 self.recording_thread.join()  # Wait for the recording to finish
                 recorded_file = self.voice_recorder.last_saved_file
-                if recorded_file:
-                    # Transcribe the recorded audio
-                    self.transcription_thread = threading.Thread(target=self.transcribe_and_respond, args=(recorded_file,))
-                    self.transcription_thread.start()
-
-    def transcribe_and_respond(self, audio_file_path):
-        transcription = self.transcriber.transcribe_audio(audio_file_path)
-        if transcription:
-            logger.info(f"Transcription: {transcription}")
-            # Generate a response using text-to-speech
-            response_audio_path = self.text_to_speech.synthesize_speech(transcription, self.output_directory)
-            if response_audio_path:
-                logger.info(f"Response audio saved to {response_audio_path}")
-            else:
-                logger.error("Failed to synthesize speech from transcription.")
                 if recorded_file:
                     logger.info(f"Voice recording saved to {recorded_file}")
             else:
