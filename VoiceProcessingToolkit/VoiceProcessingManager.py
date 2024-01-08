@@ -1,10 +1,15 @@
 import logging
+import os
+
+import pyaudio
+from dotenv import load_dotenv
+
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
-from VoiceProcessingToolkit.wake_word_detector.NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 
 logger = logging.getLogger(__name__)
+
 
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3'):
@@ -19,12 +24,12 @@ class VoiceProcessingManager:
 
     def setup(self):
         # Initialize AudioStream
-        self.audio_stream_manager = AudioStream(rate=16000, channels=1, _audio_format=pyaudio.paInt16, frames_per_buffer=512)
-        # Initialize NotificationSoundManager
-        notification_sound_manager = NotificationSoundManager('path/to/notification/sound.wav')
+        self.audio_stream_manager = AudioStream(rate=16000, channels=1, _audio_format=pyaudio.paInt16,
+                                                frames_per_buffer=512)
+
         # Initialize WakeWordDetector
         self.wake_word_detector = WakeWordDetector(
-            access_key='your-picovoice_api_key',
+            access_key=os.environ.get('PICOVOICE_APIKEY') or os.getenv('PICOVOICE_APIKEY'),
             wake_word=self.wake_word,
             sensitivity=self.sensitivity,
             action_manager=self.action_manager,
@@ -57,7 +62,10 @@ class VoiceProcessingManager:
         self.audio_stream_manager.cleanup()
         self.voice_recorder.cleanup()
 
+
 if __name__ == '__main__':
+    load_dotenv()
+    # set the
     logging.basicConfig(level=logging.INFO)
     manager = VoiceProcessingManager()
     manager.run()
