@@ -1,4 +1,5 @@
 """
+"""
 WakeWordDetector Library
 ------------------------
 
@@ -31,6 +32,7 @@ Example:
     )
     detector.run()
     ```
+"""
 """
 
 import asyncio
