@@ -1,9 +1,9 @@
 import logging
 import os
 import threading
-import asyncio
 
 import pyaudio
+import pygame
 from dotenv import load_dotenv
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
@@ -80,7 +80,7 @@ class VoiceProcessingManager:
         except Exception as e:
             logger.exception("An error occurred during voice processing.", exc_info=e)
         finally:
-            self.cleanup()
+                self.cleanup()
         return transcription
 
     def setup(self):
@@ -155,7 +155,8 @@ if __name__ == '__main__':
     transcription = manager.start_and_transcribe()
     if transcription:
         logger.info(f"Transcription: {transcription}")
+        tts = text_to_speech_stream(transcription)
 
-    tts = text_to_speech_stream(transcription)
+
 
 
