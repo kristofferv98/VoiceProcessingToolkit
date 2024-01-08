@@ -164,15 +164,20 @@ class AudioRecorder:
         if duration < self.MIN_RECORDING_LENGTH:
             return 'UNDER_MIN_LENGTH'
 
-        recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
+        recordings_dir = os.path.join(self.output_directory)
+        if not os.path.exists(recordings_dir):
+            os.makedirs(recordings_dir)
         filename = os.path.join(recordings_dir, "recording.wav")
 
-        with wave.open(filename, 'wb') as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(self.py_audio.get_sample_size(pyaudio.paInt16))
-            wf.setframerate(self.cobra_handle.sample_rate)
-            wf.writeframes(b''.join(frames))
-        logging.info(f"Saved to {filename}")
+        try:
+            with wave.open(filename, 'wb') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(self.py_audio.get_sample_size(pyaudio.paInt16))
+                wf.setframerate(self.cobra_handle.sample_rate)
+                wf.writeframes(b''.join(frames))
+            logging.info(f"Saved to {filename}")
+        except IOError as e:
+            logging.error(f"Could not save recording to {filename}: {e}")
         return 'SAVE'
 
     def stop_recording(self):
