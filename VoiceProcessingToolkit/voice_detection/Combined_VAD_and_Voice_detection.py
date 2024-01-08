@@ -20,9 +20,10 @@ class AudioDataProvider:
         self.rate = rate
         self.frames_per_buffer = frames_per_buffer
         self.stream = None
+        self.py_audio = pyaudio.PyAudio()
 
     def start_stream(self):
-        self.stream = pyaudio.PyAudio().open(
+        self.stream = self.py_audio.open(
             format=self.format,
             channels=self.channels,
             rate=self.rate,
@@ -37,6 +38,7 @@ class AudioDataProvider:
         if self.stream:
             self.stream.stop_stream()
             self.stream.close()
+            self.py_audio.terminate()
 
 # Cobra VAD Class
 class CobraVAD:
@@ -82,7 +84,7 @@ class CobraVAD:
 class AudioRecorder:
     def __init__(self, vad_engine, output_directory, min_recording_length=3):
         self.logger = logging.getLogger(__name__)
-        self.p = None
+        self.py_audio = pyaudio.PyAudio()
         self.MIN_RECORDING_LENGTH = 3
         self.cobra_handle = None
         self.cobra_handle = vad_engine
@@ -159,7 +161,7 @@ class AudioRecorder:
 
         with wave.open(filename, 'wb') as wf:
             wf.setnchannels(1)
-            wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
+            wf.setsampwidth(self.py_audio.get_sample_size(pyaudio.paInt16))
             wf.setframerate(self.cobra_handle.sample_rate)
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
@@ -170,5 +172,6 @@ class AudioRecorder:
         self.is_recording = False
         if self.recording_thread:
             self.recording_thread.join()
+            self.py_audio.terminate()
         self.logger.info("Recording stopped.")
 
