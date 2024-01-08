@@ -79,19 +79,28 @@ class AudioRecorder:
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
-            if self.should_stop_recording():
-                self.finalize_recording()
-                break
-            if (self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT):
-                self.logger.info("No voice detected for a while. Exiting...")
-                self.finalize_recording()
-                break
-            if self.recording:
-                silent_frames += 1
-                if (
-                        silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
-                        self.SILENCE_LIMIT):
-                    self.finalize_recording()
+            if not self.recording:
+                self.buffer_audio_frame(frame)
+            else:
+                voice_activity_detected = self.detect_voice_activity(frame)
+                if voice_activity_detected:
+                    self.inactivity_frames = 0
+                    self.frames_to_save.append(frame)
+                else:
+                    self.inactivity_frames += 1
+                    silent_frames += 1
+                    self.frames_to_save.append(frame)
+                    if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
+                        self.logger.info("No voice detected for a while. Exiting...")
+                        self.finalize_recording()
+                        break
+                    if silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.SILENCE_LIMIT:
+                        recording_length = len(self.frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+                        if recording_length >= self.MIN_RECORDING_LENGTH:
+                            self.save_to_wav_file(self.frames_to_save)
+                            self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
+                            self.finalize_recording()
+                            break
 
     def process_frame(self, frame):
         if frame is not None:
