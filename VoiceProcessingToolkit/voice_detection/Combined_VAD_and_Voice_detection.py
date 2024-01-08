@@ -42,7 +42,6 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
-    GRACE_PERIOD = 0.5  # Half a second grace period
     def __init__(self, output_directory=None, access_key=None):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
@@ -65,7 +64,6 @@ class AudioRecorder:
         self.SILENCE_LIMIT = 2  # Silence limit in seconds.
         self.INACTIVITY_LIMIT = 2  # Inactivity limit in seconds.
         self.MIN_RECORDING_LENGTH = 3  # Minimum length for recording to be saved (seconds)
-        self.GRACE_PERIOD = 0.5  # Grace period in seconds
         self.audio_data_provider = None
 
     def start_recording(self, audio_data_provider):
@@ -77,7 +75,7 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
-        self.silent_frames = 0
+        silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
@@ -90,9 +88,9 @@ class AudioRecorder:
                     self.frames_to_save.append(frame)
                 else:
                     self.inactivity_frames += 1
-                    self.silent_frames += 1
+                    silent_frames += 1
                     self.frames_to_save.append(frame)
-                    if self.should_stop_recording():
+                    if self.should_finalize_recording(silent_frames):
                         break
 
     def should_finalize_recording(self, silent_frames):
@@ -163,16 +161,6 @@ class AudioRecorder:
         return result
 
     def should_stop_recording(self):
-        silence_duration = self.silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
-        inactivity_duration = self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
-
-        if silence_duration > self.SILENCE_LIMIT + self.GRACE_PERIOD or \
-           inactivity_duration > self.INACTIVITY_LIMIT + self.GRACE_PERIOD:
-            return True
-
-        return False
-
-    def should_stop_recording(self):
         # Logic to determine if recording should stop
         return not self.is_recording
 
@@ -219,4 +207,5 @@ if __name__ == '__main__':
     audio_data_provider.start_stream()
     audio_recorder = AudioRecorder(output_directory='Wav_MP3')
     audio_recorder.start_recording(audio_data_provider)
+    input("Press Enter to stop recording...")
     audio_recorder.stop_recording()
