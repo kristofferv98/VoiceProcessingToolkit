@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
+import logging
+import os
+import wave
+
 import pyaudio
 import numpy as np
 import threading
 from ctypes import c_float, c_short, byref
 import pvcobra
+from dotenv import load_dotenv
+
 
 # Audio Data Provider Class
 class AudioDataProvider:
@@ -47,14 +53,15 @@ class CobraVAD:
         if len(pcm) != self.frame_length:
             raise ValueError("Invalid frame length. Expected %d but received %d" % (self.frame_length, len(pcm)))
 
-        pcm_array = (c_short * len(pcm))(*pcm)
+        pcm_array = (c_short * len(pcm))(*pcm)  # Correct way to create a ctypes array from PCM data
         result = c_float()
         status = self.cobra_handle.process_func(self.cobra_handle._handle, pcm_array, byref(result))
+
         if status is not self.cobra_handle.PicovoiceStatuses.SUCCESS:
+            # Raise an exception if processing fails
             raise self.cobra_handle._PICOVOICE_STATUS_TO_EXCEPTION[status](
                 message='Processing failed',
                 message_stack=self.cobra_handle._get_error_stack())
-
         return result.value
 
     def __del__(self):
@@ -64,6 +71,9 @@ class CobraVAD:
 # Audio Recorder Class
 class AudioRecorder:
     def __init__(self, vad_engine, output_directory, min_recording_length=3):
+        self.p = None
+        self.MIN_RECORDING_LENGTH = 3
+        self.cobra_handle = None
         self.vad_engine = vad_engine
         self.output_directory = output_directory
         self.min_recording_length = min_recording_length
@@ -95,23 +105,38 @@ class AudioRecorder:
         pass
 
     def save_to_wav_file(self, frames):
-        # Logic to save frames to a WAV file
-        pass
+        duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+        if duration < self.MIN_RECORDING_LENGTH:
+            return 'UNDER_MIN_LENGTH'
+
+        recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
+        filename = os.path.join(recordings_dir, "recording.wav")
+
+        with wave.open(filename, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
+            wf.setframerate(self.cobra_handle.sample_rate)
+            wf.writeframes(b''.join(frames))
+        logging.info(f"Saved to {filename}")
+        return 'SAVE'
 
     def stop_recording(self):
         self.is_recording = False
         if self.recording_thread:
             self.recording_thread.join()
 
-# Example usage
-audio_data_provider = AudioDataProvider()
-FRAME_LENGTH = 1024  # This value should be the expected frame length for CobraVAD
-SAMPLE_RATE = 16000  # This value should be the sample rate in Hz for audio data
-# Example usage
-audio_data_provider = AudioDataProvider()
-cobra_vad = CobraVAD(access_key="ACTUAL_ACCESS_KEY", frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
-audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
+def main():
+    load_dotenv()
+    api_key = os.getenv("PICOVOICE_APIKEY")
 
-# Start recording process
-audio_data_provider.start_stream()
-audio_recorder.start_recording(audio_data_provider)
+    # Example usage
+    audio_data_provider = AudioDataProvider()
+    FRAME_LENGTH = 1024
+    SAMPLE_RATE = 16000
+    # Example usage
+    cobra_vad = CobraVAD(access_key=api_key, frame_length=FRAME_LENGTH, sample_rate=SAMPLE_RATE)
+    audio_recorder = AudioRecorder(cobra_vad, "output_directory_path")
+
+    # Start recording process
+    audio_data_provider.start_stream()
+    audio_recorder.start_recording(audio_data_provider)
