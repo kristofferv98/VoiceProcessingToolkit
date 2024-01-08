@@ -54,6 +54,8 @@ class AudioRecorder:
         self.output_directory = output_directory
         self.inactivity_frames = 0
         self.is_recording = False
+        self.recording = False
+        self.frames_to_save = []
         self.frames = []
         self.lock = threading.Lock()
         self.recording_thread = None
@@ -71,8 +73,7 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
-        self.recording = False
-        self.frames_to_save = []
+        # The recording and frames_to_save attributes are now initialized in __init__
         silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
