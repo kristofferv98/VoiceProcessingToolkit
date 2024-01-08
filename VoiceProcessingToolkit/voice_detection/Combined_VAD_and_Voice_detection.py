@@ -39,7 +39,7 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
-    def __init__(self, vad_engine, output_directory, min_recording_length=3):
+    def __init__(self, vad_engine, output_directory):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
         self.cobra_handle = vad_engine
@@ -57,6 +57,7 @@ class AudioRecorder:
         self.VOICE_THRESHOLD = 0.8  # Threshold for voice activity detection
         self.SILENCE_LIMIT = 2  # Silence limit in seconds.
         self.INACTIVITY_LIMIT = 2  # Inactivity limit in seconds.
+        self.MIN_RECORDING_LENGTH = 3  # Minimum length for recording to be saved (seconds)
 
     def start_recording(self, audio_data_provider):
         self.is_recording = True
