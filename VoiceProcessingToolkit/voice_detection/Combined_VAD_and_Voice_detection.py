@@ -225,4 +225,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
     audio_recorder = AudioRecorder(output_directory='Wav_MP3')
-    audio_recorder.perform_recording()
+    file = audio_recorder.perform_recording()
+    logging.info(f"Saved to {file}")
