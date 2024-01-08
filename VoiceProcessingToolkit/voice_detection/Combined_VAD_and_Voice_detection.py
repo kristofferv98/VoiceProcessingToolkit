@@ -42,6 +42,7 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
+    GRACE_PERIOD = 0.5  # Half a second grace period
     def __init__(self, output_directory=None, access_key=None):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
@@ -64,6 +65,7 @@ class AudioRecorder:
         self.SILENCE_LIMIT = 2  # Silence limit in seconds.
         self.INACTIVITY_LIMIT = 2  # Inactivity limit in seconds.
         self.MIN_RECORDING_LENGTH = 3  # Minimum length for recording to be saved (seconds)
+        self.GRACE_PERIOD = 0.5  # Grace period in seconds
         self.audio_data_provider = None
 
     def start_recording(self, audio_data_provider):
@@ -163,7 +165,12 @@ class AudioRecorder:
     def should_stop_recording(self):
         silence_duration = self.silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
         inactivity_duration = self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
-        return silence_duration > self.SILENCE_LIMIT or inactivity_duration > self.INACTIVITY_LIMIT
+
+        if silence_duration > self.SILENCE_LIMIT + self.GRACE_PERIOD or \
+           inactivity_duration > self.INACTIVITY_LIMIT + self.GRACE_PERIOD:
+            return True
+
+        return False
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
