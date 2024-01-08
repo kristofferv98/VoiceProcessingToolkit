@@ -197,4 +197,12 @@ def example_usage():
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    example_usage()
+    try:
+        example_usage()
+    except KeyboardInterrupt:
+        logger.info("Wake word detection stopped by user.")
+    except Exception as e:
+        logger.exception("An error occurred during wake word detection.", exc_info=e)
+
+if __name__ == "__main__":
+    main()
