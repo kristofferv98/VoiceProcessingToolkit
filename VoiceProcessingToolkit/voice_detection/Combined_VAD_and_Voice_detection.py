@@ -87,10 +87,6 @@ class AudioRecorder:
         Returns:
             str: The path to the recorded audio file.
         """
-        """
-        Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
-        Returns the path to the recorded audio file.
-        """
         self._audio_data_provider = AudioDataProvider()
         self.start_recording(self._audio_data_provider)
         try:
