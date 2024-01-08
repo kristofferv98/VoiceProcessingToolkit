@@ -39,16 +39,15 @@ import os
 import struct
 import threading
 import time
-
 import pvporcupine
 import pyaudio
-
-logger = logging.getLogger(__name__)
-
 from wake_word_detector.AudioStreamManager import AudioStream
 from wake_word_detector.NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
 from wake_word_detector.ActionManager import ActionManager
+
+
+logger = logging.getLogger(__name__)
 
 
 class WakeWordDetector:
@@ -87,7 +86,9 @@ class WakeWordDetector:
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
                  play_notification_sound: bool = True) -> None:
-        self.notification_sound_manager = notification_sound_manager
+        self.notification_sound_manager = self.notification_sound_manager = NotificationSoundManager(
+            '/Users/kristoffervatnehol/PycharmProjects/VoiceProcessingToolkit/VoiceProcessingToolkit'
+            '/wake_word_detector/Wav_MP3/notification.wav')
         self.action_manager = action_manager
         self.play_notification_sound = play_notification_sound
         """
@@ -135,7 +136,7 @@ class WakeWordDetector:
             self.notification_sound_manager.play(preloaded_sound=self.notification_sound_manager.sound_data)
         action_thread = threading.Thread(target=lambda: asyncio.run(self.action_manager.execute_actions()))
         action_thread.start()
-                # Removed the stop event set to allow continuous wake word detection
+        # Removed the stop event set to allow continuous wake word detection
 
     def run(self) -> None:
         """
@@ -192,3 +193,8 @@ def example_usage():
 
     # Start the wake word detection loop
     detector.run()
+
+
+def main():
+    logging.basicConfig(level=logging.INFO)
+    example_usage()
