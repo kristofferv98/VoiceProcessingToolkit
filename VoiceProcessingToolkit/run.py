@@ -6,7 +6,6 @@ import threading
 
 import pyaudio
 from dotenv import load_dotenv
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from voice_detection.audio_data_provider import PyAudioDataProvider
 from wake_word_detector.ActionManager import ActionManager, register_action_decorator
@@ -130,3 +129,6 @@ wake_word_thread.join()
 print("VoiceProcessingToolkit has been shut down gracefully.")
 
 # Placeholder comment removed as the implementation is now complete.
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
