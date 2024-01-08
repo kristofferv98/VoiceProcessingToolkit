@@ -197,6 +197,7 @@ class AudioRecorder:
 
 
 if __name__ == '__main__':
+
     # dotenv from load_dotenv
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
