@@ -90,10 +90,9 @@ class AudioRecorder:
                     else:
                         self.inactivity_frames += 1
                         silent_frames += 1
-                        self.frames_to_save.append(frame)
                         if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
                             self.logger.info("Inactivity limit exceeded. Finalizing recording...")
-                            self.finalize_recording()
+                            return
                             break
             except Exception as e:
                 self.logger.error(f"An error occurred during recording: {e}")
