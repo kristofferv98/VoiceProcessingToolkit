@@ -41,17 +41,21 @@ class AudioDataProvider:
 class CobraVAD:
     def __init__(self, access_key, frame_length, sample_rate):
         self.cobra_handle = None
+        self.logger = logging.getLogger(__name__)
         try:
             self.cobra_handle = pvcobra.create(access_key=access_key)
+            self.logger.info("CobraVAD initialized successfully.")
         except pvcobra.CobraError as e:
-            print(f"Failed to initialize CobraVAD: {e}")
+            self.logger.error(f"Failed to initialize CobraVAD: {e}")
             raise
         self.frame_length = frame_length
         self.sample_rate = sample_rate
 
     def process(self, pcm):
         if len(pcm) != self.frame_length:
-            raise ValueError("Invalid frame length. Expected %d but received %d" % (self.frame_length, len(pcm)))
+            error_message = f"Invalid frame length. Expected {self.frame_length} but received {len(pcm)}"
+            self.logger.error(error_message)
+            raise ValueError(error_message)
 
         pcm_array = (c_short * len(pcm))(*pcm)  # Correct way to create a ctypes array from PCM data
         result = c_float()
@@ -59,18 +63,24 @@ class CobraVAD:
 
         if status is not self.cobra_handle.PicovoiceStatuses.SUCCESS:
             # Raise an exception if processing fails
-            raise self.cobra_handle._PICOVOICE_STATUS_TO_EXCEPTION[status](
-                message='Processing failed',
-                message_stack=self.cobra_handle._get_error_stack())
+            error_message = 'Processing failed'
+            self.logger.error(f"{error_message}: {self.cobra_handle._get_error_stack()}")
+            raise self.cobra_handle._PICOVOICE_STATUS_TO_EXCEPTION[status](message=error_message,
+                                                                          message_stack=self.cobra_handle._get_error_stack())
         return result.value
 
     def __del__(self):
         if hasattr(self, 'cobra_handle') and self.cobra_handle is not None:
-            self.cobra_handle.delete()
+            try:
+                self.cobra_handle.delete()
+                self.logger.info("CobraVAD resources released successfully.")
+            except Exception as e:
+                self.logger.error(f"Failed to release CobraVAD resources: {e}")
 
 # Audio Recorder Class
 class AudioRecorder:
     def __init__(self, vad_engine, output_directory, min_recording_length=3):
+        self.logger = logging.getLogger(__name__)
         self.p = None
         self.MIN_RECORDING_LENGTH = 3
         self.cobra_handle = None
@@ -86,6 +96,7 @@ class AudioRecorder:
         self.is_recording = True
         self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
         self.recording_thread.start()
+        self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
         while self.is_recording:
@@ -95,9 +106,11 @@ class AudioRecorder:
                 if voice_prob > 0.5:  # Assuming 0.5 as the threshold for voice activity
                     with self.lock:
                         self.frames.append(frame)
+                    self.logger.debug("Voice detected, frame appended.")
                 else:
                     if self.should_stop_recording():
                         self.is_recording = False
+                        self.logger.info("Voice activity ended, stopping recording.")
         self.save_to_wav_file(self.frames)
 
     def should_stop_recording(self):
@@ -118,12 +131,14 @@ class AudioRecorder:
             wf.setframerate(self.cobra_handle.sample_rate)
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
+        self.logger.info(f"Recording saved to {filename}.")
         return 'SAVE'
 
     def stop_recording(self):
         self.is_recording = False
         if self.recording_thread:
             self.recording_thread.join()
+        self.logger.info("Recording stopped.")
 
 
 load_dotenv()
