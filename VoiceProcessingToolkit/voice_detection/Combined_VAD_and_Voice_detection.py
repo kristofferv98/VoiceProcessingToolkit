@@ -77,21 +77,27 @@ class AudioRecorder:
     def record_loop(self, audio_data_provider):
         silent_frames = 0
         while self.is_recording:
-            frame = audio_data_provider.get_next_frame()
-            self.process_frame(frame)
-            if not self.recording:
-                self.buffer_audio_frame(frame)
-            else:
-                voice_activity_detected = self.detect_voice_activity(frame)
-                if voice_activity_detected:
-                    self.inactivity_frames = 0
-                    self.frames_to_save.append(frame)
+            try:
+                frame = audio_data_provider.get_next_frame()
+                self.process_frame(frame)
+                if not self.recording:
+                    self.buffer_audio_frame(frame)
                 else:
-                    self.inactivity_frames += 1
-                    silent_frames += 1
-                    self.frames_to_save.append(frame)
-                    if self.should_finalize_recording(silent_frames):
-                        break
+                    voice_activity_detected = self.detect_voice_activity(frame)
+                    if voice_activity_detected:
+                        self.inactivity_frames = 0
+                        self.frames_to_save.append(frame)
+                    else:
+                        self.inactivity_frames += 1
+                        silent_frames += 1
+                        self.frames_to_save.append(frame)
+                        if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
+                            self.logger.info("Inactivity limit exceeded. Finalizing recording...")
+                            self.finalize_recording()
+                            break
+            except Exception as e:
+                self.logger.error(f"An error occurred during recording: {e}")
+                break
 
     def should_finalize_recording(self, silent_frames):
         if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
@@ -204,8 +210,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     load_dotenv()
     audio_data_provider = AudioDataProvider()
-    audio_data_provider.start_stream()
     audio_recorder = AudioRecorder(output_directory='Wav_MP3')
     audio_recorder.start_recording(audio_data_provider)
-    input("Press Enter to stop recording...")
+    try:
+        while audio_recorder.is_recording:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        pass
     audio_recorder.stop_recording()
