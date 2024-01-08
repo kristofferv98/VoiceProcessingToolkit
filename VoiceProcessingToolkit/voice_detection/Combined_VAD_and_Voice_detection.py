@@ -42,14 +42,18 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
-    def __init__(self, output_directory=None, access_key=None):
+    def __init__(self, output_directory=None, access_key=None, voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
         self.access_key = access_key or os.environ.get('PICOVOICE_APIKEY')
-        if not self.access_key:
-            raise ValueError("Cobra access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
         self.vad_engine = self.cobra_handle = pvcobra.create(access_key=self.access_key)
         self.output_directory = output_directory or os.path.join(os.path.dirname(__file__), 'Wav_MP3')
+        self.VOICE_THRESHOLD = voice_threshold
+        self.SILENCE_LIMIT = silence_limit
+        self.INACTIVITY_LIMIT = inactivity_limit
+        self.MIN_RECORDING_LENGTH = min_recording_length
+        self.BUFFER_LENGTH = buffer_length
+        self.audio_buffer = collections.deque(maxlen=self.BUFFER_LENGTH * self.cobra_handle.sample_rate // self.cobra_handle.frame_length)
         self.inactivity_frames = 0
         self.is_recording = False
         self.recording = False
@@ -57,14 +61,8 @@ class AudioRecorder:
         self.frames = []
         self.lock = threading.Lock()
         self.recording_thread = None
-        self.BUFFER_LENGTH = 2  # The size of the internal circular buffer in seconds.
-        self.audio_buffer = collections.deque(
-            maxlen=self.BUFFER_LENGTH * self.cobra_handle.sample_rate // self.cobra_handle.frame_length)
-        self.VOICE_THRESHOLD = 0.8  # Threshold for voice activity detection
-        self.SILENCE_LIMIT = 2  # Silence limit in seconds.
-        self.INACTIVITY_LIMIT = 2  # Inactivity limit in seconds.
-        self.MIN_RECORDING_LENGTH = 3  # Minimum length for recording to be saved (seconds)
         self.audio_data_provider = None
+
 
     def start_recording(self, audio_data_provider):
         self.audio_data_provider = audio_data_provider
@@ -93,7 +91,6 @@ class AudioRecorder:
                         if self.should_finalize_recording(silent_frames):
                             self.logger.info("Inactivity limit exceeded. Finalizing recording...")
                             return
-                            break
             except Exception as e:
                 self.logger.error(f"An error occurred during recording: {e}")
                 break
@@ -218,3 +215,4 @@ if __name__ == '__main__':
         pass
     finally:
         audio_recorder.stop_recording()
+        audio_recorder.cleanup()
