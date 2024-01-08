@@ -67,6 +67,7 @@ class AudioRecorder:
     def perform_recording(self):
         """
         Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
+        Returns the path to the recorded audio file.
         """
         self.audio_data_provider = AudioDataProvider()
         self.start_recording(self.audio_data_provider)
@@ -78,6 +79,7 @@ class AudioRecorder:
         finally:
             self.stop_recording()
             self.cleanup()
+            return self.last_saved_file
 
     def start_recording(self, audio_data_provider):
         self.audio_data_provider = audio_data_provider
@@ -166,17 +168,19 @@ class AudioRecorder:
 
     def finalize_recording(self):
         result = False
+        saved_file_path = None
         if self.frames_to_save:
             recording_length = len(self.frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
             if recording_length >= self.MIN_RECORDING_LENGTH:
-                result = self.save_to_wav_file(self.frames_to_save)
+                saved_file_path = self.save_to_wav_file(self.frames_to_save)
                 self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
             else:
                 self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
         self.recording = False
         self.frames_to_save = []
         self.is_recording = False
-        return result
+        self.last_saved_file = saved_file_path
+        return saved_file_path
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
@@ -201,7 +205,7 @@ class AudioRecorder:
             wf.setframerate(self.cobra_handle.sample_rate)
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
-        return filename
+        return os.path.abspath(filename)
 
     def stop_recording(self):
         self.is_recording = False
