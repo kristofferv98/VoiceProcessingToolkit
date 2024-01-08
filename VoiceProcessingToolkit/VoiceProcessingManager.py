@@ -6,10 +6,8 @@ import pyaudio
 from dotenv import load_dotenv
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
-from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
-
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 logger = logging.getLogger(__name__)
 
@@ -53,10 +51,9 @@ class VoiceProcessingManager:
             play_notification_sound=True
         )
         # Initialize VoiceRecorder
-        self.voice_recorder = AudioRecorder(output_directory=self.output_directory, audio_format=self.audio_format,
-                                            channels=self.channels, rate=self.rate, frames_per_buffer=self.frames_per_buffer,
-                                            voice_threshold=self.voice_threshold, silence_limit=self.silence_limit,
-                                            inactivity_limit=self.inactivity_limit, min_recording_length=self.min_recording_length,
+        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,voice_threshold=self.voice_threshold,
+                                            silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
+                                            min_recording_length=self.min_recording_length,
                                             buffer_length=self.buffer_length)
         # Register the voice recording action
         self.register_voice_recording_action()
