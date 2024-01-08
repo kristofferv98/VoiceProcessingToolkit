@@ -8,12 +8,11 @@ import pvcobra
 import pyaudio
 import numpy as np
 import threading
-
 from dotenv import load_dotenv
 
 
 # Audio Data Provider Class
-class AudioDataProvider:
+class AudioDataProvider(object):
     def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
         self.audio_format = audio_format
         self.channels = channels
@@ -41,8 +40,19 @@ class AudioDataProvider:
             self.py_audio.terminate()
 
 
-class AudioRecorder:
+class AudioRecorder(object):
     def __init__(self, output_directory=None, access_key=None, voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
+        """
+        Initializes the audio recorder with the given parameters.
+        Args:
+            output_directory (str): The directory where recordings will be saved.
+            access_key (str): The access key for the Cobra VAD engine.
+            voice_threshold (float): The threshold for voice detection.
+            silence_limit (int): The number of seconds of silence before stopping the recording.
+            inactivity_limit (int): The number of seconds of inactivity before stopping the recording.
+            min_recording_length (int): The minimum length of a valid recording.
+            buffer_length (int): The length of the audio buffer.
+        """
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
         self.access_key = access_key or os.environ.get('PICOVOICE_APIKEY')
@@ -67,6 +77,11 @@ class AudioRecorder:
     def perform_recording(self):
         """
         Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
+        Returns:
+            str: The path to the recorded audio file.
+        """
+        """
+        Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
         Returns the path to the recorded audio file.
         """
         self.audio_data_provider = AudioDataProvider()
@@ -82,6 +97,11 @@ class AudioRecorder:
             return self.last_saved_file
 
     def start_recording(self, audio_data_provider):
+        """
+        Starts the audio recording process using the provided audio data provider.
+        Args:
+            audio_data_provider (AudioDataProvider): The provider of audio data frames.
+        """
         self.audio_data_provider = audio_data_provider
         self.audio_data_provider.start_stream()
         self.is_recording = True
@@ -90,6 +110,11 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
+        """
+        The main loop for recording audio, processing frames, and managing recording state.
+        Args:
+            audio_data_provider (AudioDataProvider): The provider of audio data frames.
+        """
         silent_frames = 0
         while self.is_recording:
             try:
@@ -113,6 +138,13 @@ class AudioRecorder:
                 break
 
     def should_finalize_recording(self, silent_frames):
+        """
+        Determines whether the recording should be finalized based on the number of silent frames.
+        Args:
+            silent_frames (int): The number of consecutive silent frames.
+        Returns:
+            bool: True if the recording should be finalized, False otherwise.
+        """
         if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
             self.logger.info("No voice detected for a while. Finalizing recording...")
             self.finalize_recording()
@@ -124,16 +156,34 @@ class AudioRecorder:
         return False
 
     def process_frame(self, frame):
+        """
+        Processes a single frame of audio data, detecting voice activity and managing recording state.
+        Args:
+            frame (bytes): A frame of audio data.
+        """
         if frame is not None:
             voice_activity_detected = self.detect_voice_activity(frame)
             self.manage_recording_state(frame, voice_activity_detected)
 
     def detect_voice_activity(self, frame):
+        """
+        Detects voice activity in a frame of audio data.
+        Args:
+            frame (bytes): A frame of audio data.
+        Returns:
+            bool: True if voice activity is detected, False otherwise.
+        """
         audio_frame = np.frombuffer(frame, dtype=np.int16)
         voice_probability = self.vad_engine.process(audio_frame)
         return voice_probability > self.VOICE_THRESHOLD
 
     def manage_recording_state(self, frame, voice_activity_detected):
+        """
+        Manages the recording state based on voice activity detection.
+        Args:
+            frame (bytes): A frame of audio data.
+            voice_activity_detected (bool): Whether voice activity was detected in the frame.
+        """
         with self.lock:
             if voice_activity_detected:
                 self.inactivity_frames = 0
@@ -151,22 +201,38 @@ class AudioRecorder:
                         self.finalize_recording()
 
     def start_new_recording(self):
+        """
+        Starts a new recording, saving the buffered audio frames.
+        """
         self.recording = True
         self.frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
         self.logger.info("Voice Detected - Starting Recording")
 
     def buffer_audio_frame(self, frame):
+        """
+        Buffers an audio frame for potential inclusion in a recording.
+        Args:
+            frame (bytes): A frame of audio data.
+        """
         if len(self.audio_buffer) == self.audio_buffer.maxlen:
             self.audio_buffer.popleft()
         self.audio_buffer.append(frame)
 
     def check_inactivity_duration(self):
+        """
+        Checks the duration of inactivity and finalizes the recording if necessary.
+        """
         if (
                 self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
                 self.INACTIVITY_LIMIT):
             self.finalize_recording()
 
     def finalize_recording(self):
+        """
+        Finalizes the recording, saving it to a file if it meets the minimum length requirement.
+        Returns:
+            str or bool: The path to the saved recording file, or False if the recording was not saved.
+        """
         result = False
         saved_file_path = None
         if self.frames_to_save:
@@ -183,10 +249,22 @@ class AudioRecorder:
         return self.last_saved_file
 
     def should_stop_recording(self):
+        """
+        Determines whether the recording should stop.
+        Returns:
+            bool: True if the recording should stop, False otherwise.
+        """
         # Logic to determine if recording should stop
         return not self.is_recording
 
     def save_to_wav_file(self, frames):
+        """
+        Saves the recorded audio frames to a WAV file.
+        Args:
+            frames (list): A list of audio frames to be saved.
+        Returns:
+            str or bool: The path to the saved WAV file, or False if the recording was not saved.
+        """
         duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
         if duration < self.MIN_RECORDING_LENGTH:
             return False
@@ -208,6 +286,9 @@ class AudioRecorder:
         return os.path.abspath(filename)
 
     def stop_recording(self):
+        """
+        Stops the recording process and joins the recording thread.
+        """
         self.is_recording = False
         if self.recording_thread:
             self.recording_thread.join()
@@ -215,6 +296,9 @@ class AudioRecorder:
         self.logger.info("Recording stopped.")
 
     def cleanup(self):
+        """
+        Cleans up the audio recorder by deleting the Cobra VAD engine handle.
+        """
         """
         Clean up the processor by deleting the Koala handle.
         """
