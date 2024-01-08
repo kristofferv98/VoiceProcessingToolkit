@@ -81,6 +81,15 @@ class AudioRecorder:
         self._recording_thread = None  # Recording thread is now private
         self._audio_data_provider = None  # Audio data provider is now private
 
+    def cleanup(self):
+        """
+        Cleans up the resources used by the audio recorder.
+        """
+        if self._recording_thread and self._recording_thread.is_alive():
+            self._recording_thread.join()
+        if self._audio_data_provider:
+            self._audio_data_provider.stop_stream()
+
     def perform_recording(self) -> str:
         """
         Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
