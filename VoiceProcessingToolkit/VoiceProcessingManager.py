@@ -69,12 +69,14 @@ class VoiceProcessingManager:
         Returns:
             str: The transcription of the recorded audio.
         """
-        transcription = None
+        transcription = ""
         try:
             self.wake_word_detector.run()
             recorded_file = self.voice_recorder.last_saved_file
             if recorded_file:
                 transcription = self.transcriber.transcribe_audio(recorded_file)
+                # Ensure pygame mixer is properly closed to prevent hanging
+                pygame.mixer.quit()
         except Exception as e:
             logger.exception("An error occurred during voice processing.", exc_info=e)
         finally:
