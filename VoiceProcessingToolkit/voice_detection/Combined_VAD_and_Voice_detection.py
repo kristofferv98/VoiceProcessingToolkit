@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+load_dotenv()
+
 import numpy as np
 import pyaudio
 import pvcobra
