@@ -161,11 +161,11 @@ def example_usage():
     # Set up the required parameters for AudioStreamManager
     rate = 16000  # Sample rate
     channels = 1  # Number of audio channels
-    format = pyaudio.paInt16  # Audio format
+    audio_format = pyaudio.paInt16  # Audio format
     frames_per_buffer = 512  # Number of frames per buffer
 
     # Create an instance of AudioStreamManager
-    audio_stream_manager = AudioStream(rate, channels, format, frames_per_buffer)
+    audio_stream_manager = AudioStream(rate, channels, audio_format, frames_per_buffer)
 
     # Create an instance of ActionManager
     action_manager = ActionManager()
