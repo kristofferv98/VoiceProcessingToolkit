@@ -10,7 +10,7 @@ import numpy as np
 import pyaudio
 import pvcobra
 
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 
@@ -58,7 +58,7 @@ class AudioRecorder:
             buffer_length (int): The length of the audio buffer.
         """
         self._last_saved_file = None
-        self._logger = logging.getLogger(__name__)  # Logger is now private
+        self._logger = logger.getLogger(__name__)  # Logger is now private
         self._py_audio = pyaudio.PyAudio()
         self._access_key = access_key or os.environ.get('PICOVOICE_APIKEY')  # Access key is now private
         self._vad_engine = self._cobra_handle = pvcobra.create(
@@ -283,7 +283,7 @@ class AudioRecorder:
             wf.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16))
             wf.setframerate(self._cobra_handle.sample_rate)
             wf.writeframes(b''.join(frames))
-        logging.info(f"Saved to {filename}")
+        logger.info(f"Saved to {filename}")
         return os.path.abspath(filename)
 
     def stop_recording(self) -> None:
@@ -306,4 +306,4 @@ class AudioRecorder:
 if __name__ == '__main__':
     audio_recorder = AudioRecorder(output_directory='Wav_MP3')
     recorded_file = audio_recorder.perform_recording()
-    logging.info(f"Saved to {recorded_file}")
+    logger.info(f"Saved to {recorded_file}")
