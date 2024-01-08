@@ -10,6 +10,8 @@ from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
+from text_to_speech.elevenlabs_tts import text_to_speech_stream
+
 logger = logging.getLogger(__name__)
 
 
@@ -151,5 +153,7 @@ if __name__ == '__main__':
     transcription = manager.start_and_transcribe()
     if transcription:
         logger.info(f"Transcription: {transcription}")
+
+    tts = text_to_speech_stream(transcription)
 
 
