@@ -150,8 +150,8 @@ class AudioRecorder:
         pass
 
     def save_to_wav_file(self, frames):
-        recording_length = len(frames) * self.frame_length / self.sample_rate
-        if recording_length < self.MIN_RECORDING_LENGTH:
+        duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+        if duration < self.MIN_RECORDING_LENGTH:
             return 'UNDER_MIN_LENGTH'
 
         recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
@@ -160,9 +160,10 @@ class AudioRecorder:
         with wave.open(filename, 'wb') as wf:
             wf.setnchannels(1)
             wf.setsampwidth(self.p.get_sample_size(pyaudio.paInt16))
-            wf.setframerate(self.sample_rate)
+            wf.setframerate(self.cobra_handle.sample_rate)
             wf.writeframes(b''.join(frames))
         logging.info(f"Saved to {filename}")
+        return 'SAVE'
         self.logger.info(f"Recording saved to {filename}.")
         return 'SAVE'
 
