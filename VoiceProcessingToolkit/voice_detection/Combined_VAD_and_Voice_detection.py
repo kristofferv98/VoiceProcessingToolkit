@@ -7,11 +7,11 @@ import time
 import threading
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.INFO)
-load_dotenv()
+logging.basicConfig(level=logging.INFO)  # Configure logging at the start of the script
+load_dotenv()  # Load environment variables from a .env file
 
-logging.basicConfig(level=logging.INFO)
-load_dotenv()
+logging.basicConfig(level=logging.INFO)  # Configure logging at the start of the script
+load_dotenv()  # Load environment variables from a .env file
 
 import numpy as np
 import pyaudio
@@ -29,7 +29,7 @@ class AudioDataProvider:
         self.rate = rate
         self.frames_per_buffer = frames_per_buffer
         self.stream = None
-        self._py_audio = pyaudio.PyAudio()
+        self._py_audio = pyaudio.PyAudio()  # PyAudio instance is now private
 
     def start_stream(self):
         self.stream = self._py_audio.open(
@@ -64,11 +64,11 @@ class AudioRecorder:
             min_recording_length (int): The minimum length of a valid recording.
             buffer_length (int): The length of the audio buffer.
         """
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger(__name__)  # Logger is now private
         self._py_audio = pyaudio.PyAudio()
-        self._access_key = access_key or os.environ.get('PICOVOICE_APIKEY')
-        self._vad_engine = self._cobra_handle = pvcobra.create(access_key=self._access_key)
-        self._output_directory = output_directory or os.path.join(os.path.dirname(__file__), 'Wav_MP3')
+        self._access_key = access_key or os.environ.get('PICOVOICE_APIKEY')  # Access key is now private
+        self._vad_engine = self._cobra_handle = pvcobra.create(access_key=self._access_key)  # VAD engine and Cobra handle are now private
+        self._output_directory = output_directory or os.path.join(os.path.dirname(__file__), 'Wav_MP3')  # Output directory is now private
         self.VOICE_THRESHOLD = voice_threshold
         self.SILENCE_LIMIT = silence_limit
         self.INACTIVITY_LIMIT = inactivity_limit
@@ -76,14 +76,14 @@ class AudioRecorder:
         self.BUFFER_LENGTH = buffer_length
         self._audio_buffer = collections.deque(maxlen=self.BUFFER_LENGTH * self._cobra_handle.sample_rate // self.
                                                _cobra_handle.frame_length)
-        self._inactivity_frames = 0
-        self._is_recording = False
-        self._recording = False
-        self._frames_to_save = []
-        self._frames = []
-        self._lock = threading.Lock()
-        self._recording_thread = None
-        self._audio_data_provider = None
+        self._inactivity_frames = 0  # Inactivity frames counter is now private
+        self._is_recording = False  # Recording state is now private
+        self._recording = False  # Recording state is now private
+        self._frames_to_save = []  # Frames to save are now private
+        self._frames = []  # Frames are now private
+        self._lock = threading.Lock()  # Lock for thread safety is now private
+        self._recording_thread = None  # Recording thread is now private
+        self._audio_data_provider = None  # Audio data provider is now private
 
     def perform_recording(self) -> str:
         """
@@ -136,7 +136,7 @@ class AudioRecorder:
                 else:
                     voice_activity_detected = self.detect_voice_activity(frame)
                     if voice_activity_detected:
-                        self._inactivity_frames = 0
+                        self._inactivity_frames = 0  # Inactivity frames counter is now private
                         self.frames_to_save.append(frame)
                     else:
                         self._inactivity_frames += 1
@@ -197,7 +197,7 @@ class AudioRecorder:
         """
         with self._lock:
             if voice_activity_detected:
-                self._inactivity_frames = 0
+                self._inactivity_frames = 0  # Inactivity frames counter is now private
                 if not self.is_recording:
                     self.start_new_recording()
                 self.frames_to_save.append(frame)
@@ -255,9 +255,9 @@ class AudioRecorder:
             else:
                 self._logger.info(
                     f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
-        self._recording = False
-        self._frames_to_save = []
-        self._is_recording = False
+        self._recording = False  # Recording state is now private
+        self._frames_to_save = []  # Frames to save are now private
+        self._is_recording = False  # Recording state is now private
         self.last_saved_file = saved_file_path if saved_file_path else False
         return self.last_saved_file
 
@@ -293,7 +293,7 @@ class AudioRecorder:
         """
         Stops the recording process and joins the recording thread.
         """
-        self._is_recording = False
+        self._is_recording = False  # Recording state is now private
         if self.recording_thread:
             self.recording_thread.join()
             self._py_audio.terminate()
