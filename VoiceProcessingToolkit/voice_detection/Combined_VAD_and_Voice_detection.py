@@ -4,9 +4,12 @@ import logging
 import os
 import wave
 
+import pvcobra
 import pyaudio
 import numpy as np
 import threading
+
+from dotenv import load_dotenv
 
 
 # Audio Data Provider Class
@@ -39,10 +42,13 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
-    def __init__(self, vad_engine, output_directory):
+    def __init__(self, output_directory, access_key=None):
         self.logger = logging.getLogger(__name__)
         self.py_audio = pyaudio.PyAudio()
-        self.cobra_handle = vad_engine
+        self.access_key = access_key or os.environ.get('PICOVOICE_APIKEY')
+        if not self.access_key:
+            raise ValueError("Cobra access key must be provided or set as an environment variable 'PICOVOICE_APIKEY'")
+        self.vad_engine = self.cobra_handle = pvcobra.create(access_key=self.access_key)
         self.output_directory = output_directory
         self.inactivity_frames = 0
         self.is_recording = False
@@ -66,7 +72,6 @@ class AudioRecorder:
         self.logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider):
-        # The recording and frames_to_save attributes are now initialized in __init__
         silent_frames = 0
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
@@ -162,3 +167,20 @@ class AudioRecorder:
             self.recording_thread.join()
             self.py_audio.terminate()
         self.logger.info("Recording stopped.")
+
+    def cleanup(self):
+        """
+        Clean up the processor by deleting the Koala handle.
+        """
+        self.vad_engine.delete()
+
+
+if __name__ == '__main__':
+    # dotenv from load_dotenv
+    load_dotenv()
+    audio_data_provider = AudioDataProvider()
+    audio_recorder = AudioRecorder(output_directory=os.path.join(os.path.dirname(__file__), 'Wav_MP3'))
+    audio_recorder.start_recording(audio_data_provider)
+    input("Press ENTER to stop recording.")
+    audio_recorder.stop_recording()
+    audio_recorder.cleanup()
