@@ -15,14 +15,21 @@ logger = logging.getLogger(__name__)
 
 
 class VoiceProcessingManager:
-    def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3'):
+    def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
+                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
+                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
+        self.audio_format = audio_format
+        self.channels = channels
+        self.rate = rate
+        self.frames_per_buffer = frames_per_buffer
         self.voice_threshold = voice_threshold
         self.silence_limit = silence_limit
         self.inactivity_limit = inactivity_limit
         self.min_recording_length = min_recording_length
+        self.buffer_length = buffer_length
         self.audio_stream_manager = None
         self.wake_word_detector = None
         self.voice_recorder = None
@@ -33,8 +40,8 @@ class VoiceProcessingManager:
 
     def setup(self):
         # Initialize AudioStream
-        self.audio_stream_manager = AudioStream(rate=16000, channels=1, _audio_format=pyaudio.paInt16,
-                                                frames_per_buffer=512)
+        self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
+                                                _audio_format=self.audio_format, frames_per_buffer=self.frames_per_buffer)
 
         # Initialize WakeWordDetector
         self.wake_word_detector = WakeWordDetector(
@@ -46,8 +53,11 @@ class VoiceProcessingManager:
             play_notification_sound=True
         )
         # Initialize VoiceRecorder
-        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
-                                            voice_threshold=self.voice_threshold, silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit, min_recording_length=self.min_recording_length)
+        self.voice_recorder = AudioRecorder(output_directory=self.output_directory, audio_format=self.audio_format,
+                                            channels=self.channels, rate=self.rate, frames_per_buffer=self.frames_per_buffer,
+                                            voice_threshold=self.voice_threshold, silence_limit=self.silence_limit,
+                                            inactivity_limit=self.inactivity_limit, min_recording_length=self.min_recording_length,
+                                            buffer_length=self.buffer_length)
         # Register the voice recording action
         self.register_voice_recording_action()
 
