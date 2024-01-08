@@ -64,8 +64,11 @@ class AudioRecorder:
         self.SILENCE_LIMIT = 2  # Silence limit in seconds.
         self.INACTIVITY_LIMIT = 2  # Inactivity limit in seconds.
         self.MIN_RECORDING_LENGTH = 3  # Minimum length for recording to be saved (seconds)
+        self.audio_data_provider = None
 
     def start_recording(self, audio_data_provider):
+        self.audio_data_provider = audio_data_provider
+        self.audio_data_provider.start_stream()
         self.is_recording = True
         self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
         self.recording_thread.start()
@@ -179,6 +182,7 @@ if __name__ == '__main__':
     # dotenv from load_dotenv
     load_dotenv()
     audio_data_provider = AudioDataProvider()
+    audio_data_provider.start_stream()
     audio_recorder = AudioRecorder(output_directory=os.path.join(os.path.dirname(__file__), 'Wav_MP3'))
     audio_recorder.start_recording(audio_data_provider)
     input("Press ENTER to stop recording.")
