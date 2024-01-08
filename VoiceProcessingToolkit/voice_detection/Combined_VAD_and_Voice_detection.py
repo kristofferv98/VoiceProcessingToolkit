@@ -90,18 +90,19 @@ class AudioRecorder:
                     self.inactivity_frames += 1
                     silent_frames += 1
                     self.frames_to_save.append(frame)
-                    if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
-                        self.logger.info("No voice detected for a while. Exiting...")
-                        self.finalize_recording()
+                    if self.should_finalize_recording(silent_frames):
                         break
-                    if silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.SILENCE_LIMIT:
-                        recording_length = len(self.frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
-                        if recording_length >= self.MIN_RECORDING_LENGTH:
-                            self.save_to_wav_file(self.frames_to_save)
-                            self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
-                            self.finalize_recording()
-                            break
 
+    def should_finalize_recording(self, silent_frames):
+        if self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
+            self.logger.info("No voice detected for a while. Finalizing recording...")
+            self.finalize_recording()
+            return True
+        if silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.SILENCE_LIMIT:
+            self.logger.info("Exceeded silence limit. Finalizing recording...")
+            self.finalize_recording()
+            return True
+        return False
     def process_frame(self, frame):
         if frame is not None:
             voice_activity_detected = self.detect_voice_activity(frame)
@@ -146,12 +147,13 @@ class AudioRecorder:
             self.finalize_recording()
 
     def finalize_recording(self):
-        recording_length = len(self.frames_to_save) * self.vad_engine.frame_length / self.vad_engine.sample_rate
-        if recording_length >= self.MIN_RECORDING_LENGTH:
-            self.save_to_wav_file(self.frames_to_save)
-            self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
-        else:
-            self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
+        if self.frames_to_save:
+            recording_length = len(self.frames_to_save) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+            if recording_length >= self.MIN_RECORDING_LENGTH:
+                self.save_to_wav_file(self.frames_to_save)
+                self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
+            else:
+                self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
         self.recording = False
         self.frames_to_save = []
 
