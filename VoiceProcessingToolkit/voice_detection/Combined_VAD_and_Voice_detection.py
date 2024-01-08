@@ -79,7 +79,7 @@ class AudioRecorder:
         while self.is_recording:
             frame = audio_data_provider.get_next_frame()
             self.process_frame(frame)
-            if self.should_stop_recording() or (
+            if (
                     self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
                     self.INACTIVITY_LIMIT):
                 self.finalize_recording()
@@ -146,8 +146,10 @@ class AudioRecorder:
         self.frames_to_save = []
 
     def should_stop_recording(self):
-        # Logic to determine if recording should stop
-        return not self.is_recording
+        # Logic to determine if recording should stop based on a condition
+        # For example, a stop command received, a maximum recording duration reached, etc.
+        # This is a placeholder for the actual condition, which needs to be implemented.
+        return False
 
     def save_to_wav_file(self, frames):
         duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
