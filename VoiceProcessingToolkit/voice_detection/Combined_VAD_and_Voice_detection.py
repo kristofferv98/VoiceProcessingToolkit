@@ -74,70 +74,22 @@ class AudioRecorder:
         self.recording_thread.start()
         self.logger.info("Recording started.")
 
-    def calculate_recording_length(self, frames):
-        return len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
-
     def record_loop(self, audio_data_provider):
-        recording = False
-        frames_to_save = []
-        inactivity_frames = 0
         silent_frames = 0
-        self.logger.debug("Entering record loop.")
-        try:
-            while self.is_recording:
-                audio_frame = audio_data_provider.get_next_frame()
-                voice_probability = self.cobra_handle.process(np.frombuffer(audio_frame, dtype=np.int16))
-
-                if voice_probability > self.VOICE_THRESHOLD:
-                    inactivity_frames = 0
-                    silent_frames = 0
-                    if not recording:
-                        recording = True
-                        frames_to_save = list(self.audio_buffer)  # Collect buffered audio when voice is detected
-                        self.logger.info("Voice Detected - Starting Recording")
-                    frames_to_save.append(audio_frame)
-                else:
-                    if len(self.audio_buffer) == self.audio_buffer.maxlen:
-                        self.audio_buffer.popleft()
-                    self.audio_buffer.append(audio_frame)
-                    inactivity_frames += 1
-                    if recording:
-                        silent_frames += 1
-                        frames_to_save.append(audio_frame)
-                        if silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.SILENCE_LIMIT:
-                            recording_length = self.calculate_recording_length(frames_to_save)
-                            if recording_length >= self.MIN_RECORDING_LENGTH:
-                                self.save_to_wav_file(frames_to_save)
-                                self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
-                                recording = False
-                                frames_to_save = []
-                                return "SAVE"
-                            else:
-                                frames_to_save = []
-                                recording = False
-                                self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
-
-                if inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate > self.INACTIVITY_LIMIT:
-                    self.logger.info("No voice detected for a while. Exiting...")
-                    if recording:
-                        self.finalize_recording()
-                    return 'NO_VOICE_EXIT'
-            self.logger.debug("Exiting record loop normally.")
-        except KeyboardInterrupt:
-            if frames_to_save:
-                recording_length = self.calculate_recording_length(frames_to_save)
-                if recording_length >= self.MIN_RECORDING_LENGTH:
-                    self.save_to_wav_file(frames_to_save)
-                    self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
-                    return "SAVE"
-                else:
-                    self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
-                    return "UNDER_MIN_LENGTH"
-            self.logger.info("Exiting...")
-        finally:
-            if self.is_recording:
-                self.stop_recording()
-        self.logger.debug("Record loop has ended.")
+        while self.is_recording:
+            frame = audio_data_provider.get_next_frame()
+            self.process_frame(frame)
+            if self.should_stop_recording() or (
+                    self.inactivity_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
+                    self.INACTIVITY_LIMIT):
+                self.finalize_recording()
+                break
+            if self.recording:
+                silent_frames += 1
+                if (
+                        silent_frames * self.cobra_handle.frame_length / self.cobra_handle.sample_rate >
+                        self.SILENCE_LIMIT):
+                    self.finalize_recording()
 
     def process_frame(self, frame):
         if frame is not None:
@@ -183,21 +135,18 @@ class AudioRecorder:
             self.finalize_recording()
 
     def finalize_recording(self):
-        frame_count = len(self.frames_to_save)
-        recording_length = frame_count * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
+        recording_length = len(self.frames_to_save) * self.vad_engine.frame_length / self.vad_engine.sample_rate
         if recording_length >= self.MIN_RECORDING_LENGTH:
             self.save_to_wav_file(self.frames_to_save)
             self.logger.info(f"Recording of {recording_length:.2f} seconds saved.")
         else:
-            self.logger.info(f"Recording of {recording_length:.2f} seconds with {frame_count} frames is under the minimum length ({self.MIN_RECORDING_LENGTH} seconds). Not saved.")
+            self.logger.info(f"Recording of {recording_length:.2f} seconds is under the minimum length. Not saved.")
         self.recording = False
         self.frames_to_save = []
 
     def should_stop_recording(self):
-        # Logic to determine if recording should stop based on a condition
-        # For example, a stop command received, a maximum recording duration reached, etc.
-        # This is a placeholder for the actual condition, which needs to be implemented.
-        return False
+        # Logic to determine if recording should stop
+        return not self.is_recording
 
     def save_to_wav_file(self, frames):
         duration = len(frames) * self.cobra_handle.frame_length / self.cobra_handle.sample_rate
@@ -217,7 +166,6 @@ class AudioRecorder:
 
     def stop_recording(self):
         self.is_recording = False
-        self.logger.debug("Stopping recording...")
         if self.recording_thread:
             self.recording_thread.join()
             self.py_audio.terminate()
