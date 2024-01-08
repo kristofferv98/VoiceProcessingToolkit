@@ -134,7 +134,16 @@ if __name__ == '__main__':
     load_dotenv()
     # set the
     logging.basicConfig(level=logging.INFO)
-    manager = VoiceProcessingManager()
-    manager.run()
+    def start_voice_processing():
+        manager = VoiceProcessingManager()
+        try:
+            manager.run()
+        except Exception as e:
+            logger.exception("An error occurred during voice processing.", exc_info=e)
+        finally:
+            manager.cleanup()
+            logger.info("Voice processing has been stopped.")
+
+    start_voice_processing()
 
 
