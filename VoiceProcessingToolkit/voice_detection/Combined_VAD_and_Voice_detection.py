@@ -179,8 +179,8 @@ class AudioRecorder:
         self.recording = False
         self.frames_to_save = []
         self.is_recording = False
-        self.last_saved_file = saved_file_path
-        return saved_file_path
+        self.last_saved_file = saved_file_path if saved_file_path else False
+        return self.last_saved_file
 
     def should_stop_recording(self):
         # Logic to determine if recording should stop
