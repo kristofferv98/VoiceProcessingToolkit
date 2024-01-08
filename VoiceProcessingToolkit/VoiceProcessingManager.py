@@ -21,6 +21,7 @@ class VoiceProcessingManager:
         self.voice_recorder = None
         self.action_manager = ActionManager()
         self.setup()
+        self.recording_thread = None
 
     def setup(self):
         # Initialize AudioStream
@@ -45,7 +46,12 @@ class VoiceProcessingManager:
         @register_action_decorator(self.action_manager)
         def start_voice_recording():
             logger.info("Wake word detected, starting voice recording...")
-            recorded_file = self.voice_recorder.perform_recording()
+            # Start the recording in a separate thread to avoid blocking the main thread
+            if self.recording_thread is None or not self.recording_thread.is_alive():
+                self.recording_thread = threading.Thread(target=self.voice_recorder.perform_recording)
+                self.recording_thread.start()
+            else:
+                logger.warning("A recording is already in progress.")
             logger.info(f"Voice recording saved to {recorded_file}")
 
     def run(self):
@@ -60,6 +66,8 @@ class VoiceProcessingManager:
 
     def cleanup(self):
         self.audio_stream_manager.cleanup()
+        if self.recording_thread and self.recording_thread.is_alive():
+            self.recording_thread.join()
         self.voice_recorder.cleanup()
 
 
