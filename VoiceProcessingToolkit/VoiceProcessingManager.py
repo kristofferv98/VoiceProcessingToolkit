@@ -71,7 +71,8 @@ class VoiceProcessingManager:
         """
         transcription = ""
         try:
-            self.wake_word_detector.run()
+            # Run the wake word detection and recording once
+            self.wake_word_detector.run_once()
             recorded_file = self.voice_recorder.last_saved_file
             if recorded_file:
                 transcription = self.transcriber.transcribe_audio(recorded_file)
@@ -136,6 +137,14 @@ class VoiceProcessingManager:
         """
         transcription = self.start_and_transcribe()
         return transcription
+
+    def run_once(self):
+        """
+        Starts the wake word detection and handles the voice processing workflow for a single iteration.
+        """
+        self.setup()
+        self.wake_word_detector.voice_loop()  # Run the detection loop once
+        self.cleanup()
 
     def cleanup(self):
         """
