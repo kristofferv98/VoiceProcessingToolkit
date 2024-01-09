@@ -78,15 +78,9 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
             api_key=config.elevenlabs_api_key,
             stream=True  # Enable streaming
         )
-        try:
-            # Stream the audio if playback is enabled
-            if config.playback_enabled:
-                stream(audio_stream)
-        except KeyboardInterrupt:
-            config.stop_playback()
-            logging.info("Streaming text-to-speech interrupted by user.")
-        except Exception as e:
-            logging.exception(f"An error occurred during streaming text-to-speech: {e}")
+        # Stream the audio if playback is enabled
+        if config.playback_enabled:
+            stream(audio_stream)
     except Exception as e:
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
