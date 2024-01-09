@@ -71,40 +71,6 @@ class VoiceProcessingManager:
         else:
             logger.info("No transcription was made.")
 
-    def record_voice(self):
-        """
-        Method to record a voice command without wake word detection and return the path to the recorded audio file.
-
-        Returns:
-            str or None: The path to the recorded audio file, or None if no recording was made.
-        """
-        # Start recording
-        self.voice_recorder.perform_recording()
-        # Wait for the recording to complete
-        if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
-
-        # Return the path to the recorded audio file
-        return self.voice_recorder.last_saved_file if self.voice_recorder.last_saved_file else None
-
-    def transcribe_audio(self, audio_file_path):
-        """
-        Method to transcribe a given audio file and return the transcription.
-
-        Args:
-            audio_file_path (str): The path to the audio file to be transcribed.
-
-        Returns:
-            str or None: The transcribed text of the audio file, or None if transcription fails.
-        """
-        # Transcribe the audio file
-        transcription = self.transcriber.transcribe_audio(audio_file_path)
-        if transcription:
-            logger.info(f"Transcription: {transcription}")
-        else:
-            logger.info("No transcription was made.")
-        return transcription
-
     def wakeword_transcription(self):
         """
         Method to process a voice command after wake word detection and return the transcription.
@@ -175,16 +141,7 @@ def main():
     # Load environment variables
     load_dotenv()
     vpm = VoiceProcessingManager()
-    # Example usage of the new record and transcribe methods
-    recorded_file = vpm.record_voice()
-    if recorded_file:
-        transcription = vpm.transcribe_audio(recorded_file)
-        if transcription:
-            logger.info(f"Transcription: {transcription}")
-        else:
-            logger.info("No transcription was made.")
-    else:
-        logger.info("No recording was made.")
+    vpm.wakeword_tts()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
