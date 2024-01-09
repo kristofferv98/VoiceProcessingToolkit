@@ -1,6 +1,5 @@
 import logging
 import os
-import threading
 
 import pyaudio
 from dotenv import load_dotenv
@@ -41,7 +40,6 @@ class VoiceProcessingManager:
             min_recording_length (int): The minimum length of a valid recording.
             buffer_length (int): The length of the audio buffer.
         """
-        self.transcription = None
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
