@@ -2,7 +2,9 @@ import json
 import logging
 import os
 import tempfile
+import time
 
+import pygame
 from dotenv import load_dotenv
 from elevenlabs import generate, stream
 
@@ -43,6 +45,7 @@ class ElevenLabsConfig:
 
 class ElevenLabsTextToSpeech:
     def __init__(self, config=None, voice_id=None):
+        self.temp_dir = None
         self.config = config or ElevenLabsConfig(voice_id=voice_id)
 
     def synthesize_speech(self, text, output_dir=None):
@@ -81,21 +84,22 @@ class ElevenLabsTextToSpeech:
             }
         }
 
-        # Ensure the output directory exists
-        if not output_dir:
+        # Check if output_dir is provided or not
+        use_temp_dir = output_dir is None
+
+        if use_temp_dir:
+            # Use a temporary directory to store and play the audio
             temp_dir = tempfile.TemporaryDirectory()
             output_dir = temp_dir.name
-            os.makedirs(output_dir, exist_ok=True)
-        else:
-            # Ensure the specified output directory exists
-            os.makedirs(output_dir, exist_ok=True)
+
+        os.makedirs(output_dir, exist_ok=True)
 
         try:
             logging.debug("Sending request to ElevenLabs API for text-to-speech synthesis")
             response = requests.post(ELEVENLABS_API_URL + voice_id, headers=headers, json=data)
             logging.debug("Received response from ElevenLabs API with status code: %s", response.status_code)
             if response.status_code == 200:
-                # The output directory is guaranteed to exist at this point
+                # Define the output file path
                 output_file = os.path.join(output_dir, 'output.mp3')
                 with open(output_file, 'wb') as f:
                     f.write(response.content)
@@ -104,7 +108,24 @@ class ElevenLabsTextToSpeech:
 
                 # Initialize pygame mixer and play audio file if playback is enabled
                 if config.playback_enabled:
-                    return output_file
+                    pygame.mixer.init()
+                    pygame.mixer.music.load(output_file)
+                    pygame.mixer.music.play()
+
+                    # Wait for the playback to finish if using a temporary directory
+                    if use_temp_dir:
+                        while pygame.mixer.music.get_busy():
+                            time.sleep(1)
+
+                    pygame.mixer.quit()
+
+                    # If using a temporary directory, the file will be deleted upon exiting the context
+                    if output_dir is None:
+                        # Cleanup the temporary directory after playback
+                        self.temp_dir.cleanup()
+                        self.temp_dir = None
+                        return None
+                return output_file if not use_temp_dir else None
             else:
                 error_message = f"API Error: Status code {response.status_code}. Response: {response.text}"
                 if response.status_code == 401:
@@ -117,73 +138,8 @@ class ElevenLabsTextToSpeech:
             return None
 
 
-def text_to_speech(text, output_dir=None, voice_id=None):
-    """
-    Synthesizes speech from text using ElevenLabs API with minimal configuration required from the user.
-
-    This function serves as a simple and direct way to convert text to speech, handling the instantiation of the
-    ElevenLabsTextToSpeech class and the retrieval of the API key from the ELEVENLABS_API_KEY environment variable.
-    If the output directory is not specified, the audio file will be saved in a default 'audio_files' directory.
-
-    Args:
-        text (str): The text to be converted into speech.
-        output_dir (str, optional): The directory where the audio file will be saved. Defaults to None.
-        config (ElevenLabsConfig, optional): The configuration for ElevenLabs TTS. If not provided, defaults will be used.
-
-    Returns:
-        str: The file path to the saved audio file if the synthesis was successful, None otherwise.
-        :param text:
-        :param output_dir:
-        :param voice_id:
-    """
-    if config is None:
-        config = ElevenLabsConfig(voice_id=voice_id)
-    tts = ElevenLabsTextToSpeech(config=config)
-    return tts.synthesize_speech(text, output_dir)
-
-def text_to_speech_stream(text, config=None, voice_id=None):
-    """
-    Streams synthesized speech from text using ElevenLabs API.
-
-    Args:
-        text (str): The text to be converted into speech.
-        config (ElevenLabsConfig, optional): Configuration for ElevenLabs API. If not provided, defaults will be used.
-        voice_id (str, optional): The ID of the voice to be used for speech synthesis. Overrides the voice_id in config if provided.
-        :param text:
-        :param config:
-        :param voice_id:
-    """
-    if config is None:
-        config = ElevenLabsConfig()
-    if not text:
-        logging.info("No text provided for synthesis.")
-        return
-
-    # Ensure text-to-speech is enabled
-    if not config.enable_text_to_speech:
-        logging.info("Text-to-speech is disabled in settings.")
-        return
-
-    try:
-        # Generate the audio stream
-        audio_stream = generate(
-            text=text,
-            voice=voice_id or config.voice_id,
-            model=config.model_id,
-            api_key=config.elevenlabs_api_key,
-            stream=True  # Enable streaming
-        )
-
-        # Stream the audio if playback is enabled
-        if config.playback_enabled:
-            stream(audio_stream)
-    except Exception as e:
-        logging.exception(f"An error occurred during streaming text-to-speech: {e}")
-
-
 
 if __name__ == '__main__':
     load_dotenv()
     logging.basicConfig(level=logging.DEBUG)
-    text_to_speech_stream("""EXAMPLE""")
 
