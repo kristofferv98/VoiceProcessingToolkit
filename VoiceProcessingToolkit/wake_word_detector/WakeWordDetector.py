@@ -86,7 +86,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
-                 play_notification_sound: bool = True) -> None:
+                 play_notification_sound: bool = True, stop_event=None) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
 
