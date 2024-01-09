@@ -71,10 +71,14 @@ class VoiceProcessingManager:
         self.wake_word_detector.run_blocking()
 
         # Once wake word is detected, start recording
-        recorded_file = self.voice_recorder.perform_recording()
+        self.voice_recorder.perform_recording()
+        # Wait for the recording to complete
+        if self.voice_recorder.recording_thread:
+            self.voice_recorder.recording_thread.join()
 
         # If a recording was made, transcribe it
-        if recorded_file:
+        if self.voice_recorder.last_saved_file:
+            recorded_file = self.voice_recorder.last_saved_file
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 
