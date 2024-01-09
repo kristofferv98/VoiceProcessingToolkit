@@ -163,7 +163,7 @@ def main():
     # Load environment variables
     load_dotenv()
     vpm = VoiceProcessingManager()
-    vpm.wakeword_tts()
+    vpm.recorder_transcriber()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
