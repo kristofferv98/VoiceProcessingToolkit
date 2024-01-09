@@ -133,7 +133,7 @@ class WakeWordDetector:
         self.is_running = True
         try:
             while not self._stop_event.is_set() and not shutdown_flag.is_set():
-                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
+                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
@@ -142,7 +142,6 @@ class WakeWordDetector:
             logger.exception("An error occurred during wake word detection.", exc_info=e)
         finally:
             self.is_running = False
-        # Check if shutdown flag is set and stop the loop
 
     def handle_wake_word_detection(self):
         """
