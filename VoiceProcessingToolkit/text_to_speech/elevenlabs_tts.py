@@ -20,17 +20,15 @@ class ElevenLabsConfig:
     def __init__(self, api_key=None, voice_id=None, model_id=None, playback_enabled=True):
         # The API key for ElevenLabs can be provided as an argument or set as an environment variable
         # 'ELEVENLABS_API_KEY'.
+class ElevenLabsConfig:
+    def __init__(self, api_key=None, voice_id=None, model_id=None, playback_enabled=True):
         self.elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY', api_key) or api_key
         self.voice_id = voice_id or "eqI1AF0IrvwU3tgfmt0B"
         self.model_id = model_id or ELEVENLABS_MODEL_ID
         self.enable_text_to_speech = True
         self.playback_enabled = playback_enabled
 
-        if not self.elevenlabs_api_key:
-            raise ValueError("API key is required for ElevenLabsTextToSpeech.")
 
-        if not self.elevenlabs_api_key:
-            raise ValueError("API key is required for ElevenLabsTextToSpeech.")
 
     def load_settings(self, settings_file='config/settings.json'):
         try:
@@ -136,8 +134,6 @@ class ElevenLabsTextToSpeech:
         except Exception as e:
             logging.exception(f"An error occurred in text_to_speech: {e}")
             return None
-                    pygame.mixer.quit()
-                    self.mixer_initialized = False
 
     def stop_playback(self):
         """
