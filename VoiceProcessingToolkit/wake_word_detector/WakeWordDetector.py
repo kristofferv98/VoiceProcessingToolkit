@@ -152,6 +152,14 @@ class WakeWordDetector:
         detection_thread.join()  # Wait for the thread to finish
         self.cleanup()  # Cleanup resources after the thread has finished
 
+    def run_blocking(self) -> None:
+        """
+        Starts the wake word detection loop and waits for it to finish before returning.
+        This method is intended to be used when the detection should block the calling thread.
+        """
+        self.voice_loop()
+        self.cleanup()
+
     def cleanup(self) -> None:
         """
         Cleans up the resources used by the wake word detector.
