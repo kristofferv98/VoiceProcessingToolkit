@@ -17,10 +17,7 @@ ELEVENLABS_MODEL_ID = 'eleven_monolingual_v1'
 
 # Configuration class
 class ElevenLabsConfig:
-    def __init__(self, api_key=None, voice_id=None, model_id=None, playback_enabled=True):
-        # The API key for ElevenLabs can be provided as an argument or set as an environment variable
-        # 'ELEVENLABS_API_KEY'.
-class ElevenLabsConfig:
+    # The API key forElevenLabs can be provided as an argument or set as an environment variable 'ELEVENLABS_API_KEY'.
     def __init__(self, api_key=None, voice_id=None, model_id=None, playback_enabled=True):
         self.elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY', api_key) or api_key
         self.voice_id = voice_id or "eqI1AF0IrvwU3tgfmt0B"
@@ -28,7 +25,8 @@ class ElevenLabsConfig:
         self.enable_text_to_speech = True
         self.playback_enabled = playback_enabled
 
-
+        if not self.elevenlabs_api_key:
+            raise ValueError("API key is required for ElevenLabsTextToSpeech.")
 
     def load_settings(self, settings_file='config/settings.json'):
         try:
@@ -42,9 +40,9 @@ class ElevenLabsConfig:
 
 class ElevenLabsTextToSpeech:
     def __init__(self, config=None, voice_id=None):
+        self.mixer_initialized = None
         self.temp_dir = None
         self.config = config or ElevenLabsConfig(voice_id=voice_id)
-        self.mixer_initialized = False
 
     def synthesize_speech(self, text, output_dir=None):
         """
@@ -107,6 +105,7 @@ class ElevenLabsTextToSpeech:
                 # Initialize pygame mixer and play audio file if playback is enabled
                 if config.playback_enabled:
                     pygame.mixer.init()
+                    self.mixer_initialized = True
                     pygame.mixer.music.load(output_file)
                     pygame.mixer.music.play()
 
@@ -116,6 +115,7 @@ class ElevenLabsTextToSpeech:
                             time.sleep(1)
 
                     pygame.mixer.quit()
+                    self.mixer_initialized = False
 
                     # If using a temporary directory, the file will be deleted upon exiting the context
                     if output_dir is None:
@@ -134,12 +134,12 @@ class ElevenLabsTextToSpeech:
         except Exception as e:
             logging.exception(f"An error occurred in text_to_speech: {e}")
             return None
-
+        
     def stop_playback(self):
         """
         Stops the audio playback if it is currently playing.
         """
-        if self.mixer_initialized and pygame.mixer.music.get_busy():
+        if self.config.mixer_initialized and pygame.mixer.music.get_busy():
             pygame.mixer.music.stop()
             pygame.mixer.quit()
             self.mixer_initialized = False
