@@ -1,8 +1,5 @@
 import logging
-import threading
-import threading
 import os
-import signal
 import threading
 
 import pyaudio
@@ -91,8 +88,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 shutdown_flag = threading.Event()
-shutdown_flag = threading.Event()
-shutdown_flag = threading.Event()
+
 
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
