@@ -3,6 +3,7 @@ import collections
 import logging
 import os
 import wave
+import time
 import threading
 from dotenv import load_dotenv
 import numpy as np
@@ -22,7 +23,6 @@ class AudioDataProvider:
         self._frames_per_buffer = frames_per_buffer
         self._stream = None
         self._py_audio = pyaudio.PyAudio()
-        self._stop_event = threading.Event()  # Event to signal when to stop the audio stream
 
     def start_stream(self):
         self._stream = self._py_audio.open(
@@ -37,19 +37,10 @@ class AudioDataProvider:
         return self._stream.is_active()
 
     def get_next_frame(self):
-        if self._stop_event.is_set():
-            raise StopIteration("Audio stream stop event triggered.")
         if self.is_stream_active():
             return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
         else:
             raise IOError("Audio stream is not active.")
-
-    def stop(self):
-        self._stop_event.set()
-        if self._stream and not self._stream.is_stopped():
-            self._stream.stop_stream()
-        self._stream.close()
-        self._py_audio.terminate()
 
     def stop_stream(self):
         if self._stream:
@@ -72,7 +63,6 @@ class AudioRecorder:
             min_recording_length (int): The minimum length of a valid recording.
             buffer_length (int): The length of the audio buffer.
         """
-        self._stop_event = threading.Event()  # Event to signal threads to stop gracefully
         self.last_saved_file = None
         self._logger = logger  # Logger is now private
         self._py_audio = pyaudio.PyAudio()
@@ -115,12 +105,16 @@ class AudioRecorder:
         """
         self._stop_recording_flag = False
         self._audio_data_provider = AudioDataProvider()
-        self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,), daemon=True)
+        self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
         self.recording_thread.start()
-        self.recording_thread.join()
+        try:
+            while self.recording_thread.is_alive():
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            self._logger.info("Recording interrupted by user.")
+            self.stop_recording()
         self.recording_thread.join()
         return self.last_saved_file if self.last_saved_file else None
-
 
     def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
         self._audio_data_provider = audio_data_provider
@@ -129,32 +123,25 @@ class AudioRecorder:
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
-            if self._stop_event.is_set():
-                self._logger.info("Stop event set, stopping recording loop.")
-                break
             if self._stop_recording_flag:
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:
-                try:
-                    frame = audio_data_provider.get_next_frame()
-                    self.process_frame(frame)
-                    if not self._recording:
-                        self.buffer_audio_frame(frame)
+                frame = audio_data_provider.get_next_frame()
+                self.process_frame(frame)
+                if not self._recording:
+                    self.buffer_audio_frame(frame)
+                else:
+                    voice_activity_detected = self.detect_voice_activity(frame)
+                    if voice_activity_detected:
+                        self._inactivity_frames = 0
+                        self._frames_to_save.append(frame)
                     else:
-                        voice_activity_detected = self.detect_voice_activity(frame)
-                        if voice_activity_detected:
-                            self._inactivity_frames = 0
-                            self._frames_to_save.append(frame)
-                        else:
-                            self._inactivity_frames += 1
-                            silent_frames += 1
-                            if self.should_finalize_recording(silent_frames):
-                                self._logger.info("Inactivity limit exceeded. Finalizing recording...")
-                                return
-                except KeyboardInterrupt:
-                    self._logger.info("KeyboardInterrupt received, stopping recording loop.")
-                    break
+                        self._inactivity_frames += 1
+                        silent_frames += 1
+                        if self.should_finalize_recording(silent_frames):
+                            self._logger.info("Inactivity limit exceeded. Finalizing recording...")
+                            return
             except Exception as e:
                 self._logger.error(f"An error occurred during recording: {e}")
                 break
@@ -310,7 +297,6 @@ class AudioRecorder:
             self.recording_thread.join()
             self._py_audio.terminate()
         self._logger.info("Recording stopped.")
-
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ import os
 import pyaudio
 from dotenv import load_dotenv
 from elevenlabs import stream, generate
-import threading
+
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
@@ -130,13 +130,13 @@ class VoiceProcessingManager:
         self.transcriber = WhisperTranscriber()
         self.action_manager = ActionManager()
         self.setup()
-        self.stop_event = threading.Event()  # Event to signal threads to stop gracefully
+        self.recording_thread = None
 
     def stop_wake_word_detection(self):
         """
         Stops the wake word detection process if it is currently running.
         """
-        if self.wake_word_detector and self.wake_word_detector.is_running:  # No change needed, already checking is_running
+        if self.wake_word_detector and self.wake_word_detector.is_running:
             self.wake_word_detector.stop()
 
     def stop_recording(self):
@@ -179,17 +179,8 @@ class VoiceProcessingManager:
         """
         Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
         """
-        transcription = None
         try:
-            self.wake_word_detector.run_blocking()
-            transcription = self.recorder_transcriber()
-        except KeyboardInterrupt:
-            logger.info("Operation interrupted by user.")
-            self.stop_event.set()  # Signal all threads to stop
-        finally:
-            self.stop_wake_word_detection()
-            self.stop_recording()
-            self.stop_text_to_speech()
+            transcription = self.process_voice_command()
             if transcription:
                 logger.info(f"Transcription: {transcription}")
                 if streaming is False:
@@ -198,6 +189,11 @@ class VoiceProcessingManager:
                     text_to_speech_stream(transcription)
             else:
                 logger.info("No transcription was made.")
+        except KeyboardInterrupt:
+            logger.info("Operation interrupted by user.")
+            self.stop_wake_word_detection()
+            self.stop_recording()
+            self.stop_text_to_speech()
 
     def wakeword_transcription(self):
         """
@@ -227,7 +223,7 @@ class VoiceProcessingManager:
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
         if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
+            self.voice_recorder.recording_.join()
 
         # If a recording was made, transcribe it
         if self.voice_recorder.last_saved_file:
@@ -267,29 +263,10 @@ def main():
     """
     load_dotenv()
     vpm = VoiceProcessingManager()
-
-    # Run the wake word detection in the main thread
-    vpm.wake_word_detector.run()
-
-    # Start a separate thread for the rest of the voice processing tasks
-    processing_thread = threading.Thread(target=vpm.wakeword_tts, args=(True,))
-    processing_thread.start()
-
-    try:
-        while processing_thread.is_alive():
-            processing_thread.join(timeout=1)
-    except KeyboardInterrupt:
-        logger.info("Operation interrupted by user. Shutting down...")
-        vpm.stop_event.set()  # Signal all threads to stop
-        processing_thread.join()  # Ensure the processing thread has stopped
-        vpm.stop_wake_word_detection()
-        vpm.stop_recording()
-        vpm.stop_text_to_speech()
-        logger.info("Shutdown complete.")
+    text = vpm.recorder_transcriber()
+    text_to_speech_stream(text)
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     main()
-
-
