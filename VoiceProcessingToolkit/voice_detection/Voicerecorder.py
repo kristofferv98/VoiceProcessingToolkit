@@ -33,8 +33,14 @@ class AudioDataProvider:
             frames_per_buffer=self._frames_per_buffer
         )
 
+    def is_stream_active(self):
+        return self._stream.is_active()
+
     def get_next_frame(self):
-        return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
+        if self.is_stream_active():
+            return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
+        else:
+            raise IOError("Audio stream is not active.")
 
     def stop_stream(self):
         if self._stream:
@@ -96,10 +102,18 @@ class AudioRecorder:
         Returns:
             str: The path to the recorded audio file.
         """
+        self._stop_recording_flag = False
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
         self.recording_thread.start()
-        while self.recording_thread.is_alive():
+        try:
+            while self.recording_thread.is_alive():
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            self._logger.info("Recording interrupted by user.")
+            self.stop_recording()
+            self._stop_recording_flag = True
+        return self.last_saved_file if self.last_saved_file else None
             try:
                 time.sleep(0.1)
             except KeyboardInterrupt:
@@ -129,6 +143,8 @@ class AudioRecorder:
         """
         silent_frames = 0
         while self._is_recording:
+            if self._stop_recording_flag:
+                break
             try:
                 frame = audio_data_provider.get_next_frame()
                 self.process_frame(frame)
