@@ -79,13 +79,14 @@ class AudioRecorder:
         self._audio_buffer = collections.deque(maxlen=self.BUFFER_LENGTH * self._cobra_handle.sample_rate // self.
                                                _cobra_handle.frame_length)
         self._inactivity_frames = 0  # Inactivity frames counter is now private
-        self._is_recording = False  # Recording state is now private
+        self.is_recording = False  # Recording state is now private
         self._recording = False  # Recording state is now private
         self._frames_to_save = []  # Frames to save are now private
         self._frames = []  # Frames are now private
         self._lock = threading.Lock()  # Lock for thread safety is now private
         self.recording_thread = None  # Recording thread is now private
         self._audio_data_provider = None  # Audio data provider is now private
+        self._stop_recording_flag = False  # Stop recording flag is now private
 
     def cleanup(self):
         """
@@ -104,46 +105,25 @@ class AudioRecorder:
         """
         self._stop_recording_flag = False
         self._audio_data_provider = AudioDataProvider()
-        self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
+        self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
         self.recording_thread.start()
         try:
-        while self.recording_thread.is_alive():
-            try:
+            while self.recording_thread.is_alive():
                 time.sleep(0.1)
         except KeyboardInterrupt:
-            self._stop_recording_flag = True
-            self._logger.info("KeyboardInterrupt caught, stopping recording.")
-            self.recording_thread.join()
-            except KeyboardInterrupt:
-                self._logger.info("Recording interrupted by user.")
-                self.stop_recording()
-                break
+            self._logger.info("Recording interrupted by user.")
+            self.stop_recording()
+        self.recording_thread.join()
         return self.last_saved_file if self.last_saved_file else None
 
-    def start_recording(self, audio_data_provider: AudioDataProvider) -> None:
-        """
-        Starts the audio recording process using the provided audio data provider.
-        Args:
-            audio_data_provider (AudioDataProvider): The provider of audio data frames.
-        """
-        self._audio_data_provider = audio_data_provider
-        self._audio_data_provider.start_stream()
-        self._is_recording = True
-        self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
-        self.recording_thread.start()
-        try:
-        self._logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
-        """
-        The main loop for recording audio, processing frames, and managing recording state.
-        Args:
-            audio_data_provider (AudioDataProvider): The provider of audio data frames.
-        """
+        self._audio_data_provider = audio_data_provider
+        self._audio_data_provider.start_stream()
+        self.is_recording = True
+        self._logger.info("Recording started.")
         silent_frames = 0
-        while self._is_recording:
-            if self._stop_recording_flag:
-                break
+        while self.is_recording:
             if self._stop_recording_flag:
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
@@ -155,7 +135,7 @@ class AudioRecorder:
                 else:
                     voice_activity_detected = self.detect_voice_activity(frame)
                     if voice_activity_detected:
-                        self._inactivity_frames = 0  # Inactivity frames counter is now private
+                        self._inactivity_frames = 0
                         self._frames_to_save.append(frame)
                     else:
                         self._inactivity_frames += 1
@@ -219,13 +199,13 @@ class AudioRecorder:
         with self._lock:
             if voice_activity_detected:
                 self._inactivity_frames = 0  # Inactivity frames counter is now private
-                if not self._is_recording:
+                if not self.is_recording:
                     self.start_new_recording()
                 self._frames_to_save.append(frame)
             else:
                 self.buffer_audio_frame(frame)
                 self._inactivity_frames += 1
-                if self._is_recording:
+                if self.is_recording:
                     self._frames_to_save.append(frame)
                     if (
                             self._inactivity_frames * self._cobra_handle.frame_length / self._cobra_handle.sample_rate >
@@ -277,7 +257,7 @@ class AudioRecorder:
                     f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
         self._recording = False  # Recording state is now private
         self._frames_to_save = []  # Frames to save are now private
-        self._is_recording = False  # Recording state is now private
+        self.is_recording = False  # Recording state is now private
         self.last_saved_file = saved_file_path if saved_file_path else False
         return self.last_saved_file
 
@@ -313,7 +293,7 @@ class AudioRecorder:
         """
         Stops the recording process and joins the recording thread.
         """
-        self._is_recording = False  # Recording state is now private
+        self.is_recording = False  # Recording state is now private
         if self.recording_thread:
             self.recording_thread.join()
             self._py_audio.terminate()

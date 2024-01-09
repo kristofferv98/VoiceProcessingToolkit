@@ -109,6 +109,8 @@ class WakeWordDetector:
         self._stop_event = threading.Event()
         self._porcupine = None
         self.initialize_porcupine()
+        self.is_running = False  # New attribute
+
 
     def initialize_porcupine(self) -> None:
         """
@@ -126,11 +128,17 @@ class WakeWordDetector:
         """
         The main loop that listens for the wake word and triggers the action function.
         """
-        while not self._stop_event.is_set():
-            pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
-            pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
-            if self._porcupine.process(pcm) >= 0:
-                self.handle_wake_word_detection()
+        self.is_running = True
+        try:
+            while not self._stop_event.is_set():
+                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+                pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
+                if self._porcupine.process(pcm) >= 0:
+                    self.handle_wake_word_detection()
+        except KeyboardInterrupt:
+            logger.info("Wake word detection stopped by user.")
+        finally:
+            self.is_running = False
 
     def handle_wake_word_detection(self):
         """
@@ -142,6 +150,11 @@ class WakeWordDetector:
         action_thread.start()
         self._stop_event.set()  # Signal to stop after handling the detection
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.cleanup()
 
     def run(self) -> None:
         """
