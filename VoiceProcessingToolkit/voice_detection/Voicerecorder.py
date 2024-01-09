@@ -3,7 +3,6 @@ import collections
 import logging
 import os
 import wave
-import time
 import threading
 from dotenv import load_dotenv
 import numpy as np
