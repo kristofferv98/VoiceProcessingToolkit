@@ -105,7 +105,7 @@ class AudioRecorder:
         Returns:
             str: The path to the recorded audio file.
         """
-        self._stop_recording_flag = False
+        # self._stop_recording_flag = False  # Removed, using shared_resources.shutdown_flag instead
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
         self.recording_thread.start()
@@ -121,7 +121,7 @@ class AudioRecorder:
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
-            if self._stop_recording_flag or (shutdown_flag and shutdown_flag.is_set()):
+            if shutdown_flag.is_set():
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:
