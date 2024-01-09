@@ -139,10 +139,13 @@ class ElevenLabsTextToSpeech:
         """
         Stops the audio playback if it is currently playing.
         """
-        if self.config.mixer_initialized and pygame.mixer.music.get_busy():
+        if self.mixer_initialized and pygame.mixer.music.get_busy():
             pygame.mixer.music.stop()
             pygame.mixer.quit()
             self.mixer_initialized = False
+            if self.temp_dir:
+                self.temp_dir.cleanup()
+                self.temp_dir = None
 
 if __name__ == '__main__':
     load_dotenv()
