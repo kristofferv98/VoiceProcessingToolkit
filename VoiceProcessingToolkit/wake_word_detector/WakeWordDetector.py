@@ -134,7 +134,6 @@ class WakeWordDetector:
         try:
             while not self._stop_event.is_set() and not shutdown_flag.is_set():
                 pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
-                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
@@ -144,8 +143,6 @@ class WakeWordDetector:
         finally:
             self.is_running = False
         # Check if shutdown flag is set and stop the loop
-        if shutdown_flag.is_set():
-            self._stop_event.set()
 
     def handle_wake_word_detection(self):
         """
@@ -155,7 +152,7 @@ class WakeWordDetector:
             self._notification_sound_manager.play()  # This should block until the sound is done playing
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
-        self._stop_event.set()  # Signal to stop after handling the detection
+        shutdown_flag.set()  # Signal to stop after handling the detection
 
 
     def run(self) -> None:
@@ -164,8 +161,9 @@ class WakeWordDetector:
         """
         detection_thread = threading.Thread(target=self.voice_loop)
         detection_thread.start()
-        detection_thread.join()  # Wait for the thread to finish
-        self.cleanup()  # Cleanup resources after the thread has finished
+        while not shutdown_flag.is_set():
+            time.sleep(0.1)
+        self.cleanup()
 
     def run_blocking(self) -> None:
         """
