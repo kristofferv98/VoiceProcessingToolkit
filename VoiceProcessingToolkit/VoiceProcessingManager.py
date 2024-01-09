@@ -236,10 +236,7 @@ def main():
     """
     load_dotenv()
     vpm = VoiceProcessingManager()
-    try:
-        vpm.wakeword_tts(streaming=True)
-    except KeyboardInterrupt:
-        thread_manager.handle_keyboard_interrupt()
+    vpm.wakeword_tts(streaming=False)
     # Ensure all threads are joined before exiting the main function
     thread_manager.join_all()
     logger.info("Exiting main function.")
