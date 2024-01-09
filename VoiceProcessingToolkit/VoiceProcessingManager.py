@@ -135,13 +135,13 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         # Start recording
-        self.voice_recorder.perform_recording()
+        recorded_file = self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        # Joining of threads is now handled by thread_manager, no need to join here
+        if self.voice_recorder.recording_thread:
+            self.voice_recorder.recording_thread.join()
 
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            recorded_file = self.voice_recorder.last_saved_file
+        if recorded_file:
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 
@@ -193,11 +193,11 @@ class VoiceProcessingManager:
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        # Joining of threads is now handled by thread_manager, no need to join here
+        if self.voice_recorder.recording_thread:
+            self.voice_recorder.recording_thread.join()
 
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            recorded_file = self.voice_recorder.last_saved_file
+        if recorded_file:
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 
