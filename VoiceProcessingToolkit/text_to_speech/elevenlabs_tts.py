@@ -107,12 +107,14 @@ class ElevenLabsTextToSpeech:
                     pygame.mixer.init()
                     self.mixer_initialized = True
                     pygame.mixer.music.load(output_file)
-                    pygame.mixer.music.play()
-
-                    # Wait for the playback to finish if using a temporary directory
-                    if use_temp_dir:
+                    try:
+                        pygame.mixer.music.play()
+                        # Check for playback to finish with interruptible sleep loop
                         while pygame.mixer.music.get_busy():
-                            time.sleep(1)
+                            time.sleep(0.1)  # Use a shorter sleep time to allow for keyboard interrupt
+                    except KeyboardInterrupt:
+                        logging.info("Playback interrupted by user.")
+                        self.stop_playback()
 
                     pygame.mixer.quit()
                     self.mixer_initialized = False
