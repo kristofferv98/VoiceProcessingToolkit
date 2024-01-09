@@ -10,12 +10,10 @@ import numpy as np
 import pyaudio
 import pvcobra
 
+
 logger = logging.getLogger(__name__)
 load_dotenv()
 
-
-# Audio Data Provider Class
-from VoiceProcessingToolkit.VoiceProcessingManager import shutdown_flag
 
 class AudioDataProvider:
     def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
@@ -100,7 +98,7 @@ class AudioRecorder:
             self._audio_data_provider.stop_stream()
         self._py_audio.terminate()
 
-    def perform_recording(self) -> str:
+    def perform_recording(self, shutdown_flag=None) -> str:
         """
         Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
         Returns:
@@ -115,14 +113,14 @@ class AudioRecorder:
         self.recording_thread.join()
         return self.last_saved_file if self.last_saved_file else None
 
-    def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
+    def record_loop(self, audio_data_provider: AudioDataProvider, shutdown_flag=None) -> None:
         self._audio_data_provider = audio_data_provider
         self._audio_data_provider.start_stream()
         self.is_recording = True
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
-            if self._stop_recording_flag or shutdown_flag.is_set():
+            if self._stop_recording_flag or shutdown_flag():
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:

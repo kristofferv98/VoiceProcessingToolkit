@@ -17,6 +17,7 @@ from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextT
 logger = logging.getLogger(__name__)
 
 
+
 def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
     """
     Synthesizes speech from text using ElevenLabs API with minimal configuration required from the user.
@@ -87,13 +88,6 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
 
-shutdown_flag = threading.Event()
-
-def signal_handler(signal, frame):
-    print("Shutdown signal received")
-    shutdown_flag.set()
-
-signal.signal(signal.SIGINT, signal_handler)
 
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
@@ -185,7 +179,7 @@ class VoiceProcessingManager:
         # If no recording was made, return None
         return None
 
-    def wakeword_tts(self, streaming=None):
+    def wakeword_tts(self, streaming=None, shutdown_flag=None):
         """
         Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
         """
@@ -199,6 +193,8 @@ class VoiceProcessingManager:
                     text_to_speech_stream(transcription)
             else:
                 logger.info("No transcription was made.")
+        except Exception as e:
+            logger.exception(f"An error occurred during text-to-speech: {e}")
 
         # Check if shutdown flag is set and stop all processes
         if shutdown_flag.is_set():
@@ -281,3 +277,4 @@ def main():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()
+

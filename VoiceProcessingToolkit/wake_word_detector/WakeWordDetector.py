@@ -51,6 +51,7 @@ from wake_word_detector.ActionManager import ActionManager
 logger = logging.getLogger(__name__)
 
 
+
 class WakeWordDetector:
     """
     Detects a specified wake word using the Porcupine engine and executes registered actions upon detection.
@@ -129,16 +130,16 @@ class WakeWordDetector:
         The main loop that listens for the wake word and triggers the action function.
         """
         self.is_running = True
-        while not self._stop_event.is_set():
-            try:
+        try:
+            while not self._stop_event.is_set():
                 pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
-            except KeyboardInterrupt:
-                logger.info("Wake word detection stopped by user.")
-                break
-        self.is_running = False
+        except KeyboardInterrupt:
+            logger.info("Wake word detection stopped by user.")
+        finally:
+            self.is_running = False
 
     def handle_wake_word_detection(self):
         """
@@ -150,11 +151,6 @@ class WakeWordDetector:
         action_thread.start()
         self._stop_event.set()  # Signal to stop after handling the detection
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.cleanup()
 
     def run(self) -> None:
         """
@@ -162,14 +158,8 @@ class WakeWordDetector:
         """
         detection_thread = threading.Thread(target=self.voice_loop)
         detection_thread.start()
-        try:
-            detection_thread.join()  # Wait for the thread to finish
-        except KeyboardInterrupt:
-            # If a KeyboardInterrupt occurs, we set the stop event and wait again
-            self._stop_event.set()
-            detection_thread.join()
-        finally:
-            self.cleanup()  # Cleanup resources after the thread has finished
+        detection_thread.join()  # Wait for the thread to finish
+        self.cleanup()  # Cleanup resources after the thread has finished
 
     def run_blocking(self) -> None:
         """
