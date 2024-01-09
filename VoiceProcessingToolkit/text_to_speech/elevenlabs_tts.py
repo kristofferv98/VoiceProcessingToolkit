@@ -141,12 +141,14 @@ def text_to_speech(text, output_dir=None, voice_id=None):
 
 def text_to_speech_stream(text, config=None, voice_id=None):
 
+def text_to_speech_stream(text, config=None, voice_id=None):
     """
     Streams synthesized speech from text using ElevenLabs API.
 
     Args:
         text (str): The text to be converted into speech.
-        config (ElevenLabsConfig): Configuration for ElevenLabs API.
+        config (ElevenLabsConfig, optional): Configuration for ElevenLabs API. If not provided, defaults will be used.
+        voice_id (str, optional): The ID of the voice to be used for speech synthesis. Overrides the voice_id in config if provided.
         :param text:
         :param config:
         :param voice_id:
