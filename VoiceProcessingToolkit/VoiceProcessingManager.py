@@ -141,8 +141,7 @@ class VoiceProcessingManager:
         # Joining of threads is now handled by thread_manager, no need to join here
 
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            recorded_file = self.voice_recorder.last_saved_file
+        if recorded_file:
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 
@@ -165,6 +164,8 @@ class VoiceProcessingManager:
         # Ensure all threads are joined before exiting the method
         thread_manager.join_all()
 
+class VoiceProcessingManager:
+    ...
     def wakeword_transcription(self):
         """
         Method to process a voice command after wake word detection and return the transcription.
@@ -172,16 +173,25 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
-        transcription = self.process_voice_command()
-        if transcription:
+        # Start wake word detection and wait for it to finish
+        self.wake_word_detector.run_blocking()
+
+        # Once wake word is detected, start recording
+        recorded_file = self.voice_recorder.perform_recording()
+
+        # If a recording was made, transcribe it
+        if recorded_file:
+            transcription = self.transcriber.transcribe_audio(recorded_file)
             logger.info(f"Transcription: {transcription}")
+            return transcription
         else:
             logger.info("No transcription was made.")
-            return transcription
+            return None
         # Ensure all threads are joined before exiting the method
         thread_manager.join_all()
 
     def process_voice_command(self):
+        ...
         """
         Detects the wake word, records the following voice command, and transcribes it.
 
@@ -192,13 +202,12 @@ class VoiceProcessingManager:
         self.wake_word_detector.run_blocking()
 
         # Once wake word is detected, start recording
-        self.voice_recorder.perform_recording()
+        recorded_file = self.voice_recorder.perform_recording()
         # Wait for the recording to complete
         # Joining of threads is now handled by thread_manager, no need to join here
 
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            recorded_file = self.voice_recorder.last_saved_file
+        if recorded_file:
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 
