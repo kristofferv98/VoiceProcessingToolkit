@@ -162,14 +162,16 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         # Start recording
-        self.voice_recorder.perform_recording()
+        recording_file = self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
+        # No need to join the thread here, perform_recording will handle it
 
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            recorded_file = self.voice_recorder.last_saved_file
+        if recording_file:
+            transcription = self.transcriber.transcribe_audio(recording_file)
+            return transcription
+        # If no recording was made, return None
+        return None
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 
@@ -236,8 +238,11 @@ class VoiceProcessingManager:
             self.voice_recorder.recording_.join()
 
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            recorded_file = self.voice_recorder.last_saved_file
+        if recording_file:
+            transcription = self.transcriber.transcribe_audio(recording_file)
+            return transcription
+        # If no recording was made, return None
+        return None
             transcription = self.transcriber.transcribe_audio(recorded_file)
             return transcription
 

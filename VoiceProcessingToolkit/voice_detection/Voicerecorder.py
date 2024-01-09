@@ -109,9 +109,15 @@ class AudioRecorder:
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
         self.recording_thread.start()
-        while not shutdown_flag.is_set() and self.recording_thread.is_alive():
-            time.sleep(0.1)
-        # self.recording_thread.join()  # Removed, no longer necessary as we use shutdown_flag
+        try:
+            while not shutdown_flag.is_set():
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            # If a keyboard interrupt is received, set the shutdown flag
+            shutdown_flag.set()
+        finally:
+            # Wait for the recording thread to finish
+            self.recording_thread.join()
         return self.last_saved_file if self.last_saved_file else None
 
     def record_loop(self, audio_data_provider: AudioDataProvider, shutdown_flag=None) -> None:
