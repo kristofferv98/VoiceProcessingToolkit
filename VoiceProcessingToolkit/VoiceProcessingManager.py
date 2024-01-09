@@ -67,8 +67,8 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
-        # Start wake word detection
-        self.wake_word_detector.run()
+        # Start wake word detection and wait for it to finish
+        self.wake_word_detector.run_blocking()
 
         # Once wake word is detected, start recording
         recorded_file = self.voice_recorder.perform_recording()
@@ -80,6 +80,13 @@ class VoiceProcessingManager:
 
         # If no recording was made, return None
         return None
+
+    def run_blocking(self):
+        """
+        Starts the wake word detection loop and waits for it to finish before returning.
+        """
+        self.voice_loop()
+        self.cleanup()
 
     def setup(self):
         # Initialize AudioStream
