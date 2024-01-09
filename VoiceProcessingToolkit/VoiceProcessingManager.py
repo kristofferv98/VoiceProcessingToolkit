@@ -4,7 +4,7 @@ import os
 import pyaudio
 from dotenv import load_dotenv
 from elevenlabs import stream, generate
-
+import threading
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
