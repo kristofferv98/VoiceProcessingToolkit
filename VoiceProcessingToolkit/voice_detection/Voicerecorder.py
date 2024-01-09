@@ -107,6 +107,7 @@ class AudioRecorder:
         self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,), daemon=True)
         self.recording_thread.start()
         self.recording_thread.join()
+        self.recording_thread.join()
         return self.last_saved_file if self.last_saved_file else None
 
 
@@ -117,6 +118,9 @@ class AudioRecorder:
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
+            if self._stop_event.is_set():
+                self._logger.info("Stop event set, stopping recording loop.")
+                break
             if self._stop_recording_flag:
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break

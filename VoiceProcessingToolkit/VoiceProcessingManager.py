@@ -130,7 +130,7 @@ class VoiceProcessingManager:
         self.transcriber = WhisperTranscriber()
         self.action_manager = ActionManager()
         self.setup()
-        self.recording_thread = None
+        self.stop_event = threading.Event()  # Event to signal threads to stop gracefully
 
     def stop_wake_word_detection(self):
         """
@@ -185,6 +185,7 @@ class VoiceProcessingManager:
             transcription = self.recorder_transcriber()
         except KeyboardInterrupt:
             logger.info("Operation interrupted by user.")
+            self.stop_event.set()  # Signal all threads to stop
         finally:
             self.stop_wake_word_detection()
             self.stop_recording()
