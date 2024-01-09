@@ -62,6 +62,7 @@ class AudioRecorder:
             min_recording_length (int): The minimum length of a valid recording.
             buffer_length (int): The length of the audio buffer.
         """
+        self._stop_event = threading.Event()  # Event to signal threads to stop gracefully
         self.last_saved_file = None
         self._logger = logger  # Logger is now private
         self._py_audio = pyaudio.PyAudio()
