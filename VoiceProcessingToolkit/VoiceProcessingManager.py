@@ -184,7 +184,6 @@ def main():
     """
     Main function to test the VoiceProcessingManager's process_voice_command method.
     """
-    # Load environment variables
     load_dotenv()
     vpm = VoiceProcessingManager()
     vpm.recorder_transcriber()
