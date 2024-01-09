@@ -87,7 +87,6 @@ class AudioRecorder:
         self._lock = threading.Lock()  # Lock for thread safety is now private
         self.recording_thread = None  # Recording thread is now private
         self._audio_data_provider = None  # Audio data provider is now private
-        self._stop_recording_flag = False  # Stop recording flag is now private
 
     def cleanup(self):
         """
@@ -111,7 +110,7 @@ class AudioRecorder:
         self.recording_thread.start()
         while not shutdown_flag.is_set() and self.recording_thread.is_alive():
             time.sleep(0.1)
-        self.recording_thread.join()
+        # self.recording_thread.join()  # Removed, no longer necessary as we use shutdown_flag
         return self.last_saved_file if self.last_saved_file else None
 
     def record_loop(self, audio_data_provider: AudioDataProvider, shutdown_flag=None) -> None:
@@ -295,9 +294,3 @@ class AudioRecorder:
             self.recording_thread.join()
             self._py_audio.terminate()
         self._logger.info("Recording stopped.")
-
-
-if __name__ == '__main__':
-    audio_recorder = AudioRecorder(output_directory='Wav_MP3')
-    recorded_file = audio_recorder.perform_recording()
-    logger.info(f"Saved to {recorded_file}")
