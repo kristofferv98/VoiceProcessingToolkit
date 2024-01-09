@@ -106,9 +106,14 @@ class AudioRecorder:
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
         self.recording_thread.start()
+        try:
         while self.recording_thread.is_alive():
             try:
                 time.sleep(0.1)
+        except KeyboardInterrupt:
+            self._stop_recording_flag = True
+            self._logger.info("KeyboardInterrupt caught, stopping recording.")
+            self.recording_thread.join()
             except KeyboardInterrupt:
                 self._logger.info("Recording interrupted by user.")
                 self.stop_recording()
@@ -126,6 +131,7 @@ class AudioRecorder:
         self._is_recording = True
         self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
         self.recording_thread.start()
+        try:
         self._logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
@@ -137,6 +143,9 @@ class AudioRecorder:
         silent_frames = 0
         while self._is_recording:
             if self._stop_recording_flag:
+                break
+            if self._stop_recording_flag:
+                self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:
                 frame = audio_data_provider.get_next_frame()
