@@ -1,5 +1,6 @@
 import logging
 import threading
+import threading
 import os
 import signal
 import threading
@@ -89,6 +90,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
 
+shutdown_flag = threading.Event()
 shutdown_flag = threading.Event()
 shutdown_flag = threading.Event()
 
@@ -198,6 +200,12 @@ class VoiceProcessingManager:
                 logger.info("No transcription was made.")
         except Exception as e:
             logger.exception(f"An error occurred during text-to-speech: {e}")
+
+        # Check if shutdown flag is set and stop all processes
+        if shutdown_flag and shutdown_flag.is_set():
+            self.stop_wake_word_detection()
+            self.stop_recording()
+            self.stop_text_to_speech()
 
         # Check if shutdown flag is set and stop all processes
         if shutdown_flag.is_set():

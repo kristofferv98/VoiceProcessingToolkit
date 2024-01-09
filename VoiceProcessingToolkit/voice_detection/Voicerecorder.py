@@ -121,7 +121,7 @@ class AudioRecorder:
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
-            if self._stop_recording_flag or shutdown_flag():
+            if self._stop_recording_flag or (shutdown_flag and shutdown_flag.is_set()):
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:
