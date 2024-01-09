@@ -126,7 +126,6 @@ def main():
     """
     # Load environment variables
     load_dotenv()
-
     vpm = VoiceProcessingManager()
     vpm.wakeword_tts()
 
