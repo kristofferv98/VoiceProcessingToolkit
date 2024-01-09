@@ -3,14 +3,13 @@ import os
 import threading
 
 import pyaudio
-import pygame
 from dotenv import load_dotenv
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from text_to_speech.elevenlabs_tts import text_to_speech_stream, text_to_speech
+from text_to_speech.elevenlabs_tts import text_to_speech
 
 logger = logging.getLogger(__name__)
 
@@ -111,16 +110,16 @@ class VoiceProcessingManager:
             self.recording_thread = threading.Thread(target=self.voice_recorder.perform_recording)
             self.recording_thread.start()
             self.recording_thread.join()  # Wait for the recording to finish
-                recorded_file = self.voice_recorder.last_saved_file
-                if recorded_file:
+            recorded_file = self.voice_recorder.last_saved_file
+            if recorded_file:
                     # Transcribe the recorded audio
-                    try:
-                        transcription = self.transcriber.transcribe_audio(recorded_file)
-                        if transcription:
-                            logger.info(f"Transcription: {transcription}")
-                        return transcription
-                    except Exception as e:
-                        logger.error(f"Failed to transcribe audio: {e}")
+                try:
+                    transcription = self.transcriber.transcribe_audio(recorded_file)
+                    if transcription:
+                        logger.info(f"Transcription: {transcription}")
+                    return transcription
+                except Exception as e:
+                    logger.error(f"Failed to transcribe audio: {e}")
 
                 if recorded_file:
                     logger.info(f"Voice recording saved to {recorded_file}")
@@ -149,7 +148,11 @@ if __name__ == '__main__':
     # Configure logging at the start of the application
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     manager = VoiceProcessingManager()
+    recording_thread = threading.Thread(target=manager.voice_recorder.perform_recording)
+    transcription = recording_thread.start()
     transcription = manager.start_and_transcribe()
+    logger.info("Voice processing completed.")
+    logging.info("Voice processing completed and here is the transcription:" + transcription)
     if transcription:
         logger.info(f"Transcription: {transcription}")
         tts = text_to_speech(transcription)
