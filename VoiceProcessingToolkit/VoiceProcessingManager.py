@@ -138,10 +138,29 @@ class VoiceProcessingManager:
 
     def run(self):
         """
-        Starts the wake word detection and handles the voice processing workflow.
+        Starts the wake word detection loop and handles the voice processing workflow.
         """
-        transcription = self.start_and_transcribe()
-        return transcription
+        while True:
+            try:
+                # Start wake word detection
+                self.wake_word_detector.run()
+                # Once wake word is detected, perform recording and transcription
+                recorded_file = self.voice_recorder.perform_recording()
+                if recorded_file:
+                    transcription = self.transcriber.transcribe_audio(recorded_file)
+                    if transcription:
+                        logger.info(f"Transcription: {transcription}")
+                        # Speak out the transcription
+                        text_to_speech(transcription, config=self.tts_config)
+            except KeyboardInterrupt:
+                logger.info("Voice processing interrupted by user.")
+                break
+            except Exception as e:
+                logger.exception("An error occurred during voice processing.", exc_info=e)
+                break
+            finally:
+                self.cleanup()
+
 
     def cleanup(self):
         """
