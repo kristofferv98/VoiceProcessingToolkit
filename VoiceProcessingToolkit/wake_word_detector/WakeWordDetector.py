@@ -132,7 +132,15 @@ class WakeWordDetector:
         self.is_running = True
         try:
             while True:
-                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+                try:
+                    pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+                except IOError as e:
+                    if e.errno == pyaudio.paInputOverflowed:
+                        # Clear the buffer by reading and discarding
+                        self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
+                        continue
+                    else:
+                        raise
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
