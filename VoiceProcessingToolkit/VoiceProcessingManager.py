@@ -141,6 +141,14 @@ class VoiceProcessingManager:
         if self.voice_recorder and self.voice_recorder.is_recording:
             self.voice_recorder.stop_recording()
 
+    def stop_text_to_speech(self):
+        """
+        Stops any ongoing text-to-speech playback if it is currently running.
+        """
+        # This is a placeholder for the actual implementation.
+        # The actual implementation should stop the audio playback if it's being played.
+        pass
+
     def recorder_transcriber(self):
         """
         Method to record a voice command and return the transcription without wake word detection.
