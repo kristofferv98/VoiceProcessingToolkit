@@ -10,6 +10,7 @@ import numpy as np
 import pyaudio
 import pvcobra
 
+import shared_resources
 from shared_resources import shutdown_flag
 
 logger = logging.getLogger(__name__)

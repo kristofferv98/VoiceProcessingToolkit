@@ -1,6 +1,5 @@
 import logging
 import os
-import threading
 
 import pyaudio
 from dotenv import load_dotenv
@@ -10,12 +9,12 @@ from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
-from VoiceProcessingToolkit.shared_resources import shutdown_flag
 from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, \
     ElevenLabsConfig
+from shared_resources import shutdown_flag
+from voice_detection.Voicerecorder import AudioRecorder
 
 logger = logging.getLogger(__name__)
-
 
 
 def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
@@ -86,9 +85,6 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
             stream(audio_stream)
     except Exception as e:
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
-
-
-
 
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
@@ -180,7 +176,7 @@ class VoiceProcessingManager:
         # If no recording was made, return None
         return None
 
-    def wakeword_tts(self, streaming=None, shutdown_flag=None):
+    def wakeword_tts(self, streaming=None):
         """
         Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
         """
