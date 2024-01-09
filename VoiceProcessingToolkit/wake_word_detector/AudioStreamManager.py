@@ -27,11 +27,9 @@ class AudioStream:
         """Returns the initialized audio stream."""
         return self._stream
 
-class AudioStream:
-    ...
     def cleanup(self):
         """Cleans up the audio stream and terminates the PyAudio instance."""
-        if self._stream and self._stream.is_active():
+        if self._stream.is_active():
             self._stream.stop_stream()
         self._stream.close()
         self._py_audio.terminate()
