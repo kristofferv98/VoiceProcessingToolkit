@@ -10,7 +10,7 @@ from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from text_to_speech.elevenlabs_tts import text_to_speech_stream
+from text_to_speech.elevenlabs_tts import text_to_speech, ElevenLabsConfig, text_to_speech_stream
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,7 @@ class VoiceProcessingManager:
         """
         transcription = ""
         try:
-            # Run the wake word detection and recording once
-            self.wake_word_detector.run_once()
+            self.wake_word_detector.run()
             recorded_file = self.voice_recorder.last_saved_file
             if recorded_file:
                 transcription = self.transcriber.transcribe_audio(recorded_file)
@@ -120,6 +119,7 @@ class VoiceProcessingManager:
                     # Transcribe the recorded audio
                     try:
                         transcription = self.transcriber.transcribe_audio(recorded_file)
+
                         if transcription:
                             logger.info(f"Transcription: {transcription}")
                             return transcription
@@ -138,33 +138,28 @@ class VoiceProcessingManager:
         transcription = self.start_and_transcribe()
         return transcription
 
-    def run_once(self):
-        """
-        Starts the wake word detection and handles the voice processing workflow for a single iteration.
-        """
-        self.setup()
-        self.wake_word_detector.voice_loop()  # Run the detection loop once
-        self.cleanup()
-
     def cleanup(self):
         """
         Cleans up the resources used by the voice processing manager.
         """
-        self.audio_stream_manager.cleanup()
         if self.recording_thread and self.recording_thread.is_alive():
             self.recording_thread.join()
             self.voice_recorder.cleanup()
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+
     load_dotenv()
-    # set the
-    logging.basicConfig(level=logging.INFO)
+    config = ElevenLabsConfig()
     manager = VoiceProcessingManager()
     transcription = manager.start_and_transcribe()
+
+    # set the
     if transcription:
         logger.info(f"Transcription: {transcription}")
-        tts = text_to_speech_stream(transcription)
+
+
 
 
 
