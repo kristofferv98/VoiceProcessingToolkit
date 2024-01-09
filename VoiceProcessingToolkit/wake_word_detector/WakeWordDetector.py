@@ -160,9 +160,17 @@ class WakeWordDetector:
         """
         Starts the wake word detection loop.
         """
-        detection_thread = threading.Thread(target=self.voice_loop)
+        detection_thread = threading.Thread(target=self.voice_loop, daemon=True)
         detection_thread.start()
-        detection_thread.join()  # Wait for the thread to finish
+        try:
+            while detection_thread.is_alive():
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            logger.info("Wake word detection interrupted by user.")
+            self._stop_event.set()
+        finally:
+            detection_thread.join()  # Ensure the thread is cleaned up
+            self.cleanup()  # Cleanup resources after the thread has finished
         self.cleanup()  # Cleanup resources after the thread has finished
 
     def run_blocking(self) -> None:
