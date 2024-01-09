@@ -60,6 +60,28 @@ class VoiceProcessingManager:
         self.setup()
         self.recording_thread = None
 
+    def recorder_transcriber(self):
+        """
+        Method to record a voice command and return the transcription without wake word detection.
+
+        Returns:
+            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+        """
+        # Start recording
+        self.voice_recorder.perform_recording()
+        # Wait for the recording to complete
+        if self.voice_recorder.recording_thread:
+            self.voice_recorder.recording_thread.join()
+
+        # If a recording was made, transcribe it
+        if self.voice_recorder.last_saved_file:
+            recorded_file = self.voice_recorder.last_saved_file
+            transcription = self.transcriber.transcribe_audio(recorded_file)
+            return transcription
+
+        # If no recording was made, return None
+        return None
+
     def wakeword_tts(self):
         """
         Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
