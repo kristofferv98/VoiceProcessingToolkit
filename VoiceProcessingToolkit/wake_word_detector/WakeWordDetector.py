@@ -39,7 +39,6 @@ import os
 import struct
 import threading
 from VoiceProcessingToolkit.shared_resources import shutdown_flag
-from VoiceProcessingToolkit.shared_resources import shutdown_flag
 import time
 import pvporcupine
 import pyaudio
