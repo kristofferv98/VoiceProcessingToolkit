@@ -148,14 +148,13 @@ if __name__ == '__main__':
     # Configure logging at the start of the application
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     manager = VoiceProcessingManager()
-    recording_thread = threading.Thread(target=manager.voice_recorder.perform_recording)
-    transcription = recording_thread.start()
-    transcription = manager.start_and_transcribe()
-    logger.info("Voice processing completed.")
-    logging.info("Voice processing completed and here is the transcription:" + transcription)
+    transcription = manager.run()
     if transcription:
+        logger.info("Voice processing completed.")
         logger.info(f"Transcription: {transcription}")
-        tts = text_to_speech(transcription)
+        # Invoke text-to-speech only if transcription is successful and not empty
+        if transcription.strip():
+            tts = text_to_speech(transcription)
 
 
 
