@@ -87,14 +87,9 @@ class WakeWordDetector:
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
                  play_notification_sound: bool = True) -> None:
-        self._notification_sound_manager = NotificationSoundManager(
-            '/Users/kristoffervatnehol/PycharmProjects/VoiceProcessingToolkit/VoiceProcessingToolkit'
-            '/wake_word_detector/Wav_MP3/notification.wav')
-        self._action_manager = action_manager
-        self._play_notification_sound = play_notification_sound
         """
         Initializes the WakeWordDetector with the provided parameters.
-        
+
         Args:
             access_key (str): The access key for the Porcupine wake word engine.
             wake_word (str): The wake word that the detector should listen for.
@@ -102,6 +97,11 @@ class WakeWordDetector:
             action_manager (ActionManager): Manages the actions to execute when the wake word is detected.
             audio_stream_manager (AudioStreamManager): Manages the audio stream.
         """
+        self._notification_sound_manager = NotificationSoundManager(
+            '/Users/kristoffervatnehol/PycharmProjects/VoiceProcessingToolkit/VoiceProcessingToolkit'
+            '/wake_word_detector/Wav_MP3/notification.wav')
+        self._action_manager = action_manager
+        self._play_notification_sound = play_notification_sound
         self._access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
         self._wake_word = wake_word
         self._sensitivity = sensitivity
@@ -133,11 +133,15 @@ class WakeWordDetector:
                 self.handle_wake_word_detection()
 
     def handle_wake_word_detection(self):
+        """
+        Handle the detection of the wake word, play the notification sound, trigger actions, and then stop.
+        """
         if self._play_notification_sound:
-            self._notification_sound_manager.play()
+            self._notification_sound_manager.play()  # This should block until the sound is done playing
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
-        # Removed the stop event set to allow continuous wake word detection
+        self._stop_event.set()  # Signal to stop after handling the detection
+
 
     def run(self) -> None:
         """
@@ -154,7 +158,6 @@ class WakeWordDetector:
         """
         self._audio_stream_manager.cleanup()
         self._porcupine.delete()
-
 
 def example_usage():
     load_dotenv()
