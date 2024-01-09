@@ -138,9 +138,6 @@ def text_to_speech(text, output_dir=None, voice_id=None):
     tts = ElevenLabsTextToSpeech(voice_id=voice_id)
     return tts.synthesize_speech(text, output_dir)
 
-
-def text_to_speech_stream(text, config=None, voice_id=None):
-
 def text_to_speech_stream(text, config=None, voice_id=None):
     """
     Streams synthesized speech from text using ElevenLabs API.
