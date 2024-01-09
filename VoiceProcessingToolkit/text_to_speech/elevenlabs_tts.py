@@ -136,8 +136,6 @@ class ElevenLabsTextToSpeech:
         except Exception as e:
             logging.exception(f"An error occurred in text_to_speech: {e}")
             return None
-
-
                     pygame.mixer.quit()
                     self.mixer_initialized = False
 
