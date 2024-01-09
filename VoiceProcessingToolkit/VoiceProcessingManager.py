@@ -110,6 +110,7 @@ class VoiceProcessingManager:
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
+        self.interrupted = False
         self.audio_format = audio_format
         self.channels = channels
         self.rate = rate
@@ -137,6 +138,10 @@ class VoiceProcessingManager:
         # Start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
+        if self.interrupted:
+            logger.info("Recording was interrupted.")
+            return None
+
         if self.voice_recorder.recording_thread:
             self.voice_recorder.recording_thread.join()
 
@@ -156,6 +161,14 @@ class VoiceProcessingManager:
         transcription = self.process_voice_command()
         if transcription:
             logger.info(f"Transcription: {transcription}")
+        else:
+            if self.interrupted:
+                logger.info("Transcription was interrupted.")
+                return None
+            if self.interrupted:
+                logger.info("TTS was interrupted.")
+                return
+
             if streaming is False:
                 text_to_speech(transcription)
             else:
@@ -174,6 +187,10 @@ class VoiceProcessingManager:
         if transcription:
             logger.info(f"Transcription: {transcription}")
         else:
+            if self.interrupted:
+                logger.info("Transcription was interrupted.")
+                return None
+        else:
             logger.info("No transcription was made.")
         return transcription
 
@@ -186,6 +203,10 @@ class VoiceProcessingManager:
         """
         # Start wake word detection and wait for it to finish
         self.wake_word_detector.run_blocking()
+
+        if self.interrupted:
+            logger.info("Process was interrupted.")
+            return None
 
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
@@ -221,6 +242,31 @@ class VoiceProcessingManager:
         self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
                                             voice_threshold=self.voice_threshold,
                                             silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
+    def stop_wake_word_detection(self):
+        """
+        Stops the wake word detection process.
+        """
+        if self.wake_word_detector:
+            self.wake_word_detector.cleanup()
+
+    def stop_recording(self):
+        """
+        Stops the recording process.
+        """
+        if self.voice_recorder:
+            self.voice_recorder.stop_recording()
+
+    def stop_text_to_speech(self):
+        """
+        Stops the text-to-speech process.
+        """
+        # This method will be implemented based on the ElevenLabs API capabilities
+        pass
+
+    def interrupt_processes(self):
+        """
+        Interrupts all ongoing processes including wake word detection, recording, and text-to-speech.
+        """
                                             min_recording_length=self.min_recording_length,
                                             buffer_length=self.buffer_length)
 
