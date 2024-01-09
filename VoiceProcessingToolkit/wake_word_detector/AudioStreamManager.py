@@ -29,7 +29,7 @@ class AudioStream:
 
     def cleanup(self):
         """Cleans up the audio stream and terminates the PyAudio instance."""
-        if self._stream.is_active():
+        if self._stream and not self._stream.is_stopped():
             self._stream.stop_stream()
         self._stream.close()
         self._py_audio.terminate()
