@@ -61,27 +61,34 @@ class VoiceProcessingManager:
         self.recording_thread = None
 
     def text_to_speech(self, text, voice_id=None):
+    def text_to_speech(self, text, voice_id=None, elevenlabs_apikey=None):
         """
         Converts the given text to speech and plays it using the default audio device.
 
         Args:
             text (str): The text to be converted to speech.
             voice_id (str, optional): The ID of the voice to be used for speech synthesis.
+            elevenlabs_apikey (str, optional): The API key for ElevenLabs TTS. If not provided, the environment variable will be used.
         """
-        tts = ElevenLabsTextToSpeech(voice_id=voice_id)
+        config = ElevenLabsConfig(api_key=elevenlabs_apikey, voice_id=voice_id)
+        tts = ElevenLabsTextToSpeech(config=config)
         tts.synthesize_speech(text)
 
     def text_to_speech_stream(self, text, config=None):
+    def text_to_speech_stream(self, text, config=None, elevenlabs_apikey=None):
         """
         Converts the given text to speech and returns an audio stream.
 
         Args:
             text (str): The text to be converted to speech.
             config (ElevenLabsConfig, optional): The configuration for ElevenLabs TTS.
+            elevenlabs_apikey (str, optional): The API key for ElevenLabs TTS. If not provided, the environment variable will be used.
 
         Returns:
             BytesIO: An in-memory audio stream of the synthesized speech.
         """
+        if elevenlabs_apikey and not config:
+            config = ElevenLabsConfig(api_key=elevenlabs_apikey)
         return text_to_speech_stream(text, config=config)
 
     def recorder_transcriber(self):
