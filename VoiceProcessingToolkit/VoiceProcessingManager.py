@@ -11,6 +11,7 @@ from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManage
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, \
     ElevenLabsConfig
+from shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +177,7 @@ class VoiceProcessingManager:
             logger.info(f"Transcription: {transcription}")
         else:
             logger.info("No transcription was made.")
-        return transcription
+            return transcription
         # Ensure all threads are joined before exiting the method
         thread_manager.join_all()
 
@@ -238,6 +239,7 @@ def main():
     vpm.wakeword_tts(streaming=True)
     # Ensure all threads are joined before exiting the main function
     thread_manager.join_all()
+    logger.info("Exiting main function.")
 
 
 if __name__ == '__main__':
