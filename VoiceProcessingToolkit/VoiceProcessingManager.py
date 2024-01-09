@@ -268,10 +268,20 @@ def main():
     load_dotenv()
     vpm = VoiceProcessingManager()
 
+    # Run the wake word detection in the main thread
+    vpm.wake_word_detector.run()
+
+    # Start a separate thread for the rest of the voice processing tasks
+    processing_thread = threading.Thread(target=vpm.wakeword_tts, args=(True,))
+    processing_thread.start()
+
     try:
-        vpm.wakeword_tts(streaming=True)
+        while processing_thread.is_alive():
+            processing_thread.join(timeout=1)
     except KeyboardInterrupt:
         logger.info("Operation interrupted by user. Shutting down...")
+        vpm.stop_event.set()  # Signal all threads to stop
+        processing_thread.join()  # Ensure the processing thread has stopped
         vpm.stop_wake_word_detection()
         vpm.stop_recording()
         vpm.stop_text_to_speech()
