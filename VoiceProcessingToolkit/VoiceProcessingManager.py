@@ -73,7 +73,7 @@ class VoiceProcessingManager:
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        if self.voice_recorder.recording_thread:
+        if self.voice_recorder._recording_thread:
             self.voice_recorder.recording_thread.join()
 
         # If a recording was made, transcribe it
