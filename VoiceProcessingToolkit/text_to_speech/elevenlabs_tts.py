@@ -46,6 +46,7 @@ class ElevenLabsTextToSpeech:
     def __init__(self, config=None, voice_id=None):
         self.temp_dir = None
         self.config = config or ElevenLabsConfig(voice_id=voice_id)
+        self.mixer_initialized = False
 
     def synthesize_speech(self, text, output_dir=None):
         """
@@ -137,6 +138,17 @@ class ElevenLabsTextToSpeech:
             return None
 
 
+                    pygame.mixer.quit()
+                    self.mixer_initialized = False
+
+    def stop_playback(self):
+        """
+        Stops the audio playback if it is currently playing.
+        """
+        if self.mixer_initialized and pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+            self.mixer_initialized = False
 
 if __name__ == '__main__':
     load_dotenv()
