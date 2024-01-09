@@ -127,6 +127,13 @@ class VoiceProcessingManager:
         self.setup()
         self.recording_thread = None
 
+    def stop_wake_word_detection(self):
+        """
+        Stops the wake word detection process if it is currently running.
+        """
+        if self.wake_word_detector and self.wake_word_detector.is_running:
+            self.wake_word_detector.stop()
+
     def recorder_transcriber(self):
         """
         Method to record a voice command and return the transcription without wake word detection.
