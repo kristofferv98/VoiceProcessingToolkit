@@ -22,6 +22,7 @@ class AudioDataProvider:
         self._frames_per_buffer = frames_per_buffer
         self._stream = None
         self._py_audio = pyaudio.PyAudio()
+        self._stop_event = threading.Event()  # Event to signal when to stop the audio stream
 
     def start_stream(self):
         self._stream = self._py_audio.open(
@@ -36,10 +37,19 @@ class AudioDataProvider:
         return self._stream.is_active()
 
     def get_next_frame(self):
+        if self._stop_event.is_set():
+            raise StopIteration("Audio stream stop event triggered.")
         if self.is_stream_active():
             return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
         else:
             raise IOError("Audio stream is not active.")
+
+    def stop(self):
+        self._stop_event.set()
+        if self._stream and not self._stream.is_stopped():
+            self._stream.stop_stream()
+        self._stream.close()
+        self._py_audio.terminate()
 
     def stop_stream(self):
         if self._stream:
