@@ -12,6 +12,28 @@ from text_to_speech.elevenlabs_tts import text_to_speech
 
 logger = logging.getLogger(__name__)
 
+def main():
+    """
+    Main function to test the VoiceProcessingManager's process_voice_command method.
+    """
+    # Load environment variables
+    load_dotenv()
+
+    # Create an instance of VoiceProcessingManager
+    vpm = VoiceProcessingManager()
+
+    # Process a voice command
+    transcription = vpm.process_voice_command()
+
+    # Output the transcription result
+    if transcription:
+        logger.info(f"Transcription: {transcription}")
+    else:
+        logger.info("No transcription was made.")
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main()
 
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
