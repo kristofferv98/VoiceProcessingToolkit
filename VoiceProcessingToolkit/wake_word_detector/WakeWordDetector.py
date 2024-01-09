@@ -134,6 +134,7 @@ class WakeWordDetector:
         try:
             while not self._stop_event.is_set() and not shutdown_flag.is_set():
                 pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
+                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
