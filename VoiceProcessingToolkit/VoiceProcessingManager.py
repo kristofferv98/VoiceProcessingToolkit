@@ -179,8 +179,16 @@ class VoiceProcessingManager:
         """
         Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
         """
+        transcription = None
         try:
-            transcription = self.process_voice_command()
+            self.wake_word_detector.run_blocking()
+            transcription = self.recorder_transcriber()
+        except KeyboardInterrupt:
+            logger.info("Operation interrupted by user.")
+        finally:
+            self.stop_wake_word_detection()
+            self.stop_recording()
+            self.stop_text_to_speech()
             if transcription:
                 logger.info(f"Transcription: {transcription}")
                 if streaming is False:
@@ -189,11 +197,6 @@ class VoiceProcessingManager:
                     text_to_speech_stream(transcription)
             else:
                 logger.info("No transcription was made.")
-        except KeyboardInterrupt:
-            logger.info("Operation interrupted by user.")
-            self.stop_wake_word_detection()
-            self.stop_recording()
-            self.stop_text_to_speech()
 
     def wakeword_transcription(self):
         """
