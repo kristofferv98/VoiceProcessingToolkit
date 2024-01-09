@@ -149,7 +149,7 @@ class VoiceProcessingManager:
         """
         Stops any ongoing text-to-speech playback if it is currently running.
         """
-        tts = ElevenLabsTextToSpeech(config=self.config)
+        tts = ElevenLabsTextToSpeech()
         tts.stop_playback()
 
     def recorder_transcriber(self):
@@ -256,7 +256,7 @@ def main():
     """
     load_dotenv()
     vpm = VoiceProcessingManager()
-    vpm.wakeword_tts(streaming=True)
+    vpm.wakeword_tts(streaming=False)
 
 
 if __name__ == '__main__':
