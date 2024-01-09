@@ -151,7 +151,7 @@ class WakeWordDetector:
             self._notification_sound_manager.play()  # This should block until the sound is done playing
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
-        shutdown_flag.set()  # Signal to stop after handling the detection
+        # Do not set the shutdown_flag here, let the main program control the shutdown
 
 
     def run(self) -> None:
@@ -160,9 +160,8 @@ class WakeWordDetector:
         """
         detection_thread = threading.Thread(target=self.voice_loop)
         detection_thread.start()
-        while not shutdown_flag.is_set():
-            time.sleep(0.1)
-        self.cleanup()
+        # Do not wait for the shutdown_flag here, let the main program control the shutdown
+        # The cleanup will be called by the main program when needed
 
     def run_blocking(self) -> None:
         """

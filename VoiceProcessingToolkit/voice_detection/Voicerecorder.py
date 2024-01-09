@@ -118,7 +118,8 @@ class AudioRecorder:
         finally:
             # Wait for the recording thread to finish
             self.recording_thread.join()
-        return self.last_saved_file if self.last_saved_file else None
+        # Do not return here, let the recording thread set the last_saved_file
+        return self.last_saved_file
 
     def record_loop(self, audio_data_provider: AudioDataProvider, shutdown_flag=None) -> None:
         self._audio_data_provider = audio_data_provider
@@ -127,7 +128,8 @@ class AudioRecorder:
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
-            if shared_resources.shutdown_flag.is_set():
+            # Check for shutdown flag only after recording is complete
+            if shutdown_flag and shutdown_flag.is_set():
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:
@@ -145,7 +147,8 @@ class AudioRecorder:
                         silent_frames += 1
                         if self.should_finalize_recording(silent_frames):
                             self._logger.info("Inactivity limit exceeded. Finalizing recording...")
-                            return
+                            # Do not return, finalize the recording and continue the loop
+                            self.finalize_recording()
             except Exception as e:
                 self._logger.error(f"An error occurred during recording: {e}")
                 break
