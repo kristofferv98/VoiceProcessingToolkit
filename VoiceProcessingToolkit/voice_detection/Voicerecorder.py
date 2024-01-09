@@ -15,6 +15,8 @@ load_dotenv()
 
 
 # Audio Data Provider Class
+from VoiceProcessingToolkit.VoiceProcessingManager import shutdown_flag
+
 class AudioDataProvider:
     def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
         self._audio_format = audio_format
@@ -96,6 +98,7 @@ class AudioRecorder:
             self.recording_thread.join()
         if self._audio_data_provider:
             self._audio_data_provider.stop_stream()
+        self._py_audio.terminate()
 
     def perform_recording(self) -> str:
         """
@@ -107,12 +110,8 @@ class AudioRecorder:
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
         self.recording_thread.start()
-        try:
-            while self.recording_thread.is_alive():
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            self._logger.info("Recording interrupted by user.")
-            self.stop_recording()
+        while not shutdown_flag.is_set() and self.recording_thread.is_alive():
+            time.sleep(0.1)
         self.recording_thread.join()
         return self.last_saved_file if self.last_saved_file else None
 
@@ -123,7 +122,7 @@ class AudioRecorder:
         self._logger.info("Recording started.")
         silent_frames = 0
         while self.is_recording:
-            if self._stop_recording_flag:
+            if self._stop_recording_flag or shutdown_flag.is_set():
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:

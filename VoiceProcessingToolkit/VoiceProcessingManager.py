@@ -1,5 +1,7 @@
 import logging
 import os
+import signal
+import threading
 
 import pyaudio
 from dotenv import load_dotenv
@@ -85,6 +87,14 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
 
+shutdown_flag = threading.Event()
+
+def signal_handler(signal, frame):
+    print("Shutdown signal received")
+    shutdown_flag.set()
+
+signal.signal(signal.SIGINT, signal_handler)
+
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
@@ -143,7 +153,7 @@ class VoiceProcessingManager:
         """
         Stops the recording process if it is currently running.
         """
-        if self.voice_recorder and self.voice_recorder.is_recording:
+        if self.voice_recorder:
             self.voice_recorder.stop_recording()
 
     def stop_text_to_speech(self):
@@ -189,8 +199,9 @@ class VoiceProcessingManager:
                     text_to_speech_stream(transcription)
             else:
                 logger.info("No transcription was made.")
-        except KeyboardInterrupt:
-            logger.info("Operation interrupted by user.")
+
+        # Check if shutdown flag is set and stop all processes
+        if shutdown_flag.is_set():
             self.stop_wake_word_detection()
             self.stop_recording()
             self.stop_text_to_speech()
