@@ -78,15 +78,15 @@ class AudioRecorder:
         self._frames_to_save = []  # Frames to save are now private
         self._frames = []  # Frames are now private
         self._lock = threading.Lock()  # Lock for thread safety is now private
-        self._recording_thread = None  # Recording thread is now private
+        self.recording_thread = None  # Recording thread is now private
         self._audio_data_provider = None  # Audio data provider is now private
 
     def cleanup(self):
         """
         Cleans up the resources used by the audio recorder.
         """
-        if self._recording_thread and self._recording_thread.is_alive():
-            self._recording_thread.join()
+        if self.recording_thread and self.recording_thread.is_alive():
+            self.recording_thread.join()
         if self._audio_data_provider:
             self._audio_data_provider.stop_stream()
 
@@ -97,8 +97,8 @@ class AudioRecorder:
             str: The path to the recorded audio file.
         """
         self._audio_data_provider = AudioDataProvider()
-        self._recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
-        self._recording_thread.start()
+        self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
+        self.recording_thread.start()
         try:
             while self._is_recording:
                 time.sleep(0.1)
@@ -117,8 +117,8 @@ class AudioRecorder:
         self._audio_data_provider = audio_data_provider
         self._audio_data_provider.start_stream()
         self._is_recording = True
-        self._recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
-        self._recording_thread.start()
+        self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
+        self.recording_thread.start()
         self._logger.info("Recording started.")
 
     def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
@@ -296,21 +296,11 @@ class AudioRecorder:
         Stops the recording process and joins the recording thread.
         """
         self._is_recording = False  # Recording state is now private
-        if self._recording_thread:
-            self._recording_thread.join()
+        if self.recording_thread:
+            self.recording_thread.join()
             self._py_audio.terminate()
         self._logger.info("Recording stopped.")
 
-        self._logger.info("Recording stopped.")
-
-
-    def transcribe_last_recording(self):
-        """
-        Transcribes the last recorded audio file.
-        """
-        if self.last_saved_file:
-            return self.transcriber.transcribe_audio(self.last_saved_file)
-        return None
 
 
 if __name__ == '__main__':
