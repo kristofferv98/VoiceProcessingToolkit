@@ -71,18 +71,18 @@ class VoiceProcessingManager:
         tts = ElevenLabsTextToSpeech(voice_id=voice_id)
         tts.synthesize_speech(text)
 
-    def text_to_speech_stream(self, text, voice_id=None):
+    def text_to_speech_stream(self, text, config=None):
         """
         Converts the given text to speech and returns an audio stream.
 
         Args:
             text (str): The text to be converted to speech.
-            voice_id (str, optional): The ID of the voice to be used for speech synthesis.
+            config (ElevenLabsConfig, optional): The configuration for ElevenLabs TTS.
 
         Returns:
             BytesIO: An in-memory audio stream of the synthesized speech.
         """
-        return text_to_speech_stream(text, voice_id=voice_id)
+        return text_to_speech_stream(text, config=config)
 
     def recorder_transcriber(self):
         """
