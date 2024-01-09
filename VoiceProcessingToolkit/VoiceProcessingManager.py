@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 from elevenlabs import stream, generate
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
-from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
+from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
+from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
-from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
+from VoiceProcessingToolkit.shared_resources import shutdown_flag
 from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, \
     ElevenLabsConfig
 
