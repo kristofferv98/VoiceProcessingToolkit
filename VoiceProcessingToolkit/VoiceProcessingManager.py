@@ -125,7 +125,7 @@ class VoiceProcessingManager:
         self.transcriber = WhisperTranscriber()
         self.action_manager = ActionManager()
         self.setup()
-        self.recording_thread = None
+        # self.recording_thread is now managed by thread_manager, no need to keep a separate reference here
 
     def recorder_transcriber(self):
         """
@@ -137,8 +137,7 @@ class VoiceProcessingManager:
         # Start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
+        # Joining of threads is now handled by thread_manager, no need to join here
 
         # If a recording was made, transcribe it
         if self.voice_recorder.last_saved_file:
@@ -162,6 +161,8 @@ class VoiceProcessingManager:
                 text_to_speech_stream(transcription)
         else:
             logger.info("No transcription was made.")
+        # Ensure all threads are joined before exiting the method
+        thread_manager.join_all()
 
     def wakeword_transcription(self):
         """
@@ -176,6 +177,8 @@ class VoiceProcessingManager:
         else:
             logger.info("No transcription was made.")
         return transcription
+        # Ensure all threads are joined before exiting the method
+        thread_manager.join_all()
 
     def process_voice_command(self):
         """
@@ -190,8 +193,7 @@ class VoiceProcessingManager:
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
+        # Joining of threads is now handled by thread_manager, no need to join here
 
         # If a recording was made, transcribe it
         if self.voice_recorder.last_saved_file:
@@ -223,6 +225,8 @@ class VoiceProcessingManager:
                                             silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
                                             min_recording_length=self.min_recording_length,
                                             buffer_length=self.buffer_length)
+        # Add the voice recorder's thread to the thread manager
+        thread_manager.add_thread(self.voice_recorder.recording_thread)
 
 
 def main():
@@ -232,6 +236,8 @@ def main():
     load_dotenv()
     vpm = VoiceProcessingManager()
     vpm.wakeword_tts(streaming=True)
+    # Ensure all threads are joined before exiting the main function
+    thread_manager.join_all()
 
 
 if __name__ == '__main__':
