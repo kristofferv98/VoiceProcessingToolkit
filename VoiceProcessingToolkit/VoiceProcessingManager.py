@@ -136,7 +136,7 @@ class VoiceProcessingManager:
         """
         Stops the wake word detection process if it is currently running.
         """
-        if self.wake_word_detector and self.wake_word_detector.is_running:
+        if self.wake_word_detector and self.wake_word_detector.is_running:  # No change needed, already checking is_running
             self.wake_word_detector.stop()
 
     def stop_recording(self):
