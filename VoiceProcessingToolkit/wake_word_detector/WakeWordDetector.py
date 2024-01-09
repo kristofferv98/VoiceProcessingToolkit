@@ -108,6 +108,7 @@ class WakeWordDetector:
         self._audio_stream_manager = audio_stream_manager
         self._stop_event = threading.Event()
         self._porcupine = None
+        self._stop_event = stop_event or threading.Event()
         self.initialize_porcupine()
         self.is_running = False  # New attribute
 
@@ -135,7 +136,7 @@ class WakeWordDetector:
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
-                if self._stop_event.is_set():
+                if self._stop_event and self._stop_event.is_set():
                     break  # Exit the loop if stop event is set
         except KeyboardInterrupt:
             logger.info("Wake word detection stopped by user.")

@@ -266,7 +266,7 @@ def main():
     Main function to test the VoiceProcessingManager's process_voice_command method.
     """
     load_dotenv()
-    vpm = VoiceProcessingManager()
+    vpm = ()
 
     try:
         vpm.wakeword_tts(streaming=True)
