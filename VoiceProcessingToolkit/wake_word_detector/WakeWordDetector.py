@@ -39,6 +39,7 @@ import os
 import struct
 import threading
 from VoiceProcessingToolkit.VoiceProcessingManager import shutdown_flag
+from VoiceProcessingToolkit.VoiceProcessingManager import shutdown_flag
 import time
 import pvporcupine
 import pyaudio
@@ -132,11 +133,16 @@ class WakeWordDetector:
         """
         self.is_running = True
         try:
+            while not self._stop_event.is_set() and not shutdown_flag.is_set():
             while not self._stop_event.is_set():
                 pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
+        except Exception as e:
+            logger.exception("An error occurred during wake word detection.", exc_info=e)
+        finally:
+            self.is_running = False
         except Exception as e:
             logger.exception("An error occurred during wake word detection.", exc_info=e)
         finally:

@@ -1,4 +1,5 @@
 import logging
+import threading
 import os
 import signal
 import threading
@@ -88,6 +89,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
 
+shutdown_flag = threading.Event()
 shutdown_flag = threading.Event()
 
 class VoiceProcessingManager:
