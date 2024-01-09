@@ -8,7 +8,7 @@ from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from text_to_speech.elevenlabs_tts import text_to_speech_stream
+from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, text_to_speech_stream
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,30 @@ class VoiceProcessingManager:
         self.action_manager = ActionManager()
         self.setup()
         self.recording_thread = None
+
+    def text_to_speech(self, text, voice_id=None):
+        """
+        Converts the given text to speech and plays it using the default audio device.
+
+        Args:
+            text (str): The text to be converted to speech.
+            voice_id (str, optional): The ID of the voice to be used for speech synthesis.
+        """
+        tts = ElevenLabsTextToSpeech(voice_id=voice_id)
+        tts.synthesize_speech(text)
+
+    def text_to_speech_stream(self, text, voice_id=None):
+        """
+        Converts the given text to speech and returns an audio stream.
+
+        Args:
+            text (str): The text to be converted to speech.
+            voice_id (str, optional): The ID of the voice to be used for speech synthesis.
+
+        Returns:
+            BytesIO: An in-memory audio stream of the synthesized speech.
+        """
+        return text_to_speech_stream(text, voice_id=voice_id)
 
     def recorder_transcriber(self):
         """
