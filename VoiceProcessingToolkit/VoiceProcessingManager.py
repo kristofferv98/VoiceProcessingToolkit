@@ -88,6 +88,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
 
+shutdown_flag = threading.Event()
 
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',

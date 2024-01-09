@@ -5,6 +5,7 @@ import os
 import wave
 import time
 import threading
+from VoiceProcessingToolkit.VoiceProcessingManager import shutdown_flag
 from dotenv import load_dotenv
 import numpy as np
 import pyaudio
@@ -99,6 +100,7 @@ class AudioRecorder:
         self._py_audio.terminate()
 
     def perform_recording(self, shutdown_flag=None) -> str:
+    def perform_recording(self) -> str:
         """
         Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
         Returns:
@@ -108,6 +110,7 @@ class AudioRecorder:
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
         self.recording_thread.start()
+        while not shutdown_flag.is_set() and self.recording_thread.is_alive():
         while not shutdown_flag.is_set() and self.recording_thread.is_alive():
             time.sleep(0.1)
         self.recording_thread.join()
