@@ -128,6 +128,7 @@ def text_to_speech(text, output_dir=None, voice_id=None):
     Args:
         text (str): The text to be converted into speech.
         output_dir (str, optional): The directory where the audio file will be saved. Defaults to None.
+        config (ElevenLabsConfig, optional): The configuration for ElevenLabs TTS. If not provided, defaults will be used.
 
     Returns:
         str: The file path to the saved audio file if the synthesis was successful, None otherwise.
@@ -135,7 +136,9 @@ def text_to_speech(text, output_dir=None, voice_id=None):
         :param output_dir:
         :param voice_id:
     """
-    tts = ElevenLabsTextToSpeech(voice_id=voice_id)
+    if config is None:
+        config = ElevenLabsConfig(voice_id=voice_id)
+    tts = ElevenLabsTextToSpeech(config=config)
     return tts.synthesize_speech(text, output_dir)
 
 def text_to_speech_stream(text, config=None, voice_id=None):
