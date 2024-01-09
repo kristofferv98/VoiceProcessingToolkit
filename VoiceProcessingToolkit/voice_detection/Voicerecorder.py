@@ -136,21 +136,25 @@ class AudioRecorder:
                 self._logger.info("Stop flag set, stopping recording loop.")
                 break
             try:
-                frame = audio_data_provider.get_next_frame()
-                self.process_frame(frame)
-                if not self._recording:
-                    self.buffer_audio_frame(frame)
-                else:
-                    voice_activity_detected = self.detect_voice_activity(frame)
-                    if voice_activity_detected:
-                        self._inactivity_frames = 0
-                        self._frames_to_save.append(frame)
+                try:
+                    frame = audio_data_provider.get_next_frame()
+                    self.process_frame(frame)
+                    if not self._recording:
+                        self.buffer_audio_frame(frame)
                     else:
-                        self._inactivity_frames += 1
-                        silent_frames += 1
-                        if self.should_finalize_recording(silent_frames):
-                            self._logger.info("Inactivity limit exceeded. Finalizing recording...")
-                            return
+                        voice_activity_detected = self.detect_voice_activity(frame)
+                        if voice_activity_detected:
+                            self._inactivity_frames = 0
+                            self._frames_to_save.append(frame)
+                        else:
+                            self._inactivity_frames += 1
+                            silent_frames += 1
+                            if self.should_finalize_recording(silent_frames):
+                                self._logger.info("Inactivity limit exceeded. Finalizing recording...")
+                                return
+                except KeyboardInterrupt:
+                    self._logger.info("KeyboardInterrupt received, stopping recording loop.")
+                    break
             except Exception as e:
                 self._logger.error(f"An error occurred during recording: {e}")
                 break
