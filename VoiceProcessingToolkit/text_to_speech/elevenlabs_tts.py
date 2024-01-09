@@ -163,7 +163,7 @@ def text_to_speech_stream(text, config=None):
         # Generate the audio stream
         audio_stream = generate(
             text=text,
-            voice=config.voice_id,
+            voice=voice_id or config.voice_id,
             model=config.model_id,
             api_key=config.elevenlabs_api_key,
             stream=True  # Enable streaming
