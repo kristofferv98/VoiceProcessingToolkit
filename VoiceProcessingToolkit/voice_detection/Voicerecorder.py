@@ -97,7 +97,8 @@ class AudioRecorder:
             str: The path to the recorded audio file.
         """
         self._audio_data_provider = AudioDataProvider()
-        self.start_recording(self._audio_data_provider)
+        self._recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
+        self._recording_thread.start()
         try:
             while self._is_recording:
                 time.sleep(0.1)
@@ -105,7 +106,7 @@ class AudioRecorder:
             self._logger.info("Recording interrupted by user.")
         finally:
             self.stop_recording()
-            return self.last_saved_file
+            return self.last_saved_file if self.last_saved_file else None
 
     def start_recording(self, audio_data_provider: AudioDataProvider) -> None:
         """
