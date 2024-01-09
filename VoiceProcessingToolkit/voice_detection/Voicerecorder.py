@@ -301,6 +301,16 @@ class AudioRecorder:
             self._py_audio.terminate()
         self._logger.info("Recording stopped.")
 
+        self._logger.info("Recording stopped.")
+
+
+    def transcribe_last_recording(self):
+        """
+        Transcribes the last recorded audio file.
+        """
+        if self.last_saved_file:
+            return self.transcriber.transcribe_audio(self.last_saved_file)
+        return None
 
 
 if __name__ == '__main__':
