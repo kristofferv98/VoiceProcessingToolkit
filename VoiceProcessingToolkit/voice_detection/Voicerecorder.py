@@ -5,12 +5,12 @@ import os
 import wave
 import time
 import threading
-from VoiceProcessingToolkit.VoiceProcessingManager import shutdown_flag
 from dotenv import load_dotenv
 import numpy as np
 import pyaudio
 import pvcobra
 
+from shared_resources import shutdown_flag
 
 logger = logging.getLogger(__name__)
 load_dotenv()
