@@ -37,7 +37,8 @@ def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=No
     if config is None:
         config = ElevenLabsConfig(voice_id=voice_id, api_key=api_key or None)
     tts = ElevenLabsTextToSpeech(config=config, voice_id=voice_id)
-    return tts.synthesize_speech(text, output_dir)
+    audio_file_path = tts.synthesize_speech(text, output_dir)
+    return audio_file_path
 
 
 def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
@@ -76,6 +77,9 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         # Stream the audio if playback is enabled
         if config.playback_enabled:
             stream(audio_stream)
+        else:
+            tts = ElevenLabsTextToSpeech(config=config)
+            tts.stop_playback()
     except Exception as e:
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
 
@@ -145,9 +149,8 @@ class VoiceProcessingManager:
         """
         Stops any ongoing text-to-speech playback if it is currently running.
         """
-        # This is a placeholder for the actual implementation.
-        # The actual implementation should stop the audio playback if it's being played.
-        pass
+        tts = ElevenLabsTextToSpeech(config=self.config)
+        tts.stop_playback()
 
     def recorder_transcriber(self):
         """
