@@ -86,7 +86,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
-                 play_notification_sound: bool = True, stop_event=None) -> None:
+                 play_notification_sound: bool = True) -> None:
         """
         Initializes the WakeWordDetector with the provided parameters.
 
@@ -108,7 +108,6 @@ class WakeWordDetector:
         self._audio_stream_manager = audio_stream_manager
         self._stop_event = threading.Event()
         self._porcupine = None
-        self._stop_event = stop_event or threading.Event()
         self.initialize_porcupine()
         self.is_running = False  # New attribute
 
@@ -131,22 +130,11 @@ class WakeWordDetector:
         """
         self.is_running = True
         try:
-            while True:
-                try:
-                    pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
-                except IOError as e:
-                    if e.errno == pyaudio.paInputOverflowed:
-                        # Clear the buffer by reading and discarding
-                        self._audio_stream_manager.get_stream().read(self._porcupine.frame_length, exception_on_overflow=False)
-                        continue
-                    else:
-                        raise
+            while not self._stop_event.is_set():
+                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
-                time.sleep(0.1)  # Non-blocking wait
-                if self._stop_event.is_set():
-                    break
         except KeyboardInterrupt:
             logger.info("Wake word detection stopped by user.")
         finally:
@@ -172,17 +160,9 @@ class WakeWordDetector:
         """
         Starts the wake word detection loop.
         """
-        detection_thread = threading.Thread(target=self.voice_loop, daemon=True)
+        detection_thread = threading.Thread(target=self.voice_loop)
         detection_thread.start()
-        try:
-            while detection_thread.is_alive():
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            logger.info("Wake word detection interrupted by user.")
-            self._stop_event.set()
-        finally:
-            detection_thread.join()  # Ensure the thread is cleaned up
-            self.cleanup()  # Cleanup resources after the thread has finished
+        detection_thread.join()  # Wait for the thread to finish
         self.cleanup()  # Cleanup resources after the thread has finished
 
     def run_blocking(self) -> None:
@@ -190,11 +170,7 @@ class WakeWordDetector:
         Starts the wake word detection loop and waits for it to finish before returning.
         This method is intended to be used when the detection should block the calling thread.
         """
-        try:
-            self.voice_loop()
-        except KeyboardInterrupt:
-            logger.info("Wake word detection interrupted by user.")
-            self._stop_event.set()
+        self.voice_loop()
         self.cleanup()
 
     def cleanup(self) -> None:
