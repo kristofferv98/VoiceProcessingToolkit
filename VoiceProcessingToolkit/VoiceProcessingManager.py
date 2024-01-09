@@ -37,8 +37,13 @@ def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=No
     if config is None:
         config = ElevenLabsConfig(voice_id=voice_id, api_key=api_key or None)
     tts = ElevenLabsTextToSpeech(config=config, voice_id=voice_id)
-    audio_file_path = tts.synthesize_speech(text, output_dir)
-    return audio_file_path
+    try:
+        audio_file_path = tts.synthesize_speech(text, output_dir)
+        return audio_file_path
+    except KeyboardInterrupt:
+        tts.stop_playback()
+        logging.info("Text-to-speech synthesis interrupted by user.")
+        return None
 
 
 def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
@@ -76,7 +81,11 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
         # Stream the audio if playback is enabled
         if config.playback_enabled:
-            stream(audio_stream)
+            try:
+                stream(audio_stream)
+            except KeyboardInterrupt:
+                tts.stop_playback()
+                logging.info("Streaming text-to-speech interrupted by user.")
         else:
             tts = ElevenLabsTextToSpeech(config=config)
             tts.stop_playback()
