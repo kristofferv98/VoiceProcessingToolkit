@@ -129,16 +129,16 @@ class WakeWordDetector:
         The main loop that listens for the wake word and triggers the action function.
         """
         self.is_running = True
-        try:
-            while not self._stop_event.is_set():
+        while not self._stop_event.is_set():
+            try:
                 pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
-        except KeyboardInterrupt:
-            logger.info("Wake word detection stopped by user.")
-        finally:
-            self.is_running = False
+            except KeyboardInterrupt:
+                logger.info("Wake word detection stopped by user.")
+                break
+        self.is_running = False
 
     def handle_wake_word_detection(self):
         """
@@ -162,8 +162,14 @@ class WakeWordDetector:
         """
         detection_thread = threading.Thread(target=self.voice_loop)
         detection_thread.start()
-        detection_thread.join()  # Wait for the thread to finish
-        self.cleanup()  # Cleanup resources after the thread has finished
+        try:
+            detection_thread.join()  # Wait for the thread to finish
+        except KeyboardInterrupt:
+            # If a KeyboardInterrupt occurs, we set the stop event and wait again
+            self._stop_event.set()
+            detection_thread.join()
+        finally:
+            self.cleanup()  # Cleanup resources after the thread has finished
 
     def run_blocking(self) -> None:
         """
