@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
-from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager, register_action_decorator
+from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from text_to_speech.elevenlabs_tts import text_to_speech
 
@@ -41,6 +41,7 @@ class VoiceProcessingManager:
             min_recording_length (int): The minimum length of a valid recording.
             buffer_length (int): The length of the audio buffer.
         """
+        self.transcription = None
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
@@ -61,29 +62,11 @@ class VoiceProcessingManager:
         self.setup()
         self.recording_thread = None
 
-    def start_and_transcribe(self):
-        """
-        Starts the wake word detection, records upon detection, and returns the transcription.
-
-        Returns:
-            str: The transcription of the recorded audio.
-        """
-        transcription = ""
-        try:
-            self.wake_word_detector.run()
-            recorded_file = self.voice_recorder.last_saved_file
-            if recorded_file:
-                transcription = self.transcriber.transcribe_audio(recorded_file)
-        except Exception as e:
-            logger.exception("An error occurred during voice processing.", exc_info=e)
-        finally:
-                self.cleanup()
-        return transcription
-
     def setup(self):
         # Initialize AudioStream
         self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
-                                                _audio_format=self.audio_format, frames_per_buffer=self.frames_per_buffer)
+                                                _audio_format=self.audio_format,
+                                                frames_per_buffer=self.frames_per_buffer)
 
         # Initialize WakeWordDetector
         self.wake_word_detector = WakeWordDetector(
@@ -95,67 +78,9 @@ class VoiceProcessingManager:
             play_notification_sound=True
         )
         # Initialize VoiceRecorder
-        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,voice_threshold=self.voice_threshold,
+        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
+                                            voice_threshold=self.voice_threshold,
                                             silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
                                             min_recording_length=self.min_recording_length,
                                             buffer_length=self.buffer_length)
-        # Register the voice recording action
-        self.register_voice_recording_action()
-
-    def register_voice_recording_action(self):
-        @register_action_decorator(self.action_manager)
-        def start_voice_recording():
-            logger.info("Wake word detected, starting voice recording...")
-            # Start the recording in a separate thread to avoid blocking the main thread
-            self.recording_thread = threading.Thread(target=self.voice_recorder.perform_recording)
-            self.recording_thread.start()
-            self.recording_thread.join()  # Wait for the recording to finish
-            recorded_file = self.voice_recorder.last_saved_file
-            if recorded_file:
-                    # Transcribe the recorded audio
-                try:
-                    transcription = self.transcriber.transcribe_audio(recorded_file)
-                    if transcription:
-                        logger.info(f"Transcription: {transcription}")
-                    return transcription
-                except Exception as e:
-                    logger.error(f"Failed to transcribe audio: {e}")
-
-                if recorded_file:
-                    logger.info(f"Voice recording saved to {recorded_file}")
-            else:
-                logger.warning("A recording is already in progress.")
-
-    def run(self):
-        """
-        Starts the wake word detection and handles the voice processing workflow.
-        """
-        transcription = self.start_and_transcribe()
-        return transcription
-
-    def cleanup(self):
-        """
-        Cleans up the resources used by the voice processing manager.
-        """
-        if self.recording_thread is not None and self.recording_thread.is_alive():
-            self.recording_thread.join()
-            self.voice_recorder.cleanup()
-
-
-if __name__ == '__main__':
-    load_dotenv()
-
-    # Configure logging at the start of the application
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    manager = VoiceProcessingManager()
-    transcription = manager.run()
-    if transcription:
-        logger.info("Voice processing completed.")
-        logger.info(f"Transcription: {transcription}")
-        # Invoke text-to-speech only if transcription is successful and not empty
-        if transcription.strip():
-            tts = text_to_speech(transcription)
-
-
-
 
