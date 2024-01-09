@@ -99,14 +99,14 @@ class AudioRecorder:
         self._audio_data_provider = AudioDataProvider()
         self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
         self.recording_thread.start()
-        try:
-            while self._is_recording:
+        while self.recording_thread.is_alive():
+            try:
                 time.sleep(0.1)
-        except KeyboardInterrupt:
-            self._logger.info("Recording interrupted by user.")
-        finally:
-            self.stop_recording()
-            return self.last_saved_file if self.last_saved_file else None
+            except KeyboardInterrupt:
+                self._logger.info("Recording interrupted by user.")
+                self.stop_recording()
+                break
+        return self.last_saved_file if self.last_saved_file else None
 
     def start_recording(self, audio_data_provider: AudioDataProvider) -> None:
         """
