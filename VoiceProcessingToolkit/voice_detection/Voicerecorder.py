@@ -10,13 +10,11 @@ import numpy as np
 import pyaudio
 import pvcobra
 
-import shared_resources
-from shared_resources import shutdown_flag
-
 logger = logging.getLogger(__name__)
 load_dotenv()
 
 
+# Audio Data Provider Class
 class AudioDataProvider:
     def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
         self._audio_format = audio_format
@@ -35,14 +33,8 @@ class AudioDataProvider:
             frames_per_buffer=self._frames_per_buffer
         )
 
-    def is_stream_active(self):
-        return self._stream.is_active()
-
     def get_next_frame(self):
-        if self.is_stream_active():
-            return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
-        else:
-            raise IOError("Audio stream is not active.")
+        return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
 
     def stop_stream(self):
         if self._stream:
@@ -81,7 +73,7 @@ class AudioRecorder:
         self._audio_buffer = collections.deque(maxlen=self.BUFFER_LENGTH * self._cobra_handle.sample_rate // self.
                                                _cobra_handle.frame_length)
         self._inactivity_frames = 0  # Inactivity frames counter is now private
-        self.is_recording = False  # Recording state is now private
+        self._is_recording = False  # Recording state is now private
         self._recording = False  # Recording state is now private
         self._frames_to_save = []  # Frames to save are now private
         self._frames = []  # Frames are now private
@@ -97,7 +89,6 @@ class AudioRecorder:
             self.recording_thread.join()
         if self._audio_data_provider:
             self._audio_data_provider.stop_stream()
-        self._py_audio.terminate()
 
     def perform_recording(self) -> str:
         """
@@ -105,33 +96,39 @@ class AudioRecorder:
         Returns:
             str: The path to the recorded audio file.
         """
-        # self._stop_recording_flag = False  # Removed, using shared_resources.shutdown_flag instead
         self._audio_data_provider = AudioDataProvider()
-        self.recording_thread = threading.Thread(target=self.record_loop, args=(self._audio_data_provider,))
+        self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
         self.recording_thread.start()
         try:
-            while not shutdown_flag.is_set():
+            while self._is_recording:
                 time.sleep(0.1)
         except KeyboardInterrupt:
-            # If a keyboard interrupt is received, set the shutdown flag
-            shutdown_flag.set()
+            self._logger.info("Recording interrupted by user.")
         finally:
-            # Wait for the recording thread to finish
-            self.recording_thread.join()
-        # Do not return here, let the recording thread set the last_saved_file
-        return self.last_saved_file
+            self.stop_recording()
+            return self.last_saved_file if self.last_saved_file else None
 
-    def record_loop(self, audio_data_provider: AudioDataProvider, shutdown_flag=None) -> None:
+    def start_recording(self, audio_data_provider: AudioDataProvider) -> None:
+        """
+        Starts the audio recording process using the provided audio data provider.
+        Args:
+            audio_data_provider (AudioDataProvider): The provider of audio data frames.
+        """
         self._audio_data_provider = audio_data_provider
         self._audio_data_provider.start_stream()
-        self.is_recording = True
+        self._is_recording = True
+        self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
+        self.recording_thread.start()
         self._logger.info("Recording started.")
+
+    def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
+        """
+        The main loop for recording audio, processing frames, and managing recording state.
+        Args:
+            audio_data_provider (AudioDataProvider): The provider of audio data frames.
+        """
         silent_frames = 0
-        while self.is_recording:
-            # Check for shutdown flag only after recording is complete
-            if shutdown_flag and shutdown_flag.is_set():
-                self._logger.info("Stop flag set, stopping recording loop.")
-                break
+        while self._is_recording:
             try:
                 frame = audio_data_provider.get_next_frame()
                 self.process_frame(frame)
@@ -140,15 +137,14 @@ class AudioRecorder:
                 else:
                     voice_activity_detected = self.detect_voice_activity(frame)
                     if voice_activity_detected:
-                        self._inactivity_frames = 0
+                        self._inactivity_frames = 0  # Inactivity frames counter is now private
                         self._frames_to_save.append(frame)
                     else:
                         self._inactivity_frames += 1
                         silent_frames += 1
                         if self.should_finalize_recording(silent_frames):
                             self._logger.info("Inactivity limit exceeded. Finalizing recording...")
-                            # Do not return, finalize the recording and continue the loop
-                            self.finalize_recording()
+                            return
             except Exception as e:
                 self._logger.error(f"An error occurred during recording: {e}")
                 break
@@ -205,13 +201,13 @@ class AudioRecorder:
         with self._lock:
             if voice_activity_detected:
                 self._inactivity_frames = 0  # Inactivity frames counter is now private
-                if not self.is_recording:
+                if not self._is_recording:
                     self.start_new_recording()
                 self._frames_to_save.append(frame)
             else:
                 self.buffer_audio_frame(frame)
                 self._inactivity_frames += 1
-                if self.is_recording:
+                if self._is_recording:
                     self._frames_to_save.append(frame)
                     if (
                             self._inactivity_frames * self._cobra_handle.frame_length / self._cobra_handle.sample_rate >
@@ -263,7 +259,7 @@ class AudioRecorder:
                     f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
         self._recording = False  # Recording state is now private
         self._frames_to_save = []  # Frames to save are now private
-        self.is_recording = False  # Recording state is now private
+        self._is_recording = False  # Recording state is now private
         self.last_saved_file = saved_file_path if saved_file_path else False
         return self.last_saved_file
 
@@ -299,8 +295,15 @@ class AudioRecorder:
         """
         Stops the recording process and joins the recording thread.
         """
-        self.is_recording = False  # Recording state is now private
+        self._is_recording = False  # Recording state is now private
         if self.recording_thread:
             self.recording_thread.join()
             self._py_audio.terminate()
         self._logger.info("Recording stopped.")
+
+
+
+if __name__ == '__main__':
+    audio_recorder = AudioRecorder(output_directory='Wav_MP3')
+    recorded_file = audio_recorder.perform_recording()
+    logger.info(f"Saved to {recorded_file}")

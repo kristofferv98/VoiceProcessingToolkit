@@ -1,7 +1,6 @@
 import contextlib
 import logging
 import os
-import wave
 
 import pygame
 
@@ -32,7 +31,7 @@ class NotificationSoundManager:
             logger.exception("An unexpected error occurred while initializing the notification sound.", exc_info=e)
             raise
 
-    def play(self, preloaded_sound=None):
+    def play(self, _preloaded_sound=None):
         if self._notification_sound:
             self._notification_sound.play()
         if self._notification_sound:

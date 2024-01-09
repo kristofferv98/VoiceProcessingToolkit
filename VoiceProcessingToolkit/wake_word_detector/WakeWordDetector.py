@@ -38,7 +38,6 @@ import logging
 import os
 import struct
 import threading
-from VoiceProcessingToolkit.shared_resources import shutdown_flag
 import time
 import pvporcupine
 import pyaudio
@@ -50,7 +49,6 @@ from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_act
 from wake_word_detector.ActionManager import ActionManager
 
 logger = logging.getLogger(__name__)
-
 
 
 class WakeWordDetector:
@@ -111,8 +109,6 @@ class WakeWordDetector:
         self._stop_event = threading.Event()
         self._porcupine = None
         self.initialize_porcupine()
-        self.is_running = False  # New attribute
-
 
     def initialize_porcupine(self) -> None:
         """
@@ -130,18 +126,11 @@ class WakeWordDetector:
         """
         The main loop that listens for the wake word and triggers the action function.
         """
-        self.is_running = True
-        try:
-            while not self._stop_event.is_set() and not shutdown_flag.is_set():
-                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
-                pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
-                if self._porcupine.process(pcm) >= 0:
-                    self.handle_wake_word_detection()
-
-        except Exception as e:
-            logger.exception("An error occurred during wake word detection.", exc_info=e)
-        finally:
-            self.is_running = False
+        while not self._stop_event.is_set():
+            pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+            pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
+            if self._porcupine.process(pcm) >= 0:
+                self.handle_wake_word_detection()
 
     def handle_wake_word_detection(self):
         """
@@ -151,7 +140,7 @@ class WakeWordDetector:
             self._notification_sound_manager.play()  # This should block until the sound is done playing
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
-        # Do not set the shutdown_flag here, let the main program control the shutdown
+        self._stop_event.set()  # Signal to stop after handling the detection
 
 
     def run(self) -> None:
@@ -160,8 +149,8 @@ class WakeWordDetector:
         """
         detection_thread = threading.Thread(target=self.voice_loop)
         detection_thread.start()
-        # Do not wait for the shutdown_flag here, let the main program control the shutdown
-        # The cleanup will be called by the main program when needed
+        detection_thread.join()  # Wait for the thread to finish
+        self.cleanup()  # Cleanup resources after the thread has finished
 
     def run_blocking(self) -> None:
         """
