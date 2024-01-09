@@ -62,6 +62,27 @@ class VoiceProcessingManager:
         self.setup()
         self.recording_thread = None
 
+    def process_voice_command(self):
+        """
+        Detects the wake word, records the following voice command, and transcribes it.
+
+        Returns:
+            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+        """
+        # Start wake word detection
+        self.wake_word_detector.run()
+
+        # Once wake word is detected, start recording
+        recorded_file = self.voice_recorder.perform_recording()
+
+        # If a recording was made, transcribe it
+        if recorded_file:
+            transcription = self.transcriber.transcribe_audio(recorded_file)
+            return transcription
+
+        # If no recording was made, return None
+        return None
+
     def setup(self):
         # Initialize AudioStream
         self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
