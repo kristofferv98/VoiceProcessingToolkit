@@ -6,7 +6,6 @@ import time
 
 import pygame
 from dotenv import load_dotenv
-from elevenlabs import generate, stream
 
 import requests
 
