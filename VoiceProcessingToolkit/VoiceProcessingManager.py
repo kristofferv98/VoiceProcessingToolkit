@@ -8,7 +8,7 @@ from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from text_to_speech.elevenlabs_tts import text_to_speech
+from text_to_speech.elevenlabs_tts import text_to_speech_stream
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class VoiceProcessingManager:
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        if self.voice_recorder._recording_thread:
+        if self.voice_recorder.recording_thread:
             self.voice_recorder.recording_thread.join()
 
         # If a recording was made, transcribe it
@@ -84,13 +84,6 @@ class VoiceProcessingManager:
 
         # If no recording was made, return None
         return None
-
-    def run_blocking(self):
-        """
-        Starts the wake word detection loop and waits for it to finish before returning.
-        """
-        self.voice_loop()
-        self.cleanup()
 
     def setup(self):
         # Initialize AudioStream
@@ -131,9 +124,11 @@ def main():
 
     # Output the transcription result
     if transcription:
-        logger.info(f"Transcription: {transcription}")
+        logger.info(f"Transcription that is crazy: {transcription}")
     else:
         logger.info("No transcription was made.")
+
+    text_to_speech_stream(transcription)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
