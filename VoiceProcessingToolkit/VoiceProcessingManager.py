@@ -69,6 +69,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         logging.info("Text-to-speech is disabled in settings.")
         return
 
+    tts = ElevenLabsTextToSpeech(config=config, voice_id=voice_id)
     try:
         # Generate the audio stream
         audio_stream = generate(
@@ -82,12 +83,11 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
         # Stream the audio if playback is enabled
         if config.playback_enabled:
             try:
-                stream(audio_stream)
+                tts.stream(audio_stream)
             except KeyboardInterrupt:
                 tts.stop_playback()
                 logging.info("Streaming text-to-speech interrupted by user.")
         else:
-            tts = ElevenLabsTextToSpeech(config=config)
             tts.stop_playback()
     except Exception as e:
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
