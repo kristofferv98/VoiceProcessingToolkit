@@ -139,7 +139,7 @@ def text_to_speech(text, output_dir=None, voice_id=None):
     return tts.synthesize_speech(text, output_dir)
 
 
-def text_to_speech_stream(text, config=None):
+def text_to_speech_stream(text, config=None, voice_id=None):
 
     """
     Streams synthesized speech from text using ElevenLabs API.
@@ -147,6 +147,9 @@ def text_to_speech_stream(text, config=None):
     Args:
         text (str): The text to be converted into speech.
         config (ElevenLabsConfig): Configuration for ElevenLabs API.
+        :param text:
+        :param config:
+        :param voice_id:
     """
     if config is None:
         config = ElevenLabsConfig()
