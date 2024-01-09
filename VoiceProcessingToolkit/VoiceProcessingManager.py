@@ -71,6 +71,20 @@ class VoiceProcessingManager:
         else:
             logger.info("No transcription was made.")
 
+    def wakeword_transcription(self):
+        """
+        Method to process a voice command after wake word detection and return the transcription.
+
+        Returns:
+            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+        """
+        transcription = self.process_voice_command()
+        if transcription:
+            logger.info(f"Transcription: {transcription}")
+        else:
+            logger.info("No transcription was made.")
+        return transcription
+
     def process_voice_command(self):
         """
         Detects the wake word, records the following voice command, and transcribes it.
