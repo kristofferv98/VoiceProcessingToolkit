@@ -60,6 +60,17 @@ class VoiceProcessingManager:
         self.setup()
         self.recording_thread = None
 
+    def wakeword_tts(self):
+        """
+        Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
+        """
+        transcription = self.process_voice_command()
+        if transcription:
+            logger.info(f"Transcription: {transcription}")
+            text_to_speech_stream(transcription)
+        else:
+            logger.info("No transcription was made.")
+
     def process_voice_command(self):
         """
         Detects the wake word, records the following voice command, and transcribes it.
@@ -116,19 +127,8 @@ def main():
     # Load environment variables
     load_dotenv()
 
-    # Create an instance of VoiceProcessingManager
     vpm = VoiceProcessingManager()
-
-    # Process a voice command
-    transcription = vpm.process_voice_command()
-
-    # Output the transcription result
-    if transcription:
-        logger.info(f"Transcription that is crazy: {transcription}")
-    else:
-        logger.info("No transcription was made.")
-
-    text_to_speech_stream(transcription)
+    vpm.wakeword_tts()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
