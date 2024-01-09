@@ -43,6 +43,7 @@ import pvporcupine
 import pyaudio
 from dotenv import load_dotenv
 
+from shared_resources import shutdown_flag
 from wake_word_detector.AudioStreamManager import AudioStream
 from wake_word_detector.NotificationSoundManager import NotificationSoundManager
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import register_action_decorator
@@ -109,6 +110,8 @@ class WakeWordDetector:
         self._stop_event = threading.Event()
         self._porcupine = None
         self.initialize_porcupine()
+        self.is_running = False  # New attribute
+
 
     def initialize_porcupine(self) -> None:
         """
@@ -126,11 +129,16 @@ class WakeWordDetector:
         """
         The main loop that listens for the wake word and triggers the action function.
         """
-        while not self._stop_event.is_set():
-            pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
-            pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
-            if self._porcupine.process(pcm) >= 0:
-                self.handle_wake_word_detection()
+        try:
+            while not self._stop_event.is_set() and not shutdown_flag.is_set():
+                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+                pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
+                if self._porcupine.process(pcm) >= 0:
+                    self.handle_wake_word_detection()
+
+        except Exception as e:
+            logger.exception("An error occurred during wake word detection.", exc_info=e)
+
 
     def handle_wake_word_detection(self):
         """
