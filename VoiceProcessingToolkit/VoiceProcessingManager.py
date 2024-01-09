@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import text_to_speech, ElevenLabsConfig
 
 import pyaudio
 import pygame
@@ -61,6 +62,7 @@ class VoiceProcessingManager:
         self.action_manager = ActionManager()
         self.setup()
         self.recording_thread = None
+        self.tts_config = ElevenLabsConfig()
 
     def start_and_transcribe(self):
         """
@@ -77,6 +79,9 @@ class VoiceProcessingManager:
                 transcription = self.transcriber.transcribe_audio(recorded_file)
                 # Ensure pygame mixer is properly closed to prevent hanging
                 pygame.mixer.quit()
+                # Call text-to-speech function to speak out the transcription
+                if transcription:
+                    text_to_speech(transcription, config=self.tts_config)
         except Exception as e:
             logger.exception("An error occurred during voice processing.", exc_info=e)
         finally:
