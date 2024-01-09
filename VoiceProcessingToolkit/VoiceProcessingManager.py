@@ -263,8 +263,20 @@ def main():
     """
     load_dotenv()
     vpm = VoiceProcessingManager()
-    vpm.wakeword_tts(streaming=True)
 
+    try:
+        vpm.wakeword_tts(streaming=True)
+    except KeyboardInterrupt:
+        logger.info("Operation interrupted by user. Shutting down...")
+        vpm.stop_wake_word_detection()
+        vpm.stop_recording()
+        vpm.stop_text_to_speech()
+        logger.info("Shutdown complete.")
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
