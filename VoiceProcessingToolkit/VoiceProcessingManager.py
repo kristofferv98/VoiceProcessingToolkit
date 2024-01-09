@@ -75,8 +75,6 @@ class VoiceProcessingManager:
             recorded_file = self.voice_recorder.last_saved_file
             if recorded_file:
                 transcription = self.transcriber.transcribe_audio(recorded_file)
-                # Ensure pygame mixer is properly closed to prevent hanging
-                pygame.mixer.quit()
         except Exception as e:
             logger.exception("An error occurred during voice processing.", exc_info=e)
         finally:
@@ -110,10 +108,9 @@ class VoiceProcessingManager:
         def start_voice_recording():
             logger.info("Wake word detected, starting voice recording...")
             # Start the recording in a separate thread to avoid blocking the main thread
-            if self.recording_thread is None or not self.recording_thread.is_alive():
-                self.recording_thread = threading.Thread(target=self.voice_recorder.perform_recording)
-                self.recording_thread.start()
-                self.recording_thread.join()  # Wait for the recording to finish
+            self.recording_thread = threading.Thread(target=self.voice_recorder.perform_recording)
+            self.recording_thread.start()
+            self.recording_thread.join()  # Wait for the recording to finish
                 recorded_file = self.voice_recorder.last_saved_file
                 if recorded_file:
                     # Transcribe the recorded audio
@@ -141,8 +138,7 @@ class VoiceProcessingManager:
         """
         Cleans up the resources used by the voice processing manager.
         """
-        self.audio_stream_manager.cleanup()
-        if self.recording_thread and self.recording_thread.is_alive():
+        if self.recording_thread is not None and self.recording_thread.is_alive():
             self.recording_thread.join()
             self.voice_recorder.cleanup()
 
@@ -150,8 +146,8 @@ class VoiceProcessingManager:
 if __name__ == '__main__':
     load_dotenv()
 
-    # set the
-    logging.basicConfig(level=logging.INFO)
+    # Configure logging at the start of the application
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     manager = VoiceProcessingManager()
     transcription = manager.start_and_transcribe()
     if transcription:
