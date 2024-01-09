@@ -310,6 +310,14 @@ class AudioRecorder:
 
 
 if __name__ == '__main__':
-    audio_recorder = AudioRecorder(output_directory='Wav_MP3')
-    recorded_file = audio_recorder.perform_recording()
-    logger.info(f"Saved to {recorded_file}")
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
+
+    # Set up the audio recorder
+    recorder = AudioRecorder()
+
+    # Start the recording process
+    recorder.perform_recording()
+
+    # Clean up
+    recorder.cleanup()
