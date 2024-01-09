@@ -257,6 +257,12 @@ class AudioRecorder:
             else:
                 self._logger.info(
                     f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
+            self._recording = False  # Ensure recording state is reset
+            self._frames_to_save = []  # Clear the frames to save
+            self._is_recording = False  # Ensure is_recording state is reset
+            if self.recording_thread:
+                self.recording_thread.join()  # Ensure the recording thread is joined
+                self.recording_thread = None  # Reset the recording thread
         self._recording = False  # Recording state is now private
         self._frames_to_save = []  # Frames to save are now private
         self._is_recording = False  # Recording state is now private
