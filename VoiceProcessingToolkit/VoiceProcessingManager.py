@@ -224,10 +224,14 @@ class VoiceProcessingManager:
 
 def main():
     load_dotenv()
-    vpm = VoiceProcessingManager()
-    vpm.wakeword_tts()
-    thread_manager.join_all()
-    logger.info("Exiting main function.")
+    try:
+        vpm = VoiceProcessingManager()
+        vpm.wakeword_tts()
+    except KeyboardInterrupt:
+        logger.info("KeyboardInterrupt received, shutting down gracefully.")
+    finally:
+        thread_manager.shutdown()
+        logger.info("Exiting main function.")
 
 
 if __name__ == '__main__':
