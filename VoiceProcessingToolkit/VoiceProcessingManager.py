@@ -195,11 +195,10 @@ class VoiceProcessingManager:
         # If no recording was made, return None
         return None
 
-
 def main():
     load_dotenv()
     try:
-        vpm = VoiceProcessingManager(wake_word='jarvis', sensitivity=0.5)
+        vpm = VoiceProcessingManager(sensitivity=0.5, use_wake_word=False)
         vpm.run(tts=False, streaming=True)
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down gracefully.")
