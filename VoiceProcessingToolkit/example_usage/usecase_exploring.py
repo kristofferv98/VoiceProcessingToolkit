@@ -74,7 +74,6 @@ def main():
         background_audio_recorder = BackgroundAudioRecorder()
         # Start the background recording thread
         background_audio_recorder.start_recording()
-        background_recording_thread.start()
 
         @vpm.action_manager.register_action
         def recording_flag():
