@@ -84,7 +84,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
-                 play_notification_sound: bool = True) -> None:
+                 play_notification_sound: bool = True, save_audio_directory: str = None) -> None:
         """
                 Initializes the WakeWordDetector with the specified parameters.
         Args:
@@ -94,6 +94,7 @@ class WakeWordDetector:
             action_manager (ActionManager): Manages actions to execute on detection.
             audio_stream_manager (AudioStreamManager): Manages audio stream.
             play_notification_sound (bool): Flag to play a sound on detection.
+            save_audio_directory (str): Directory to save audio snippets upon detection.
 
         Raises:
             ValueError: If any initialization parameter is invalid.
@@ -114,6 +115,9 @@ class WakeWordDetector:
         self._porcupine = None
         self.initialize_porcupine()
         self.is_running = False  # New attribute
+        self._save_audio_directory = save_audio_directory
+        if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
+            os.makedirs(self._save_audio_directory)
 
 
     def initialize_porcupine(self) -> None:
@@ -135,7 +139,7 @@ class WakeWordDetector:
         self.is_running = True
         try:
             while not self._stop_event.is_set() and not shutdown_flag.is_set():
-                pcm = self._audio_stream_manager.get_stream().read(self._porcupine.frame_length)
+                pcm = self._audio_stream_manager.read()
                 pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
                 if self._porcupine.process(pcm) >= 0:
                     self.handle_wake_word_detection()
@@ -151,9 +155,26 @@ class WakeWordDetector:
         """
         if self._play_notification_sound:
             self._notification_sound_manager.play()  # This should block until the sound is done playing
+        if self._save_audio_directory:
+            self.save_audio_snippet()
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
         self._stop_event.set()  # Signal to stop after handling the detection
+
+    def save_audio_snippet(self):
+        """
+        Saves a snippet of audio from the buffer to the specified directory.
+        """
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"wake_word_{timestamp}.wav"
+        filepath = os.path.join(self._save_audio_directory, filename)
+        buffer = self._audio_stream_manager.get_rolling_buffer()
+        with wave.open(filepath, 'wb') as wave_file:
+            wave_file.setnchannels(1)
+            wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16))
+            wave_file.setframerate(self._porcupine.sample_rate)
+            wave_file.writeframes(buffer)
+            logger.info(f"Saved wake word audio snippet to {filepath}")
 
 
     def run(self) -> None:
