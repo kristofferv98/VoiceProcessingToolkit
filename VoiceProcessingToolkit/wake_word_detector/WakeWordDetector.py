@@ -163,7 +163,9 @@ class WakeWordDetector:
         if self._play_notification_sound:
             self._notification_sound_manager.play()  # This should block until the sound is done playing
         if self._save_audio_directory:
-            self.save_audio_snippet(self._snippet_frame_count)
+            # Save the audio snippet in a separate thread to avoid blocking
+            save_thread = threading.Thread(target=self.save_audio_snippet, args=(self._snippet_frame_count,))
+            save_thread.start()
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
         self._stop_event.set()  # Signal to stop after handling the detection
