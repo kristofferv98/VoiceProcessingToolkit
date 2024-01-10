@@ -88,6 +88,7 @@ class VoiceProcessingManager:
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
+        logger.debug("Initializing VoiceProcessingManager with provided configurations.")
         # Validate configuration parameters
         if not (0.0 <= sensitivity <= 1.0):
             raise ValueError("Sensitivity must be between 0.0 and 1.0")
@@ -245,6 +246,7 @@ class VoiceProcessingManager:
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
+        logger.debug("Starting voice command processing.")
         # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         """
         Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
@@ -278,6 +280,7 @@ class VoiceProcessingManager:
                 else:
                     text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
             return transcription
+        logger.debug("Voice command processing completed.")
         return None
 
     def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
@@ -295,6 +298,7 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
+        logger.info("VoiceProcessingManager run method called.")
         try:
             transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key,
                                                         voice_id=voice_id)
@@ -303,11 +307,13 @@ class VoiceProcessingManager:
             # If tts is True, the text-to-speech is already handled in _process_voice_command
             # Ensure all threads are joined before exiting
             thread_manager.join_all()
+            logger.info("VoiceProcessingManager setup completed successfully.")
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
 
     def setup(self):
+        logger.info("Setting up VoiceProcessingManager components.")
         # Initialize AudioStream
         """
         Initializes the wake word detector and voice recorder components of the voice processing manager.
