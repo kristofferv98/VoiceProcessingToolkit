@@ -17,22 +17,21 @@ logger = logging.getLogger(__name__)
 
 def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
     """
-    Synthesizes speech from text using ElevenLabs API with minimal configuration required from the user.
+    Converts text to speech using the ElevenLabs API.
 
-    This function serves as a simple and direct way to convert text to speech, handling the instantiation of the
-    ElevenLabsTextToSpeech class and the retrieval of the API key from the ELEVENLABS_API_KEY environment variable.
-    If the output directory is not specified, the audio file will be saved in a default 'audio_files' directory.
+    This function synthesizes speech from the given text using ElevenLabs' text-to-speech technology. It handles
+    the creation of an ElevenLabsTextToSpeech object and manages the API key retrieval from the environment
+    variable or the provided parameter.
 
     Args:
-        text (str): The text to be converted into speech.
-        output_dir (str, optional): The directory where the audio file will be saved. Defaults to None.
-        config (ElevenLabsConfig, optional): The configuration for ElevenLabs TTS. If not provided, defaults will be used.
+        text (str): Text to be converted to speech.
+        config (ElevenLabsConfig, optional): Configuration object for ElevenLabs TTS.
+        output_dir (str, optional): Directory to save the output audio file. Defaults to 'audio_files'.
+        voice_id (str, optional): Specific voice ID for speech synthesis.
+        api_key (str, optional): API key for ElevenLabs, if not provided in config.
 
     Returns:
-        str: The file path to the saved audio file if the synthesis was successful, None otherwise.
-        :param text:
-        :param output_dir:
-        :param voice_id:
+        str or None: File path to the saved audio file, or None if synthesis fails.
     """
     if config is None:
         config = ElevenLabsConfig(voice_id=voice_id, api_key=api_key or None)
@@ -42,15 +41,19 @@ def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=No
 
 def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
     """
-    Streams synthesized speech from text using ElevenLabs API.
+    Streams synthesized speech from text using the ElevenLabs API.
+
+    This function streams synthesized speech directly without saving it to a file. It's useful for real-time
+    applications where immediate audio playback is required.
 
     Args:
-        text (str): The text to be converted into speech.
-        config (ElevenLabsConfig, optional): Configuration for ElevenLabs API. If not provided, defaults will be used.
-        voice_id (str, optional): The ID of the voice to be used for speech synthesis. Overrides the voice_id in config if provided.
-        :param text:
-        :param config:
-        :param voice_id:
+        text (str): Text to be converted into speech for streaming.
+        config (ElevenLabsConfig, optional): Configuration for ElevenLabs API.
+        voice_id (str, optional): The ID of the voice to use for speech synthesis.
+        api_key (str, optional): API key for accessing ElevenLabs services.
+
+    Returns:
+        None
     """
     if config is None:
         config = ElevenLabsConfig(api_key=api_key or None)
@@ -85,7 +88,39 @@ class VoiceProcessingManager:
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
-        # Initializes the VoiceProcessingManager with the provided parameters.
+        """
+            Manages the entire voice processing pipeline, from wake word detection to voice recording and transcription.
+
+            This class integrates different components such as wake word detection, voice recording, and speech transcription.
+            It provides a high-level interface to manage the flow of processing voice commands.
+
+            Attributes:
+                wake_word (str): Wake word for triggering voice recording.
+                sensitivity (float): Sensitivity for wake word detection.
+                output_directory (str): Directory for saving recorded audio files.
+                audio_format (int): Format of the audio stream (e.g., pyaudio.paInt16).
+                channels (int): Number of audio channels.
+                rate (int): Sample rate of the audio stream.
+                frames_per_buffer (int): Number of audio frames per buffer.
+                voice_threshold (float): Threshold for voice activity detection.
+                silence_limit (int): Duration of silence before stopping the recording.
+                inactivity_limit (int): Duration of inactivity before stopping the recording.
+                min_recording_length (int): Minimum length of a valid recording.
+                buffer_length (int): Length of the audio buffer.
+                use_wake_word (bool): Flag to use wake word detection.
+
+                audio_stream_manager (AudioStream): Manages the audio stream.
+                wake_word_detector (WakeWordDetector): Handles wake word detection.
+                voice_recorder (AudioRecorder): Manages audio recording.
+                transcriber (WhisperTranscriber): Transcribes recorded audio.
+                action_manager (ActionManager): Manages actions triggered by voice commands.
+                recorded_file (str): Path to the last recorded audio file.
+
+            Methods:
+                run(tts=False, streaming=False): Processes a voice command with optional text-to-speech functionality.
+                setup(): Initializes the components of the voice processing manager.
+                process_voice_command(): Processes a voice command using the configured components.
+            """
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
@@ -98,16 +133,18 @@ class VoiceProcessingManager:
         self.inactivity_limit = inactivity_limit
         self.min_recording_length = min_recording_length
         self.buffer_length = buffer_length
+        self.use_wake_word = use_wake_word  # Initialize use_wake_word here
+
         self.audio_stream_manager = None
         self.wake_word_detector = None
         self.voice_recorder = None
         self.transcriber = WhisperTranscriber()
         self.action_manager = ActionManager()
+
         self.setup()
         self.recorded_file = None
-        self.use_wake_word = use_wake_word
 
-    def _process_voice_command(self, streaming=False):
+    def _process_voice_command(self, streaming=False, tts=False):
         # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         if self.use_wake_word:
             # Start wake word detection and wait for it to finish
@@ -121,13 +158,12 @@ class VoiceProcessingManager:
         if self.voice_recorder.last_saved_file is not None:
             transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
             logger.info(f"Transcription: {transcription}")
-            if transcription:
+            if transcription and tts:
                 if streaming:
                     text_to_speech_stream(transcription)
                 else:
                     text_to_speech(transcription)
             return transcription
-        # If no recording was made, return None
         return None
 
     def run(self, tts=False, streaming=False):
@@ -198,8 +234,10 @@ class VoiceProcessingManager:
 def main():
     load_dotenv()
     try:
-        vpm = VoiceProcessingManager(sensitivity=0.5, use_wake_word=False)
-        vpm.run(tts=False, streaming=True)
+        vpm = VoiceProcessingManager(sensitivity=0.5, use_wake_word=True)
+        text = vpm.run(tts=False, streaming=True)
+        logger.info(f"Text: {text}")
+
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down gracefully.")
     finally:
