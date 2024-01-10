@@ -84,29 +84,7 @@ class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
-        """
-        Manages the voice processing workflow including wake word detection, voice recording, and transcription.
-
-    class VoiceProcessingManager:
-        def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
-                     audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                     voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
-        Initializes the VoiceProcessingManager with the provided parameters.
-
-        Args:
-            wake_word (str): The wake word to activate voice recording.
-            sensitivity (float): The sensitivity of the wake word detection.
-            output_directory (str): The directory where recordings will be saved.
-            audio_format (int): The format of the audio stream.
-            channels (int): The number of audio channels.
-            rate (int): The sample rate of the audio stream.
-            frames_per_buffer (int): The number of frames per buffer.
-            voice_threshold (float): The threshold for voice detection.
-            silence_limit (int): The number of seconds of silence before stopping the recording.
-            inactivity_limit (int): The number of seconds of inactivity before stopping the recording.
-            min_recording_length (int): The minimum length of a valid recording.
-            buffer_length (int): The length of the audio buffer.
-        """
+        # Initializes the VoiceProcessingManager with the provided parameters.
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
@@ -127,44 +105,18 @@ class VoiceProcessingManager:
         self.setup()
         self.recorded_file = None
 
-    def recorder_transcriber(self):
-        """
-        Method to record a voice command and return the transcription without wake word detection.
-
-        Returns:
-            str or None: The transcribed text of the voice command, or None if no valid recording was made.
-        """
-        # Start recording
-        self.voice_recorder.perform_recording()
-
-        # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file:
-            transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-            return transcription
-
-        # If no recording was made, return None
-        return None
-
     def _process_voice_command(self, streaming=False):
-        """
-        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
-
-        Args:
-            streaming (bool): If True, use streaming text-to-speech. Defaults to False.
-        """
+        # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         # Start wake word detection and wait for it to finish
-        self._wake_word_detector.run_blocking()
-
+        self.wake_word_detector.run_blocking()
         # Once wake word is detected, start recording
-        self._voice_recorder.perform_recording()
+        self.voice_recorder.perform_recording()
         # Wait for the recording to complete
-        if self._voice_recorder.recording_thread:
-            self._voice_recorder.recording_thread.join()
-
+        if self.voice_recorder.recording_thread:
+            self.voice_recorder.recording_thread.join()
         # If a recording was made, transcribe it
-        if self._voice_recorder.last_saved_file is not None:
-            # where the transcrition file recorded is stored
-            transcription = self._transcriber.transcribe_audio(self._voice_recorder.last_saved_file)
+        if self.voice_recorder.last_saved_file is not None:
+            transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
             logger.info(f"Transcription: {transcription}")
             if transcription:
                 if streaming:
@@ -172,9 +124,30 @@ class VoiceProcessingManager:
                 else:
                     text_to_speech(transcription)
             return transcription
-
         # If no recording was made, return None
         return None
+
+    def run(self, tts=False, streaming=False):
+        """
+        The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
+        Optionally performs text-to-speech on the transcription.
+
+        Args:
+            tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
+            streaming (bool): If True, use streaming text-to-speech. Defaults to False. Only relevant if tts is True.
+
+        Args:
+            streaming (bool): If True, use streaming text-to-speech. Defaults to False.
+        """
+        transcription = self._process_voice_command(streaming=streaming)
+        if not tts:
+            return transcription
+        # If tts is True, the text-to-speech is already handled in _process_voice_command
+        # Ensure all threads are joined before exiting
+        thread_manager.join_all()
+        return transcription
+
+
         if transcription:
             logger.info(f"Transcription: {transcription}")
             if streaming is False:
@@ -255,6 +228,8 @@ class VoiceProcessingManager:
 def main():
     load_dotenv()
     try:
+        vpm = VoiceProcessingManager(wake_word='jarvis', sensitivity=0.5)
+        vpm.run(tts=True, streaming=False)
         vpm = VoiceProcessingManager(wake_word='jarvis', sensitivity=0.5)
         vpm.run(tts=True, streaming=False)
     except KeyboardInterrupt:
