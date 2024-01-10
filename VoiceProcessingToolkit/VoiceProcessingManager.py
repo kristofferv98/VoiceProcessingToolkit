@@ -14,7 +14,6 @@ from shared_resources import thread_manager
 logger = logging.getLogger(__name__)
 
 
-
 def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
     """
     Converts text to speech using the ElevenLabs API.
@@ -84,7 +83,8 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 class VoiceProcessingManager:
-    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
+    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.5,
+                 output_directory='Wav_MP3',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
@@ -148,38 +148,6 @@ class VoiceProcessingManager:
         self.setup()
         self.recorded_file = None
 
-    def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
-                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
-                 use_wake_word=True):
-        """
-        Simple constructor for VoiceProcessingManager that sets up default dependencies internally.
-
-        This constructor is suitable for users who prefer a quick setup without the need to manually create and pass
-        dependency instances. It creates default instances of transcriber, action manager, and audio stream manager.
-
-        Args:
-            wake_word (str): Wake word for triggering voice recording.
-            sensitivity (float): Sensitivity for wake word detection.
-            output_directory (str): Directory for saving recorded audio files.
-            audio_format (int): Format of the audio stream (e.g., pyaudio.paInt16).
-            channels (int): Number of audio channels.
-            rate (int): Sample rate of the audio stream.
-            frames_per_buffer (int): Number of audio frames per buffer.
-            voice_threshold (float): Threshold for voice activity detection.
-            silence_limit (int): Duration of silence before stopping the recording.
-            inactivity_limit (int): Duration of inactivity before stopping the recording.
-            min_recording_length (int): Minimum length of a valid recording.
-            buffer_length (int): Length of the audio buffer.
-            use_wake_word (bool): Flag to use wake word detection.
-        """
-        transcriber = WhisperTranscriber()
-        action_manager = ActionManager()
-        audio_stream_manager = AudioStream(rate=rate, channels=channels, _audio_format=audio_format, frames_per_buffer=frames_per_buffer)
-        super().__init__(transcriber, action_manager, audio_stream_manager, wake_word, sensitivity, output_directory,
-                         audio_format, channels, rate, frames_per_buffer, voice_threshold, silence_limit,
-                         inactivity_limit, min_recording_length, buffer_length, use_wake_word)
-
     @classmethod
     def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
@@ -208,7 +176,8 @@ class VoiceProcessingManager:
         """
         transcriber = WhisperTranscriber()
         action_manager = ActionManager()
-        audio_stream_manager = AudioStream(rate=rate, channels=channels, _audio_format=audio_format, frames_per_buffer=frames_per_buffer)
+        audio_stream_manager = AudioStream(rate=rate, channels=channels, _audio_format=audio_format,
+                                           frames_per_buffer=frames_per_buffer)
         return cls(transcriber=transcriber, action_manager=action_manager, audio_stream_manager=audio_stream_manager,
                    wake_word=wake_word, sensitivity=sensitivity, output_directory=output_directory,
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
@@ -267,7 +236,8 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         try:
-            transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key, voice_id=voice_id)
+            transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key,
+                                                        voice_id=voice_id)
             if not tts:
                 return transcription
             # If tts is True, the text-to-speech is already handled in _process_voice_command
@@ -282,7 +252,6 @@ class VoiceProcessingManager:
         """
         Initializes the wake word detector and voice recorder components of the voice processing manager.
         """
-
 
         if self.use_wake_word:
             # Initialize WakeWordDetector
@@ -328,13 +297,15 @@ class VoiceProcessingManager:
         # If no recording was made, return None
         return None
 
+
 def main():
     load_dotenv()
     try:
         transcriber = WhisperTranscriber()
         action_manager = ActionManager()
         audio_stream_manager = AudioStream(rate=16000, channels=1, _audio_format=pyaudio.paInt16, frames_per_buffer=512)
-        vpm = VoiceProcessingManager(transcriber=transcriber, action_manager=action_manager, audio_stream_manager=audio_stream_manager, sensitivity=0.5, use_wake_word=True)
+        vpm = VoiceProcessingManager(transcriber=transcriber, action_manager=action_manager,
+                                     audio_stream_manager=audio_stream_manager, sensitivity=0.5, use_wake_word=True)
         text = vpm.run(tts=True, streaming=False)
         logger.info(f"Text: {text}")
 
@@ -345,6 +316,13 @@ def main():
         logger.info("Exiting main function.")
 
 
+def simple_main():
+    simple_vpm = VoiceProcessingManager.create_default_instance()
+    text = simple_vpm.run(tts=True, streaming=False)
+    print(text)
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    main()
+    simple_vpm = VoiceProcessingManager.create_default_instance()
+    simple_vpm.run(tts=True, streaming=True)
