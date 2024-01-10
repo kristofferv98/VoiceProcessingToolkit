@@ -200,13 +200,12 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         try:
-        transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key, voice_id=voice_id)
-        if not tts:
-            return transcription
-        # If tts is True, the text-to-speech is already handled in _process_voice_command
-        # Ensure all threads are joined before exiting
-        thread_manager.join_all()
-        return transcription
+            transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key, voice_id=voice_id)
+            if not tts:
+                return transcription
+            # If tts is True, the text-to-speech is already handled in _process_voice_command
+            # Ensure all threads are joined before exiting
+            thread_manager.join_all()
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
@@ -240,7 +239,6 @@ class VoiceProcessingManager:
         thread_manager.add_thread(self.voice_recorder.recording_thread)
 
     def process_voice_command(self):
-        # Start wake word detection and wait for it to finish
         """
         Processes a voice command using the configured components. It starts with wake word detection, followed by voice recording and transcription.
 
