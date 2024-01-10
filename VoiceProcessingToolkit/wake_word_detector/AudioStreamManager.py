@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 class AudioStream:
     def __init__(self, rate: int, channels: int, _audio_format: int, frames_per_buffer: int):
         self._py_audio = pyaudio.PyAudio()
+        self._frames_per_buffer = frames_per_buffer
         self._buffer_size = 10 * frames_per_buffer  # Adjust the buffer size as needed
         self._rolling_buffer = bytearray(self._buffer_size)
         self._stream = self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
@@ -57,7 +58,7 @@ class AudioStream:
         """
         data = bytearray()
         try:
-            data.extend(self._stream.read(self._frames_per_buffer, exception_on_overflow=False))
+            data.extend(self._stream.read(frames_per_buffer, exception_on_overflow=False))
         except IOError as e:
             # Handle input overflow error if it occurs
             if e.errno == pyaudio.paInputOverflowed:
