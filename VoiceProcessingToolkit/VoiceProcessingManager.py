@@ -150,10 +150,13 @@ class VoiceProcessingManager:
         # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         """
         Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
+        Allows for passing an optional API key and voice ID for text-to-speech customization.
 
         Args:
             streaming (bool): If True, use streaming text-to-speech. Defaults to False.
             tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
+            api_key (str, optional): API key for ElevenLabs, if not provided in config.
+            voice_id (str, optional): Specific voice ID for speech synthesis.
 
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
@@ -172,25 +175,30 @@ class VoiceProcessingManager:
             logger.info(f"Transcription: {transcription}")
             if transcription and tts:
                 if streaming:
-                    text_to_speech_stream(transcription)
+                    text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
                 else:
-                    text_to_speech(transcription)
+                    text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
             return transcription
         return None
 
     def run(self, tts=False, streaming=False):
+    def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
         """
         The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
-        Optionally performs text-to-speech on the transcription and can stream the synthesized speech.
+        Optionally performs text-to-speech on the transcription and can stream the synthesized speech. It also allows
+        for passing an optional API key and voice ID for text-to-speech customization.
 
         Args:
             tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
             streaming (bool): If True, use streaming text-to-speech. Defaults to False. Only relevant if tts is True.
+            api_key (str, optional): API key for ElevenLabs, if not provided in config.
+            voice_id (str, optional): Specific voice ID for speech synthesis.
 
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         transcription = self._process_voice_command(streaming=streaming)
+        transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key, voice_id=voice_id)
         if not tts:
             return transcription
         # If tts is True, the text-to-speech is already handled in _process_voice_command
