@@ -88,6 +88,26 @@ class VoiceProcessingManager:
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
+        # Validate configuration parameters
+        if not (0.0 <= sensitivity <= 1.0):
+            raise ValueError("Sensitivity must be between 0.0 and 1.0")
+        if not (isinstance(rate, int) and rate > 0):
+            raise ValueError("Rate must be a positive integer")
+        if not (isinstance(channels, int) and channels > 0):
+            raise ValueError("Channels must be a positive integer")
+        if not (isinstance(frames_per_buffer, int) and frames_per_buffer > 0):
+            raise ValueError("Frames per buffer must be a positive integer")
+        if not (voice_threshold > 0):
+            raise ValueError("Voice threshold must be a positive number")
+        if not (silence_limit > 0):
+            raise ValueError("Silence limit must be a positive number")
+        if not (inactivity_limit > 0):
+            raise ValueError("Inactivity limit must be a positive number")
+        if not (min_recording_length > 0):
+            raise ValueError("Minimum recording length must be a positive number")
+        if not (buffer_length > 0):
+            raise ValueError("Buffer length must be a positive number")
+
         """
         Initializes the voice processing manager with the given configuration.
 
