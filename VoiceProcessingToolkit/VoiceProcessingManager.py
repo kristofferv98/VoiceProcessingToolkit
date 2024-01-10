@@ -174,6 +174,7 @@ class VoiceProcessingManager:
                                             buffer_length=self.buffer_length)
         # Add the voice recorder's thread to the thread manager
         thread_manager.add_thread(self.voice_recorder.recording_thread)
+
     def process_voice_command(self):
         # Start wake word detection and wait for it to finish
         self.wake_word_detector.run_blocking()
@@ -193,30 +194,6 @@ class VoiceProcessingManager:
 
         # If no recording was made, return None
         return None
-
-    def setup(self):
-        # Initialize AudioStream
-        self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
-                                                _audio_format=self.audio_format,
-                                                frames_per_buffer=self.frames_per_buffer)
-
-        # Initialize WakeWordDetector
-        self.wake_word_detector = WakeWordDetector(
-            access_key=os.environ.get('PICOVOICE_APIKEY') or os.getenv('PICOVOICE_APIKEY'),
-            wake_word=self.wake_word,
-            sensitivity=self.sensitivity,
-            action_manager=self.action_manager,
-            audio_stream_manager=self.audio_stream_manager,
-            play_notification_sound=True
-        )
-        # Initialize VoiceRecorder
-        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
-                                            voice_threshold=self.voice_threshold,
-                                            silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
-                                            min_recording_length=self.min_recording_length,
-                                            buffer_length=self.buffer_length)
-        # Add the voice recorder's thread to the thread manager
-        thread_manager.add_thread(self.voice_recorder.recording_thread)
 
 
 def main():
