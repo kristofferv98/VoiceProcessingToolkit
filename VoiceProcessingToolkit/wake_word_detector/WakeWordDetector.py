@@ -86,7 +86,7 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
-                 play_notification_sound: bool = True, save_audio_directory: str = None) -> None:
+                 play_notification_sound: bool = True, save_audio_directory: str = None, snippet_length: float = 3.0) -> None:
         """
                 Initializes the WakeWordDetector with the specified parameters.
         Args:
@@ -97,6 +97,7 @@ class WakeWordDetector:
             audio_stream_manager (AudioStreamManager): Manages audio stream.
             play_notification_sound (bool): Flag to play a sound on detection.
             save_audio_directory (str): Directory to save audio snippets upon detection.
+            snippet_length (float): Length of the audio snippet to save before and after wake word detection in seconds.
 
         Raises:
             ValueError: If any initialization parameter is invalid.
@@ -119,6 +120,8 @@ class WakeWordDetector:
         self.initialize_porcupine()
         self.is_running = False  # New attribute
         self._save_audio_directory = save_audio_directory
+        self._snippet_length = snippet_length
+        self._snippet_frame_count = int(self._porcupine.sample_rate * snippet_length)
         if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
             os.makedirs(self._save_audio_directory)
 
@@ -159,19 +162,19 @@ class WakeWordDetector:
         if self._play_notification_sound:
             self._notification_sound_manager.play()  # This should block until the sound is done playing
         if self._save_audio_directory:
-            self.save_audio_snippet()
+            self.save_audio_snippet(self._snippet_frame_count)
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
         self._stop_event.set()  # Signal to stop after handling the detection
 
-    def save_audio_snippet(self):
+    def save_audio_snippet(self, frame_count: int):
         """
         Saves a snippet of audio from the buffer to the specified directory.
         """
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         filename = f"wake_word_{timestamp}.wav"
         filepath = os.path.join(self._save_audio_directory, filename)
-        buffer = self._audio_stream_manager.get_rolling_buffer()
+        buffer = self._audio_stream_manager.get_rolling_buffer()[-frame_count * 2:]  # 2 bytes per frame (16-bit audio)
         with wave.open(filepath, 'wb') as wave_file:
             wave_file.setnchannels(1)
             wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16))
