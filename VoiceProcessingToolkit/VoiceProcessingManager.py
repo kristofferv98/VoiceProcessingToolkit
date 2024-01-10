@@ -89,7 +89,7 @@ class VoiceProcessingManager:
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
         """
-            Manages the entire voice processing pipeline, from wake word detection to voice recording and transcription.
+            Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
             This class integrates different components such as wake word detection, voice recording, and speech transcription.
             It provides a high-level interface to manage the flow of processing voice commands.
@@ -115,6 +115,7 @@ class VoiceProcessingManager:
                 transcriber (WhisperTranscriber): Transcribes recorded audio.
                 action_manager (ActionManager): Manages actions triggered by voice commands.
                 recorded_file (str): Path to the last recorded audio file.
+                elevenlabs_config (ElevenLabsConfig): Configuration for ElevenLabs text-to-speech service.
 
             Methods:
                 run(tts=False, streaming=False): Processes a voice command with optional text-to-speech functionality.
@@ -146,6 +147,16 @@ class VoiceProcessingManager:
 
     def _process_voice_command(self, streaming=False, tts=False):
         # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
+        """
+        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
+
+        Args:
+            streaming (bool): If True, use streaming text-to-speech. Defaults to False.
+            tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
+
+        Returns:
+            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+        """
         if self.use_wake_word:
             # Start wake word detection and wait for it to finish
             self.wake_word_detector.run_blocking()
@@ -169,7 +180,7 @@ class VoiceProcessingManager:
     def run(self, tts=False, streaming=False):
         """
         The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
-        Optionally performs text-to-speech on the transcription.
+        Optionally performs text-to-speech on the transcription and can stream the synthesized speech.
 
         Args:
             tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
@@ -188,6 +199,9 @@ class VoiceProcessingManager:
 
     def setup(self):
         # Initialize AudioStream
+        """
+        Initializes the components of the voice processing manager, including audio stream, wake word detector, and voice recorder.
+        """
         self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
                                                 _audio_format=self.audio_format,
                                                 frames_per_buffer=self.frames_per_buffer)
@@ -213,6 +227,12 @@ class VoiceProcessingManager:
 
     def process_voice_command(self):
         # Start wake word detection and wait for it to finish
+        """
+        Processes a voice command using the configured components. It starts with wake word detection, followed by voice recording and transcription.
+
+        Returns:
+            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+        """
         self.wake_word_detector.run_blocking()
 
         # Once wake word is detected, start recording
