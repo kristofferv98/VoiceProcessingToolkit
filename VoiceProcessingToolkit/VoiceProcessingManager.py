@@ -1,19 +1,18 @@
 import logging
 import os
-
 import pyaudio
 from dotenv import load_dotenv
-from elevenlabs import stream, generate
+from elevenlabs import generate, stream
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, \
-    ElevenLabsConfig
+from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, ElevenLabsConfig
 from shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
+
 
 
 def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
@@ -126,6 +125,7 @@ class VoiceProcessingManager:
         self.transcriber = WhisperTranscriber()
         self.action_manager = ActionManager()
         self.setup()
+        self.recorded_file = None
 
     def recorder_transcriber(self):
         """
@@ -135,14 +135,11 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         # Start recording
-        recorded_file = self.voice_recorder.perform_recording()
-        # Wait for the recording to complete
-        if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
+        self.voice_recorder.perform_recording()
 
         # If a recording was made, transcribe it
-        if recorded_file:
-            transcription = self.transcriber.transcribe_audio(recorded_file)
+        if self.voice_recorder.last_saved_file:
+            transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
             return transcription
 
         # If no recording was made, return None
@@ -181,12 +178,6 @@ class VoiceProcessingManager:
         thread_manager.join_all()
 
     def process_voice_command(self):
-        """
-        Detects the wake word, records the following voice command, and transcribes it.
-
-        Returns:
-            str or None: The transcribed text of the voice command, or None if no valid recording was made.
-        """
         # Start wake word detection and wait for it to finish
         self.wake_word_detector.run_blocking()
 
@@ -197,8 +188,10 @@ class VoiceProcessingManager:
             self.voice_recorder.recording_thread.join()
 
         # If a recording was made, transcribe it
-        if recorded_file:
-            transcription = self.transcriber.transcribe_audio(recorded_file)
+        if self.voice_recorder.last_saved_file is not None:
+            # where the transcrition file recorded is stored
+            transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
+            logger.info(f"Transcription: {transcription}")
             return transcription
 
         # If no recording was made, return None
@@ -230,13 +223,9 @@ class VoiceProcessingManager:
 
 
 def main():
-    """
-    Main function to test the VoiceProcessingManager's process_voice_command method.
-    """
     load_dotenv()
     vpm = VoiceProcessingManager()
-    vpm.wakeword_tts(streaming=True)
-    # Ensure all threads are joined before exiting the main function
+    vpm.wakeword_tts()
     thread_manager.join_all()
     logger.info("Exiting main function.")
 
