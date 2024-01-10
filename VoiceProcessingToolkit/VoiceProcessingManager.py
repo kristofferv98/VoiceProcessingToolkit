@@ -136,39 +136,6 @@ class VoiceProcessingManager:
             tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
             streaming (bool): If True, use streaming text-to-speech. Defaults to False. Only relevant if tts is True.
 
-        Args:
-            streaming (bool): If True, use streaming text-to-speech. Defaults to False.
-        """
-        transcription = self._process_voice_command(streaming=streaming)
-        if not tts:
-            return transcription
-        # If tts is True, the text-to-speech is already handled in _process_voice_command
-        # Ensure all threads are joined before exiting
-        thread_manager.join_all()
-        return transcription
-
-
-        if transcription:
-            logger.info(f"Transcription: {transcription}")
-            if streaming is False:
-                text_to_speech(transcription)
-            else:
-                text_to_speech_stream(transcription)
-        else:
-            logger.info("No transcription was made.")
-        # Ensure all threads are joined before exiting the method
-        thread_manager.join_all()
-        return transcription
-
-    def run(self, tts=False, streaming=False):
-        """
-        The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
-        Optionally performs text-to-speech on the transcription.
-
-        Args:
-            tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
-            streaming (bool): If True, use streaming text-to-speech. Defaults to False. Only relevant if tts is True.
-
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
@@ -229,9 +196,7 @@ def main():
     load_dotenv()
     try:
         vpm = VoiceProcessingManager(wake_word='jarvis', sensitivity=0.5)
-        vpm.run(tts=True, streaming=False)
-        vpm = VoiceProcessingManager(wake_word='jarvis', sensitivity=0.5)
-        vpm.run(tts=True, streaming=False)
+        vpm.run(tts=False, streaming=True)
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down gracefully.")
     finally:
