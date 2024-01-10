@@ -163,6 +163,7 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
+        logger.debug("Starting voice command processing.")
         if self.use_wake_word:
             # Start wake word detection and wait for it to finish
             self.wake_word_detector.run_blocking()
@@ -198,6 +199,7 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
+        try:
         transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key, voice_id=voice_id)
         if not tts:
             return transcription
@@ -205,6 +207,9 @@ class VoiceProcessingManager:
         # Ensure all threads are joined before exiting
         thread_manager.join_all()
         return transcription
+        except Exception as e:
+            logger.exception(f"An error occurred during voice processing: {e}")
+            raise
 
     def setup(self):
         # Initialize AudioStream
