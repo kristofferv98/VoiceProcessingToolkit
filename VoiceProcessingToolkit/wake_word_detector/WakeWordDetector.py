@@ -121,7 +121,7 @@ class WakeWordDetector:
         self.is_running = False  # New attribute
         self._save_audio_directory = save_audio_directory
         self._snippet_length = snippet_length
-        self._snippet_frame_count = int(self._porcupine.sample_rate * snippet_length)
+        self._snippet_frame_count = None  # Will be set after Porcupine is initialized
         if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
             os.makedirs(self._save_audio_directory)
 
@@ -134,6 +134,7 @@ class WakeWordDetector:
             if self._porcupine is None:
                 self._porcupine = pvporcupine.create(access_key=self._access_key, keywords=[self._wake_word],
                                                      sensitivities=[self._sensitivity])
+            self._snippet_frame_count = int(self._porcupine.sample_rate * self._snippet_length)
         except pvporcupine.PorcupineError as e:
             logger.exception("Failed to initialize Porcupine with the given parameters.", exc_info=e)
             raise
@@ -177,7 +178,7 @@ class WakeWordDetector:
         buffer = self._audio_stream_manager.get_rolling_buffer()[-frame_count * 2:]  # 2 bytes per frame (16-bit audio)
         with wave.open(filepath, 'wb') as wave_file:
             wave_file.setnchannels(1)
-            wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16))
+            wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16) if self._py_audio else 2)
             wave_file.setframerate(self._porcupine.sample_rate)
             wave_file.writeframes(buffer)
             logger.info(f"Saved wake word audio snippet to {filepath}")
