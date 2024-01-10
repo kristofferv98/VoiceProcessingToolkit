@@ -210,6 +210,8 @@ class WakeWordDetector:
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+
     load_dotenv()
     # Set up the access key for Porcupine
     access_key = os.getenv('PICOVOICE_APIKEY')
