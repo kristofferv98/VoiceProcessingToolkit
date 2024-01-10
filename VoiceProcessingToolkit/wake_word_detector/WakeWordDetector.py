@@ -98,7 +98,7 @@ class WakeWordDetector:
             audio_stream_manager (AudioStreamManager): Manages audio stream.
             play_notification_sound (bool): Flag to play a sound on detection.
             save_audio_directory (str): Directory to save audio snippets upon detection.
-            snippet_length (float): Length of the audio snippet to save before and after wake word detection in seconds.
+            snippet_length (float): Length of the audio snippet to save after wake word detection in seconds.
 
         Raises:
             ValueError: If any initialization parameter is invalid.
@@ -118,10 +118,10 @@ class WakeWordDetector:
         self._stop_event = threading.Event()
         self._porcupine = None
         self._py_audio = None
+        self._snippet_length = snippet_length
         self.initialize_porcupine()
         self.is_running = False  # New attribute
         self._save_audio_directory = save_audio_directory
-        self._snippet_length = snippet_length
         self._snippet_frame_count = None  # Will be set after Porcupine is initialized
         if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
             os.makedirs(self._save_audio_directory)
