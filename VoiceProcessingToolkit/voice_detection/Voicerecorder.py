@@ -23,6 +23,8 @@ class AudioDataProvider:
         self._frames_per_buffer = frames_per_buffer
         self._stream = None
         self._py_audio = pyaudio.PyAudio()
+        self.recording_finished_event = threading.Event()  # New event to signal recording completion
+
 
     def start_stream(self):
         self._stream = self._py_audio.open(
@@ -142,6 +144,7 @@ class AudioRecorder:
                     else:
                         self._inactivity_frames += 1
                         silent_frames += 1
+
                         if self.should_finalize_recording(silent_frames):
                             self._logger.info("Inactivity limit exceeded. Finalizing recording...")
                             return
@@ -261,7 +264,6 @@ class AudioRecorder:
             self._frames_to_save = []  # Clear the frames to save
             self._is_recording = False  # Ensure is_recording state is reset
             if self.recording_thread:
-                self.recording_thread.join()  # Ensure the recording thread is joined
                 self.recording_thread = None  # Reset the recording thread
         self._recording = False  # Recording state is now private
         self._frames_to_save = []  # Frames to save are now private

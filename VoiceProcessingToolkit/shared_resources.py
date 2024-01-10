@@ -21,6 +21,8 @@ class ThreadManager:
         self.join_all()
         self.shutdown_requested = True
 
+
+
     def handle_keyboard_interrupt(self):
         if not self.shutdown_requested:
             print("KeyboardInterrupt detected, shutting down threads...")

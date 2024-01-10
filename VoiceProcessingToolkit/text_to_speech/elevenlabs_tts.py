@@ -6,10 +6,8 @@ import time
 
 import pygame
 from dotenv import load_dotenv
-from elevenlabs import generate, stream
 
 import requests
-
 
 # Constants
 ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech/'
@@ -18,17 +16,13 @@ ELEVENLABS_MODEL_ID = 'eleven_monolingual_v1'
 
 # Configuration class
 class ElevenLabsConfig:
+    # The API key forElevenLabs can be provided as an argument or set as an environment variable 'ELEVENLABS_API_KEY'.
     def __init__(self, api_key=None, voice_id=None, model_id=None, playback_enabled=True):
-        # The API key for ElevenLabs can be provided as an argument or set as an environment variable
-        # 'ELEVENLABS_API_KEY'.
         self.elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY', api_key) or api_key
         self.voice_id = voice_id or "eqI1AF0IrvwU3tgfmt0B"
         self.model_id = model_id or ELEVENLABS_MODEL_ID
         self.enable_text_to_speech = True
         self.playback_enabled = playback_enabled
-
-        if not self.elevenlabs_api_key:
-            raise ValueError("API key is required for ElevenLabsTextToSpeech.")
 
         if not self.elevenlabs_api_key:
             raise ValueError("API key is required for ElevenLabsTextToSpeech.")
@@ -45,6 +39,7 @@ class ElevenLabsConfig:
 
 class ElevenLabsTextToSpeech:
     def __init__(self, config=None, voice_id=None):
+        self.mixer_initialized = None
         self.temp_dir = None
         self.config = config or ElevenLabsConfig(voice_id=voice_id)
 
@@ -109,15 +104,19 @@ class ElevenLabsTextToSpeech:
                 # Initialize pygame mixer and play audio file if playback is enabled
                 if config.playback_enabled:
                     pygame.mixer.init()
+                    self.mixer_initialized = True
                     pygame.mixer.music.load(output_file)
-                    pygame.mixer.music.play()
-
-                    # Wait for the playback to finish if using a temporary directory
-                    if use_temp_dir:
+                    try:
+                        pygame.mixer.music.play()
+                        # Check for playback to finish with interruptible sleep loop
                         while pygame.mixer.music.get_busy():
-                            time.sleep(1)
+                            time.sleep(0.1)  # Use a shorter sleep time to allow for keyboard interrupt
+                    except KeyboardInterrupt:
+                        logging.info("Playback interrupted by user.")
+                        self.stop_playback()
 
                     pygame.mixer.quit()
+                    self.mixer_initialized = False
 
                     # If using a temporary directory, the file will be deleted upon exiting the context
                     if output_dir is None:
@@ -137,6 +136,17 @@ class ElevenLabsTextToSpeech:
             logging.exception(f"An error occurred in text_to_speech: {e}")
             return None
 
+    def stop_playback(self):
+        """
+        Stops the audio playback if it is currently playing.
+        """
+        if self.mixer_initialized and pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()
+            self.mixer_initialized = False
+            if self.temp_dir:
+                self.temp_dir.cleanup()
+                self.temp_dir = None
 
 
 if __name__ == '__main__':
