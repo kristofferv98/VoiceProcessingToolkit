@@ -212,7 +212,7 @@ class WakeWordDetector:
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     load_dotenv()
     # Set up the access key for Porcupine
