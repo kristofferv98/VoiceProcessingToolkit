@@ -58,7 +58,7 @@ class AudioStream:
         """
         data = bytearray()
         try:
-            data.extend(self._stream.read(frames_per_buffer, exception_on_overflow=False))
+            data.extend(self._stream.read(self._frames_per_buffer, exception_on_overflow=False))
         except IOError as e:
             # Handle input overflow error if it occurs
             if e.errno == pyaudio.paInputOverflowed:
