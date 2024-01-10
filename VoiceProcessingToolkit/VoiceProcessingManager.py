@@ -84,7 +84,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 class VoiceProcessingManager:
-    def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
+    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
@@ -139,11 +139,11 @@ class VoiceProcessingManager:
         self.buffer_length = buffer_length
         self.use_wake_word = use_wake_word  # Initialize use_wake_word here
 
-        self.audio_stream_manager = None
+        self.transcriber = transcriber
+        self.action_manager = action_manager
+        self.audio_stream_manager = audio_stream_manager
         self.wake_word_detector = None
         self.voice_recorder = None
-        self.transcriber = WhisperTranscriber()
-        self.action_manager = ActionManager()
 
         self.setup()
         self.recorded_file = None
@@ -213,11 +213,9 @@ class VoiceProcessingManager:
     def setup(self):
         # Initialize AudioStream
         """
-        Initializes the components of the voice processing manager, including audio stream, wake word detector, and voice recorder.
+        Initializes the wake word detector and voice recorder components of the voice processing manager.
         """
-        self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
-                                                _audio_format=self.audio_format,
-                                                frames_per_buffer=self.frames_per_buffer)
+
 
         if self.use_wake_word:
             # Initialize WakeWordDetector
