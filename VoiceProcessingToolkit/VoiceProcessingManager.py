@@ -83,7 +83,8 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 class VoiceProcessingManager:
     def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
+                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
+                 use_wake_word=True):
         # Initializes the VoiceProcessingManager with the provided parameters.
         self.wake_word = wake_word
         self.sensitivity = sensitivity
@@ -104,11 +105,13 @@ class VoiceProcessingManager:
         self.action_manager = ActionManager()
         self.setup()
         self.recorded_file = None
+        self.use_wake_word = use_wake_word
 
     def _process_voice_command(self, streaming=False):
         # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
-        # Start wake word detection and wait for it to finish
-        self.wake_word_detector.run_blocking()
+        if self.use_wake_word:
+            # Start wake word detection and wait for it to finish
+            self.wake_word_detector.run_blocking()
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
         # Wait for the recording to complete
@@ -147,6 +150,30 @@ class VoiceProcessingManager:
         thread_manager.join_all()
         return transcription
 
+    def setup(self):
+        # Initialize AudioStream
+        self.audio_stream_manager = AudioStream(rate=self.rate, channels=self.channels,
+                                                _audio_format=self.audio_format,
+                                                frames_per_buffer=self.frames_per_buffer)
+
+        if self.use_wake_word:
+            # Initialize WakeWordDetector
+            self.wake_word_detector = WakeWordDetector(
+                access_key=os.environ.get('PICOVOICE_APIKEY') or os.getenv('PICOVOICE_APIKEY'),
+                wake_word=self.wake_word,
+                sensitivity=self.sensitivity,
+                action_manager=self.action_manager,
+                audio_stream_manager=self.audio_stream_manager,
+                play_notification_sound=True
+            )
+        # Initialize VoiceRecorder
+        self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
+                                            voice_threshold=self.voice_threshold,
+                                            silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
+                                            min_recording_length=self.min_recording_length,
+                                            buffer_length=self.buffer_length)
+        # Add the voice recorder's thread to the thread manager
+        thread_manager.add_thread(self.voice_recorder.recording_thread)
     def process_voice_command(self):
         # Start wake word detection and wait for it to finish
         self.wake_word_detector.run_blocking()
