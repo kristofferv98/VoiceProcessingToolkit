@@ -122,7 +122,6 @@ class WakeWordDetector:
         self.initialize_porcupine()
         self.is_running = False  # New attribute
         self._save_audio_directory = save_audio_directory
-        self._snippet_frame_count = int(self._porcupine.sample_rate * self._snippet_length)
         if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
             os.makedirs(self._save_audio_directory)
 
@@ -135,6 +134,7 @@ class WakeWordDetector:
             if self._porcupine is None:
                 self._porcupine = pvporcupine.create(access_key=self._access_key, keywords=[self._wake_word],
                                                      sensitivities=[self._sensitivity])
+                self._snippet_frame_count = int(self._porcupine.sample_rate * self._snippet_length)
         except pvporcupine.PorcupineError as e:
             logger.exception("Failed to initialize Porcupine with the given parameters.", exc_info=e)
             raise
