@@ -146,7 +146,7 @@ class VoiceProcessingManager:
         self.setup()
         self.recorded_file = None
 
-    def _process_voice_command(self, streaming=False, tts=False):
+    def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
         # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         """
         Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
@@ -181,7 +181,6 @@ class VoiceProcessingManager:
             return transcription
         return None
 
-    def run(self, tts=False, streaming=False):
     def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
         """
         The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
@@ -197,7 +196,6 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
-        transcription = self._process_voice_command(streaming=streaming)
         transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key, voice_id=voice_id)
         if not tts:
             return transcription
@@ -264,7 +262,7 @@ def main():
     load_dotenv()
     try:
         vpm = VoiceProcessingManager(sensitivity=0.5, use_wake_word=True)
-        text = vpm.run(tts=False, streaming=True)
+        text = vpm.run(tts=True, streaming=False)
         logger.info(f"Text: {text}")
 
     except KeyboardInterrupt:
