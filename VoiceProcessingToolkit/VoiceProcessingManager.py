@@ -264,7 +264,10 @@ class VoiceProcessingManager:
 def main():
     load_dotenv()
     try:
-        vpm = VoiceProcessingManager(sensitivity=0.5, use_wake_word=True)
+        transcriber = WhisperTranscriber()
+        action_manager = ActionManager()
+        audio_stream_manager = AudioStream(rate=16000, channels=1, _audio_format=pyaudio.paInt16, frames_per_buffer=512)
+        vpm = VoiceProcessingManager(transcriber=transcriber, action_manager=action_manager, audio_stream_manager=audio_stream_manager, sensitivity=0.5, use_wake_word=True)
         text = vpm.run(tts=True, streaming=False)
         logger.info(f"Text: {text}")
 
