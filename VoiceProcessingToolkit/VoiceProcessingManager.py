@@ -145,11 +145,36 @@ class VoiceProcessingManager:
         # If no recording was made, return None
         return None
 
-    def wakeword_tts(self, streaming=None):
+    def _process_voice_command(self, streaming=False):
         """
-        Method to process a voice command after wake word detection and perform text-to-speech on the transcription.
+        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
+
+        Args:
+            streaming (bool): If True, use streaming text-to-speech. Defaults to False.
         """
-        transcription = self.process_voice_command()
+        # Start wake word detection and wait for it to finish
+        self._wake_word_detector.run_blocking()
+
+        # Once wake word is detected, start recording
+        self._voice_recorder.perform_recording()
+        # Wait for the recording to complete
+        if self._voice_recorder.recording_thread:
+            self._voice_recorder.recording_thread.join()
+
+        # If a recording was made, transcribe it
+        if self._voice_recorder.last_saved_file is not None:
+            # where the transcrition file recorded is stored
+            transcription = self._transcriber.transcribe_audio(self._voice_recorder.last_saved_file)
+            logger.info(f"Transcription: {transcription}")
+            if transcription:
+                if streaming:
+                    text_to_speech_stream(transcription)
+                else:
+                    text_to_speech(transcription)
+            return transcription
+
+        # If no recording was made, return None
+        return None
         if transcription:
             logger.info(f"Transcription: {transcription}")
             if streaming is False:
@@ -160,22 +185,27 @@ class VoiceProcessingManager:
             logger.info("No transcription was made.")
         # Ensure all threads are joined before exiting the method
         thread_manager.join_all()
+        return transcription
 
-    def wakeword_transcription(self):
+    def run(self, tts=False, streaming=False):
         """
-        Method to process a voice command after wake word detection and return the transcription.
+        The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
+        Optionally performs text-to-speech on the transcription.
+
+        Args:
+            tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
+            streaming (bool): If True, use streaming text-to-speech. Defaults to False. Only relevant if tts is True.
 
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
-        transcription = self.process_voice_command()
-        if transcription:
-            logger.info(f"Transcription: {transcription}")
-        else:
-            logger.info("No transcription was made.")
+        transcription = self._process_voice_command(streaming=streaming)
+        if not tts:
             return transcription
-        # Ensure all threads are joined before exiting the method
+        # If tts is True, the text-to-speech is already handled in _process_voice_command
+        # Ensure all threads are joined before exiting
         thread_manager.join_all()
+        return transcription
 
     def process_voice_command(self):
         # Start wake word detection and wait for it to finish
@@ -225,8 +255,8 @@ class VoiceProcessingManager:
 def main():
     load_dotenv()
     try:
-        vpm = VoiceProcessingManager()
-        vpm.wakeword_tts()
+        vpm = VoiceProcessingManager(wake_word='jarvis', sensitivity=0.5)
+        vpm.run(tts=True, streaming=False)
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down gracefully.")
     finally:
