@@ -56,7 +56,6 @@ class BackgroundAudioRecorder:
 
 save_audio_flag = threading.Event()
 
-def main():
 
 def main():
     """
