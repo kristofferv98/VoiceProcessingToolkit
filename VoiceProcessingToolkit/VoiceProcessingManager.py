@@ -1,17 +1,25 @@
 import logging
-import os
-import pyaudio
-from dotenv import load_dotenv
-from elevenlabs import generate, stream
-
-from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
-from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
-from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
+from shared_resources import ThreadManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, ElevenLabsConfig
-from shared_resources import thread_manager
+from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
+from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
+from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
+from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech
 
-logger = logging.getLogger(__name__)
+class DependencyContainer:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.thread_manager = ThreadManager()
+        self.voice_recorder = AudioRecorder()
+        self.transcriber = WhisperTranscriber()
+        self.action_manager = ActionManager()
+        self.tts = ElevenLabsTextToSpeech()
+        self.wake_word_detector = WakeWordDetector(
+            action_manager=self.action_manager,
+            audio_stream_manager=self.voice_recorder.audio_data_provider
+        )
+
+dependencies = DependencyContainer()
 
 
 
@@ -81,9 +89,12 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 class VoiceProcessingManager:
-    def __init__(self, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
-                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2):
+    def __init__(self, dependencies: DependencyContainer):
+        self.dependencies = dependencies
+        self.setup()
+
+    def setup(self):
+        # Setup logic here, using dependencies from the container
         """
         Manages the voice processing workflow including wake word detection, voice recording, and transcription.
 
@@ -222,16 +233,19 @@ class VoiceProcessingManager:
         thread_manager.add_thread(self.voice_recorder.recording_thread)
 
 
-def main():
-    load_dotenv()
+def main(dependencies: DependencyContainer):
     try:
-        vpm = VoiceProcessingManager()
-        vpm.wakeword_tts()
+        vpm = VoiceProcessingManager(dependencies)
+        vpm.run()
     except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt received, shutting down gracefully.")
+        dependencies.logger.info("KeyboardInterrupt received, shutting down gracefully.")
     finally:
-        thread_manager.shutdown()
-        logger.info("Exiting main function.")
+        dependencies.thread_manager.shutdown()
+        dependencies.logger.info("Exiting main function.")
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(dependencies)
 
 
 if __name__ == '__main__':
