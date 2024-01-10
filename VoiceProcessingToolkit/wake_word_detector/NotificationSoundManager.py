@@ -14,7 +14,7 @@ class NotificationSoundManager:
         self._sound_file_path = sound_file_path
         self._notification_sound = None
         if not NotificationSoundManager._mixer_initialized:
-            with open(os.devnull, 'w') as f, contextlib.redirect_stdout(f):
+            with open(os.devnull, 'w') as f, contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
                 pygame.mixer.init()
                 NotificationSoundManager._mixer_initialized = True
         self._initialize_sound()
@@ -32,7 +32,5 @@ class NotificationSoundManager:
             raise
 
     def play(self, _preloaded_sound=None):
-        if self._notification_sound:
-            self._notification_sound.play()
         if self._notification_sound:
             self._notification_sound.play()
