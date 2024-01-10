@@ -37,9 +37,11 @@ import os
 import struct
 import threading
 import time
+import wave
 from pathlib import Path
 
 import pvporcupine
+import pyaudio
 
 from shared_resources import shutdown_flag
 from wake_word_detector.AudioStreamManager import AudioStream
@@ -113,6 +115,7 @@ class WakeWordDetector:
         self._audio_stream_manager = audio_stream_manager
         self._stop_event = threading.Event()
         self._porcupine = None
+        self._py_audio = None
         self.initialize_porcupine()
         self.is_running = False  # New attribute
         self._save_audio_directory = save_audio_directory
