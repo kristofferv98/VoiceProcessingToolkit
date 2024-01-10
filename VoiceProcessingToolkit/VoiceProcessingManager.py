@@ -109,6 +109,7 @@ class VoiceProcessingManager:
                 buffer_length (int): Length of the audio buffer.
                 use_wake_word (bool): Flag to use wake word detection.
 
+            Dependencies:
                 audio_stream_manager (AudioStream): Manages the audio stream.
                 wake_word_detector (WakeWordDetector): Handles wake word detection.
                 voice_recorder (AudioRecorder): Manages audio recording.
