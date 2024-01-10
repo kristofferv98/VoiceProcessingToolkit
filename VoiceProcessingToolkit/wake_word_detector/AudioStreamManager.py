@@ -55,19 +55,15 @@ class AudioStream:
         Returns:
             bytes: The audio data read from the stream.
         """
-        # Ensure that we always read the expected number of frames
-        frames_to_read = self._porcupine.frame_length
         data = bytearray()
-        while len(data) < frames_to_read * 2:  # 2 bytes per frame (16-bit audio)
-            try:
-                data.extend(self._stream.read(frames_to_read - len(data) // 2, exception_on_overflow=False))
-            except IOError as e:
-                # Handle input overflow error if it occurs
-                if e.errno == pyaudio.paInputOverflowed:
-                    logger.warning("Input overflow occurred while reading audio stream.")
-                    continue  # Attempt to read again
-                else:
-                    raise
+        try:
+            data.extend(self._stream.read(self._frames_per_buffer, exception_on_overflow=False))
+        except IOError as e:
+            # Handle input overflow error if it occurs
+            if e.errno == pyaudio.paInputOverflowed:
+                logger.warning("Input overflow occurred while reading audio stream.")
+            else:
+                raise
 
         self.update_rolling_buffer(data)
         return data
