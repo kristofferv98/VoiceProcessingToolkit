@@ -31,6 +31,12 @@ class NotificationSoundManager:
             logger.exception("An unexpected error occurred while initializing the notification sound.", exc_info=e)
             raise
 
-    def play(self, _preloaded_sound=None):
-        if self._notification_sound:
+    def play(self):
+        if not self._notification_sound:
+            self._initialize_sound()
+        try:
             self._notification_sound.play()
+        except pygame.error as e:
+            logger.exception("Failed to play notification sound due to Pygame error.", exc_info=e)
+        except Exception as e:
+            logger.exception("An unexpected error occurred while playing the notification sound.", exc_info=e)
