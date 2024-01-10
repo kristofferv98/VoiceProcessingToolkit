@@ -89,6 +89,8 @@ class VoiceProcessingManager:
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
         """
+        Initializes the voice processing manager with the given configuration.
+
             Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
             This class integrates different components such as wake word detection, voice recording, and speech transcription.
