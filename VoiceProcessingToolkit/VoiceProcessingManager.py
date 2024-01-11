@@ -90,7 +90,7 @@ class VoiceProcessingManager:
                  output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
-                 use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
+                 use_wake_word=True, save_wake_word_recordings=False):
         """
 
         Initializes the voice processing manager with the given configuration.
@@ -168,7 +168,6 @@ class VoiceProcessingManager:
         self.buffer_length = buffer_length
         self.use_wake_word = use_wake_word
         self.save_wake_word_recordings = save_wake_word_recordings
-        self.play_notification_sound = play_notification_sound
 
         self.transcriber = transcriber
         self.action_manager = action_manager
@@ -183,8 +182,7 @@ class VoiceProcessingManager:
     def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
-                                buffer_length=2, use_wake_word=True, save_wake_word_recordings=False,
-                                play_notification_sound=True):
+                                buffer_length=2, use_wake_word=True, save_wake_word_recordings=False):
         """
         Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
 
@@ -216,8 +214,7 @@ class VoiceProcessingManager:
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
                    voice_threshold=voice_threshold, silence_limit=silence_limit, inactivity_limit=inactivity_limit,
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
-                   save_wake_word_recordings=save_wake_word_recordings or False,
-                   play_notification_sound=play_notification_sound)
+                   save_wake_word_recordings=save_wake_word_recordings or False)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
         """
@@ -274,18 +271,13 @@ class VoiceProcessingManager:
         try:
             transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key,
                                                         voice_id=voice_id)
-            if tts:
-                thread_manager.join_all()
+            if not tts:
+                return transcription
+            thread_manager.join_all()
             logger.info("VoiceProcessingManager setup completed successfully.")
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
-        finally:
-            if self.voice_recorder.recording_thread:
-                self.voice_recorder.recording_thread.join()
-            thread_manager.shutdown()
-            logger.info("VoiceProcessingManager cleanup completed successfully.")
-        return transcription
 
     def setup(self):
         logger.info("Setting up VoiceProcessingManager components.")
@@ -301,7 +293,7 @@ class VoiceProcessingManager:
                 sensitivity=self.sensitivity,
                 action_manager=self.action_manager,
                 audio_stream_manager=self.audio_stream_manager,
-                play_notification_sound=self.play_notification_sound,
+                play_notification_sound=True,
                 save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None,
             )
         # Initialize VoiceRecorder
@@ -361,7 +353,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=False, save_wake_word_recordings=False)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True)
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
