@@ -269,15 +269,33 @@ class VoiceProcessingManager:
         """
         logger.info("VoiceProcessingManager run method called.")
         try:
-            transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key,
-                                                        voice_id=voice_id)
-            if not tts:
-                return transcription
-            thread_manager.join_all()
-            logger.info("VoiceProcessingManager setup completed successfully.")
+            transcription = None
+            if self.use_wake_word:
+                # Start wake word detection and wait for it to finish
+                self.wake_word_detector.run_blocking()
+            # Once wake word is detected, start recording
+            self.voice_recorder.perform_recording()
+            # Wait for the recording to complete
+            if self.voice_recorder.recording_thread:
+                self.voice_recorder.recording_thread.join()
+            # If a recording was made, transcribe it
+            if self.voice_recorder.last_saved_file is not None:
+                transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
+                logger.info(f"Transcription: {transcription}")
+                if transcription and tts:
+                    if streaming:
+                        text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
+                    else:
+                        text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
+            else:
+                logger.info("No valid recording was made.")
+            return transcription
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
+        finally:
+            thread_manager.shutdown()
+            logger.info("VoiceProcessingManager run method completed.")
 
     def setup(self):
         logger.info("Setting up VoiceProcessingManager components.")
