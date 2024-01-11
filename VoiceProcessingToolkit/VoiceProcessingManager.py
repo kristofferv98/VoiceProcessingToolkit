@@ -91,6 +91,10 @@ class VoiceProcessingManager:
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True, save_wake_word_recordings=False):
+        """
+        save_wake_word_recordings (bool): If True, saves the audio buffer that triggered the wake word detection.
+            This can be useful for creating training data for wake word recognition models.
+        """
 
         """
         Initializes the voice processing manager with the given configuration.
@@ -198,6 +202,7 @@ class VoiceProcessingManager:
             min_recording_length (int): Minimum length of a valid recording.
             buffer_length (int): Length of the audio buffer.
             use_wake_word (bool): Flag to use wake word detection.
+            save_wake_word_recordings (bool): Flag to save the audio buffer that triggered the wake word detection.
 
         Returns:
             VoiceProcessingManager: An instance of VoiceProcessingManager with default settings and dependencies.
