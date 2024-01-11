@@ -92,47 +92,45 @@ class VoiceProcessingManager:
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True, save_wake_word_recordings=False):
         """
-        save_wake_word_recordings (bool): If True, saves the audio buffer that triggered the wake word detection.
-            This can be useful for creating training data for wake word recognition models.
-        """
 
-        """
         Initializes the voice processing manager with the given configuration.
 
-            Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
+        Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
-            This class integrates different components such as wake word detection, voice recording, and speech transcription.
-            It provides a high-level interface to manage the flow of processing voice commands.
+        This class integrates different components such as wake word detection, voice recording, and speech transcription.
+        It provides a high-level interface to manage the flow of processing voice commands.
 
-            Attributes:
-                wake_word (str): Wake word for triggering voice recording.
-                sensitivity (float): Sensitivity for wake word detection.
-                output_directory (str): Directory for saving recorded audio files.
-                audio_format (int): Format of the audio stream (e.g., pyaudio.paInt16).
-                channels (int): Number of audio channels.
-                rate (int): Sample rate of the audio stream.
-                frames_per_buffer (int): Number of audio frames per buffer.
-                voice_threshold (float): Threshold for voice activity detection.
-                silence_limit (int): Duration of silence before stopping the recording.
-                inactivity_limit (int): Duration of inactivity before stopping the recording.
-                min_recording_length (int): Minimum length of a valid recording.
-                buffer_length (int): Length of the audio buffer.
-                use_wake_word (bool): Flag to use wake word detection.
-                save_wake_word_recordings (bool): Flag to save wake word recordings.
 
-            Dependencies:
-                audio_stream_manager (AudioStream): Manages the audio stream.
-                wake_word_detector (WakeWordDetector): Handles wake word detection.
-                voice_recorder (AudioRecorder): Manages audio recording.
-                transcriber (WhisperTranscriber): Transcribes recorded audio.
-                action_manager (ActionManager): Manages actions triggered by voice commands.
-                recorded_file (str): Path to the last recorded audio file.
-                elevenlabs_config (ElevenLabsConfig): Configuration for ElevenLabs text-to-speech service.
+        Attributes:
+            wake_word (str): Wake word for triggering voice recording.
+            sensitivity (float): Sensitivity for wake word detection.
+            output_directory (str): Directory for saving recorded audio files.
+            audio_format (int): Format of the audio stream (e.g., pyaudio.paInt16).
+            channels (int): Number of audio channels.
+            rate (int): Sample rate of the audio stream.
+            frames_per_buffer (int): Number of audio frames per buffer.
+            voice_threshold (float): Threshold for voice activity detection.
+            silence_limit (int): Duration of silence before stopping the recording.
+            inactivity_limit (int): Duration of inactivity before stopping the recording.
+            min_recording_length (int): Minimum length of a valid recording.
+            buffer_length (int): Length of the audio buffer.
+            use_wake_word (bool): Flag to use wake word detection.
+            save_wake_word_recordings (bool): If True, saves audio buffer that triggered the wake word detection.
+            This can be useful for creating training data for wake word recognition models.
 
-            Methods:
-                run(tts=False, streaming=False): Processes a voice command with optional text-to-speech functionality.
-                setup(): Initializes the components of the voice processing manager.
-                process_voice_command(): Processes a voice command using the configured components.
+        Dependencies:
+            audio_stream_manager (AudioStream): Manages the audio stream.
+            wake_word_detector (WakeWordDetector): Handles wake word detection.
+            voice_recorder (AudioRecorder): Manages audio recording.
+            transcriber (WhisperTranscriber): Transcribes recorded audio.
+            action_manager (ActionManager): Manages actions triggered by voice commands.
+            recorded_file (str): Path to the last recorded audio file.
+            elevenlabs_config (ElevenLabsConfig): Configuration for ElevenLabs text-to-speech service.
+
+        Methods:
+            run(tts=False, streaming=False): Processes a voice command with optional text-to-speech functionality.
+            setup(): Initializes the components of the voice processing manager.
+            process_voice_command(): Processes a voice command using the configured components.
             """
 
         logger.debug("Initializing VoiceProcessingManager with provided configurations.")
@@ -355,7 +353,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True)
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
