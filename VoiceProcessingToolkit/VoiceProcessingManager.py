@@ -296,8 +296,6 @@ class VoiceProcessingManager:
                                             buffer_length=self.buffer_length)
         # Add the voice recorder's thread to the thread manager
         thread_manager.add_thread(self.voice_recorder.recording_thread)
-        # Assign the audio stream manager to the thread manager for cleanup
-        thread_manager.audio_stream_manager = self.audio_stream_manager
 
     def process_voice_command(self):
         """
@@ -346,7 +344,7 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True)
 
     @simple_vpm.action_manager.register_action

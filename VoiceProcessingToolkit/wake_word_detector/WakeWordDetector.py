@@ -87,7 +87,8 @@ class WakeWordDetector:
 
     def __init__(self, access_key: str, wake_word: str, sensitivity: float,
                  action_manager: ActionManager, audio_stream_manager: AudioStream,
-                 play_notification_sound: bool = True, save_audio_directory: str = None, snippet_length: float = 3.0) -> None:
+                 play_notification_sound: bool = True, save_audio_directory: str = None,
+                 snippet_length: float = 3.0) -> None:
         """
                 Initializes the WakeWordDetector with the specified parameters.
         Args:
@@ -104,9 +105,12 @@ class WakeWordDetector:
             ValueError: If any initialization parameter is invalid.
         """
         # Determine the path of the notification sound relative to this file's location
+        self._snippet_frame_count = None
         notification_sound_path = Path(__file__).parent / 'Wav_MP3' / 'notification.wav'
         if not notification_sound_path.exists():
             raise FileNotFoundError("Notification sound file not found at expected path.")
+        self._pre_buffer_time = 1  # Time in seconds to save before wake word
+        self._post_buffer_time = 1.5  # Time in seconds to save after wake word
         self._notification_sound_manager = NotificationSoundManager(str(notification_sound_path))
 
         self._action_manager = action_manager
@@ -124,7 +128,6 @@ class WakeWordDetector:
         self._save_audio_directory = save_audio_directory
         if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
             os.makedirs(self._save_audio_directory)
-
 
     def initialize_porcupine(self) -> None:
         """
@@ -165,28 +168,36 @@ class WakeWordDetector:
             sound_thread = threading.Thread(target=self._notification_sound_manager.play)
             sound_thread.start()
         if self._save_audio_directory:
-            # Save the audio snippet in a separate thread to avoid blocking
-            save_thread = threading.Thread(target=self.save_audio_snippet, args=(self._snippet_frame_count,))
+            pre_detection_frames = int(self._porcupine.sample_rate * self._pre_buffer_time)
+            post_detection_frames = int(self._porcupine.sample_rate * self._post_buffer_time)
+            save_thread = threading.Thread(target=self.save_audio_snippet,
+                                           args=(pre_detection_frames, post_detection_frames))
             save_thread.start()
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
         # Do not set the stop event here to allow continuous detection
 
-    def save_audio_snippet(self, frame_count: int):
+    def save_audio_snippet(self, pre_detection_frames: int, post_detection_frames: int):
         """
         Saves a snippet of audio from the buffer to the specified directory.
         """
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         filename = f"wake_word_{timestamp}.wav"
         filepath = os.path.join(self._save_audio_directory, filename)
-        buffer = self._audio_stream_manager.get_rolling_buffer()[-frame_count * 2:]  # 2 bytes per frame (16-bit audio)
+        buffer = self._audio_stream_manager.get_rolling_buffer()
+
+        # Calculate the start and end indices for the snippet
+        end_index = len(buffer)
+        start_index = max(end_index - (pre_detection_frames + post_detection_frames + self._porcupine.frame_length) * 2,
+                          0)  # 2 bytes per frame (16-bit audio)
+        snippet_buffer = buffer[start_index:end_index]
+
         with wave.open(filepath, 'wb') as wave_file:
             wave_file.setnchannels(1)
             wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16) if self._py_audio else 2)
             wave_file.setframerate(self._porcupine.sample_rate)
-            wave_file.writeframes(buffer)
+            wave_file.writeframes(snippet_buffer)
             logger.info(f"Saved wake word audio snippet to {filepath}")
-
 
     def run(self) -> None:
         """
@@ -257,6 +268,7 @@ def main():
     # Run the wake word detector
     print("Listening for wake word...")
     detector.run_blocking()
+
 
 if __name__ == '__main__':
     main()
