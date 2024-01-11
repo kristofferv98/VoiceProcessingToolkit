@@ -167,6 +167,8 @@ class WakeWordDetector:
         if self._play_notification_sound:
             sound_thread = threading.Thread(target=self._notification_sound_manager.play)
             sound_thread.start()
+            sound_thread.join()  # Wait for the notification sound to finish playing
+            self._stop_event.set()  # Signal to stop the detection loop
         if self._save_audio_directory:
             pre_detection_frames = int(self._porcupine.sample_rate * self._pre_buffer_time)
             post_detection_frames = int(self._porcupine.sample_rate * self._post_buffer_time)
@@ -175,7 +177,6 @@ class WakeWordDetector:
             save_thread.start()
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
-        # Do not set the stop event here to allow continuous detection
 
     def save_audio_snippet(self, pre_detection_frames: int, post_detection_frames: int):
         """
