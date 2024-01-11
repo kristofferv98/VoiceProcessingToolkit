@@ -302,6 +302,8 @@ class VoiceProcessingManager:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
         finally:
+            if self.play_notification_sound and self.notification_sound_manager:
+                self.notification_sound_manager.cleanup()
             thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
 
