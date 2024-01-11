@@ -20,8 +20,9 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "VoiceProcessingToolkit"},
+    package_dir={"": "src"},
     packages=find_packages(where="VoiceProcessingToolkit"),
+    package_data={"VoiceProcessingToolkit": ["*.py"]},
     python_requires=">=3.6",
     install_requires=[
         "PyAudio~=0.2.14",
@@ -36,4 +37,5 @@ setup(
         "pvporcupine~=3.0.1",
         "pygame~=2.5.2",
     ],
+    zip_safe=False,
 )
