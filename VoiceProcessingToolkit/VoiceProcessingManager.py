@@ -1,5 +1,8 @@
+import asyncio
 import logging
 import os
+import time
+
 import pyaudio
 from dotenv import load_dotenv
 from elevenlabs import generate, stream
@@ -88,66 +91,6 @@ class VoiceProcessingManager:
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True):
-        logger.debug("Initializing VoiceProcessingManager with provided configurations.")
-        # Validate configuration parameters
-        if not (0.0 <= sensitivity <= 1.0):
-            raise ValueError("Sensitivity must be between 0.0 and 1.0")
-        if not (isinstance(rate, int) and rate > 0):
-            raise ValueError("Rate must be a positive integer")
-        if not (isinstance(channels, int) and channels > 0):
-            raise ValueError("Channels must be a positive integer")
-        if not (isinstance(frames_per_buffer, int) and frames_per_buffer > 0):
-            raise ValueError("Frames per buffer must be a positive integer")
-        if not (voice_threshold > 0):
-            raise ValueError("Voice threshold must be a positive number")
-        if not (silence_limit > 0):
-            raise ValueError("Silence limit must be a positive number")
-        if not (inactivity_limit > 0):
-            raise ValueError("Inactivity limit must be a positive number")
-        if not (min_recording_length > 0):
-            raise ValueError("Minimum recording length must be a positive number")
-        if not (buffer_length > 0):
-            raise ValueError("Buffer length must be a positive number")
-
-        # Validate configuration parameters
-        if not (0.0 <= sensitivity <= 1.0):
-            raise ValueError("Sensitivity must be between 0.0 and 1.0")
-        if not (isinstance(rate, int) and rate > 0):
-            raise ValueError("Rate must be a positive integer")
-        if not (isinstance(channels, int) and channels > 0):
-            raise ValueError("Channels must be a positive integer")
-        if not (isinstance(frames_per_buffer, int) and frames_per_buffer > 0):
-            raise ValueError("Frames per buffer must be a positive integer")
-        if not (voice_threshold > 0):
-            raise ValueError("Voice threshold must be a positive number")
-        if not (silence_limit > 0):
-            raise ValueError("Silence limit must be a positive number")
-        if not (inactivity_limit > 0):
-            raise ValueError("Inactivity limit must be a positive number")
-        if not (min_recording_length > 0):
-            raise ValueError("Minimum recording length must be a positive number")
-        if not (buffer_length > 0):
-            raise ValueError("Buffer length must be a positive number")
-
-        # Validate configuration parameters
-        if not (0.0 <= sensitivity <= 1.0):
-            raise ValueError("Sensitivity must be between 0.0 and 1.0")
-        if not (isinstance(rate, int) and rate > 0):
-            raise ValueError("Rate must be a positive integer")
-        if not (isinstance(channels, int) and channels > 0):
-            raise ValueError("Channels must be a positive integer")
-        if not (isinstance(frames_per_buffer, int) and frames_per_buffer > 0):
-            raise ValueError("Frames per buffer must be a positive integer")
-        if not (voice_threshold > 0):
-            raise ValueError("Voice threshold must be a positive number")
-        if not (silence_limit > 0):
-            raise ValueError("Silence limit must be a positive number")
-        if not (inactivity_limit > 0):
-            raise ValueError("Inactivity limit must be a positive number")
-        if not (min_recording_length > 0):
-            raise ValueError("Minimum recording length must be a positive number")
-        if not (buffer_length > 0):
-            raise ValueError("Buffer length must be a positive number")
 
         """
         Initializes the voice processing manager with the given configuration.
@@ -186,6 +129,27 @@ class VoiceProcessingManager:
                 setup(): Initializes the components of the voice processing manager.
                 process_voice_command(): Processes a voice command using the configured components.
             """
+
+        logger.debug("Initializing VoiceProcessingManager with provided configurations.")
+        if not (0.0 <= sensitivity <= 1.0):
+            raise ValueError("Sensitivity must be between 0.0 and 1.0")
+        if not (isinstance(rate, int) and rate > 0):
+            raise ValueError("Rate must be a positive integer")
+        if not (isinstance(channels, int) and channels > 0):
+            raise ValueError("Channels must be a positive integer")
+        if not (isinstance(frames_per_buffer, int) and frames_per_buffer > 0):
+            raise ValueError("Frames per buffer must be a positive integer")
+        if not (voice_threshold > 0):
+            raise ValueError("Voice threshold must be a positive number")
+        if not (silence_limit > 0):
+            raise ValueError("Silence limit must be a positive number")
+        if not (inactivity_limit > 0):
+            raise ValueError("Inactivity limit must be a positive number")
+        if not (min_recording_length > 0):
+            raise ValueError("Minimum recording length must be a positive number")
+        if not (buffer_length > 0):
+            raise ValueError("Buffer length must be a positive number")
+
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
@@ -246,8 +210,6 @@ class VoiceProcessingManager:
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
-        logger.debug("Starting voice command processing.")
-        # Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         """
         Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
         Allows for passing an optional API key and voice ID for text-to-speech customization.
@@ -304,8 +266,6 @@ class VoiceProcessingManager:
                                                         voice_id=voice_id)
             if not tts:
                 return transcription
-            # If tts is True, the text-to-speech is already handled in _process_voice_command
-            # Ensure all threads are joined before exiting
             thread_manager.join_all()
             logger.info("VoiceProcessingManager setup completed successfully.")
         except Exception as e:
@@ -314,7 +274,6 @@ class VoiceProcessingManager:
 
     def setup(self):
         logger.info("Setting up VoiceProcessingManager components.")
-        # Initialize AudioStream
         """
         Initializes the wake word detector and voice recorder components of the voice processing manager.
         """
@@ -382,13 +341,22 @@ def main():
         logger.info("Exiting main function.")
 
 
-def simple_main():
-    simple_vpm = VoiceProcessingManager.create_default_instance()
-    text = simple_vpm.run(tts=True, streaming=False)
-    print(text)
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance()
+    logging.basicConfig(level=logging.DEBUG)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True)
+
+    @simple_vpm.action_manager.register_action
+    def action_with_notification():
+        logger.info("Sync function is running...")
+        time.sleep(4.5)
+
+    @simple_vpm.action_manager.register_action
+    async def async_action():
+        logger.info("Async function is running...")
+        await asyncio.sleep(1)  # Simulate an async wait
+
     simple_vpm.run(tts=True, streaming=True)
+    thread_manager.shutdown()
+

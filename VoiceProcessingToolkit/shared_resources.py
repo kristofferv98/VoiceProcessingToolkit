@@ -27,4 +27,5 @@ class ThreadManager:
         if not self.shutdown_requested:
             print("KeyboardInterrupt detected, shutting down threads...")
             self.shutdown()
+
 thread_manager = ThreadManager()
