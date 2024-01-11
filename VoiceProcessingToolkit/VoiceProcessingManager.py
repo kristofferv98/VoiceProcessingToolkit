@@ -210,7 +210,7 @@ class VoiceProcessingManager:
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
                    voice_threshold=voice_threshold, silence_limit=silence_limit, inactivity_limit=inactivity_limit,
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
-                   save_wake_word_recordings=False)
+                   save_wake_word_recordings=save_wake_word_recordings if save_wake_word_recordings is not None else False)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
         """
