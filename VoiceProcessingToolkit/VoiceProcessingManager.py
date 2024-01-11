@@ -86,8 +86,8 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 class VoiceProcessingManager:
-    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.5, wake_word_recordings_directory=None,
-                 output_directory='Wav_MP3',
+    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.5,
+                 output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True, save_wake_word_recordings=False):
@@ -154,6 +154,7 @@ class VoiceProcessingManager:
         self.wake_word = wake_word
         self.sensitivity = sensitivity
         self.output_directory = output_directory
+        self.wake_word_output = wake_word_output
         self.audio_format = audio_format
         self.channels = channels
         self.rate = rate
@@ -165,7 +166,6 @@ class VoiceProcessingManager:
         self.buffer_length = buffer_length
         self.use_wake_word = use_wake_word
         self.save_wake_word_recordings = save_wake_word_recordings
-        self.wake_word_recordings_directory = wake_word_recordings_directory or output_directory
 
         self.transcriber = transcriber
         self.action_manager = action_manager
@@ -178,7 +178,6 @@ class VoiceProcessingManager:
 
     @classmethod
     def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
-                                wake_word_recordings_directory=None,
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
                                 buffer_length=2, use_wake_word=True, save_wake_word_recordings=False):
@@ -212,8 +211,7 @@ class VoiceProcessingManager:
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
                    voice_threshold=voice_threshold, silence_limit=silence_limit, inactivity_limit=inactivity_limit,
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
-                   save_wake_word_recordings=save_wake_word_recordings,
-                   wake_word_recordings_directory=wake_word_recordings_directory)
+                   save_wake_word_recordings=save_wake_word_recordings or False)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
         """
@@ -293,7 +291,7 @@ class VoiceProcessingManager:
                 action_manager=self.action_manager,
                 audio_stream_manager=self.audio_stream_manager,
                 play_notification_sound=True,
-                save_audio_directory=self.wake_word_recordings_directory if self.save_wake_word_recordings else None,
+                save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None,
             )
         # Initialize VoiceRecorder
         self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
@@ -352,7 +350,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=True)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False)
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
