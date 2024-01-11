@@ -90,7 +90,7 @@ class VoiceProcessingManager:
                  output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
-                 use_wake_word=True, save_wake_word_recordings=False):
+                 use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
         """
 
         Initializes the voice processing manager with the given configuration.
@@ -168,6 +168,7 @@ class VoiceProcessingManager:
         self.buffer_length = buffer_length
         self.use_wake_word = use_wake_word
         self.save_wake_word_recordings = save_wake_word_recordings
+        self.play_notification_sound = play_notification_sound
 
         self.transcriber = transcriber
         self.action_manager = action_manager
@@ -202,6 +203,7 @@ class VoiceProcessingManager:
             use_wake_word (bool): Flag to use wake word detection.
             save_wake_word_recordings (bool): Flag to save the audio buffer that triggered the wake word detection.
 
+                                play_notification_sound=True,
         Returns:
             VoiceProcessingManager: An instance of VoiceProcessingManager with default settings and dependencies.
         """
@@ -214,7 +216,8 @@ class VoiceProcessingManager:
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
                    voice_threshold=voice_threshold, silence_limit=silence_limit, inactivity_limit=inactivity_limit,
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
-                   save_wake_word_recordings=save_wake_word_recordings or False)
+                   save_wake_word_recordings=save_wake_word_recordings or False,
+                   play_notification_sound=play_notification_sound)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
         """
@@ -315,7 +318,7 @@ class VoiceProcessingManager:
                 sensitivity=self.sensitivity,
                 action_manager=self.action_manager,
                 audio_stream_manager=self.audio_stream_manager,
-                play_notification_sound=True,
+                play_notification_sound=self.play_notification_sound,
                 save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None,
             )
         # Initialize VoiceRecorder
