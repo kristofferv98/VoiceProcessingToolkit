@@ -388,18 +388,21 @@ class VoiceProcessingManager:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=True,
-                                                                play_notification_sound=False)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=True)
 
-    @simple_vpm.action_manager.register_action
+    # Define actions to be registered with the action manager
     def action_with_notification():
-        logger.info("Sync function is running...")
+        simple_vpm.logger.info("Sync function is running...")
         time.sleep(4.5)
 
-    @simple_vpm.action_manager.register_action
     async def async_action():
-        logger.info("Async function is running...")
+        simple_vpm.logger.info("Async function is running...")
         await asyncio.sleep(1)  # Simulate an async wait
+
+    # Register the actions
+    simple_vpm.action_manager.register_action(action_with_notification)
+    simple_vpm.action_manager.register_action(async_action)
+
 
     simple_vpm.run(tts=True, streaming=True)
     thread_manager.shutdown()
