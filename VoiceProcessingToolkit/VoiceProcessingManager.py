@@ -92,6 +92,13 @@ class VoiceProcessingManager:
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
                  use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
         """
+        Manages the voice processing pipeline, including optional wake word detection, voice recording, transcription,
+        and text-to-speech synthesis. It can be configured to handle different use cases:
+        - Wake Word Detection: When enabled, the manager listens for a specific wake word before activating recording.
+        - Text-to-Speech: Converts transcribed text back into speech, which can be played back or streamed.
+        - Transcription Only: Records and transcribes speech without wake word detection.
+        - Notification Sound: Plays a notification sound when the wake word is detected, if enabled.
+
 
         Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
@@ -189,6 +196,9 @@ class VoiceProcessingManager:
                                 play_notification_sound=True):
         """
         Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
+        This method simplifies the instantiation process and provides a quick way to get started with common settings.
+
+        Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
 
         Args:
             wake_word (str): Wake word for triggering voice recording.
@@ -260,6 +270,13 @@ class VoiceProcessingManager:
 
     def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
         """
+        Main method to start the voice processing workflow. It can be configured to perform different tasks based on
+        the provided arguments:
+        - tts (bool): If True, performs text-to-speech on the transcribed text.
+        - streaming (bool): If True, streams the synthesized speech instead of saving it to a file.
+        - api_key (str): Optional API key for text-to-speech service.
+        - voice_id (str): Optional voice ID for customizing the synthesized speech.
+
         Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
 
         Optionally performs text-to-speech on the transcription and can stream the synthesized speech. It also allows
