@@ -273,6 +273,7 @@ class VoiceProcessingManager:
         """
         logger.info("VoiceProcessingManager run method called.")
         try:
+            try:
             transcription = None
             if self.use_wake_word:
                 # Start wake word detection and wait for it to finish
@@ -301,6 +302,11 @@ class VoiceProcessingManager:
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt received, performing cleanup.")
+        finally:
+            thread_manager.shutdown()
+            logger.info("VoiceProcessingManager run method completed.")
         finally:
             thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
