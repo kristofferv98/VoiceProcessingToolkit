@@ -375,7 +375,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False, wake_word='jarvis')
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
