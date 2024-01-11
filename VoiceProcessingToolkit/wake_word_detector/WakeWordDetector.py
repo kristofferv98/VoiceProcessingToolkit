@@ -163,12 +163,6 @@ class WakeWordDetector:
         """
         Handle the detection of the wake word, play the notification sound, trigger actions, and then stop.
         """
-        # Play the notification sound in a non-blocking manner
-        if self._play_notification_sound:
-            sound_thread = threading.Thread(target=self._notification_sound_manager.play)
-            sound_thread.start()
-            sound_thread.join()  # Wait for the notification sound to finish playing
-            self._stop_event.set()  # Signal to stop the detection loop
         if self._save_audio_directory:
             pre_detection_frames = int(self._porcupine.sample_rate * self._pre_buffer_time)
             post_detection_frames = int(self._porcupine.sample_rate * self._post_buffer_time)
@@ -177,6 +171,15 @@ class WakeWordDetector:
             save_thread.start()
         action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
         action_thread.start()
+        # Play the notification sound in a non-blocking manner
+        if self._play_notification_sound:
+            sound_thread = threading.Thread(target=self._notification_sound_manager.play)
+            sound_thread.start()
+            sound_thread.join()  # Wait for the notification sound to finish playing
+            self._stop_event.set()  # Signal to stop the detection loop
+        else:
+            self._stop_event.set()
+
 
     def save_audio_snippet(self, pre_detection_frames: int, post_detection_frames: int):
         """
@@ -244,7 +247,7 @@ def main():
     snippet_length = 3.0  # Length of the audio snippet in seconds
 
     # Set up the directory to save audio snippets
-    save_audio_directory = 'saved_audio_snippets'
+    save_audio_directory = 'wake_word_output'
     if not os.path.exists(save_audio_directory):
         os.makedirs(save_audio_directory)
 
