@@ -96,7 +96,8 @@ class VoiceProcessingManager:
         """
         """
 
-        Initializes the voice processing manager with the given configuration.
+        Initializes the voice processing manager with the given configuration. Manages the voice processing pipeline,
+        including wake word detection, voice recording, and transcription.
 
         Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
@@ -109,8 +110,10 @@ class VoiceProcessingManager:
             sensitivity (float): Sensitivity for wake word detection.
             output_directory (str): Directory for saving recorded audio files.
             audio_format (int): Format of the audio stream (e.g., pyaudio.paInt16).
+            use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
             channels (int): Number of audio channels.
             rate (int): Sample rate of the audio stream.
+            use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
             frames_per_buffer (int): Number of audio frames per buffer.
             voice_threshold (float): Threshold for voice activity detection.
             silence_limit (int): Duration of silence before stopping the recording.
@@ -119,6 +122,7 @@ class VoiceProcessingManager:
             buffer_length (int): Length of the audio buffer.
             use_wake_word (bool): Flag to use wake word detection.
             save_wake_word_recordings (bool): If True, saves audio buffer that triggered the wake word detection.
+            use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
             This can be useful for creating training data for wake word recognition models.
 
         Dependencies:
@@ -190,19 +194,23 @@ class VoiceProcessingManager:
         """
         Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
 
+        Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
         Args:
             wake_word (str): Wake word for triggering voice recording.
             sensitivity (float): Sensitivity for wake word detection.
             output_directory (str): Directory for saving recorded audio files.
             audio_format (int): Format of the audio stream (e.g., pyaudio.paInt16).
+            use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
             channels (int): Number of audio channels.
             rate (int): Sample rate of the audio stream.
+            use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
             frames_per_buffer (int): Number of audio frames per buffer.
             voice_threshold (float): Threshold for voice activity detection.
             silence_limit (int): Duration of silence before stopping the recording.
             inactivity_limit (int): Duration of inactivity before stopping the recording.
             min_recording_length (int): Minimum length of a valid recording.
             buffer_length (int): Length of the audio buffer.
+            use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
             use_wake_word (bool): Flag to use wake word detection.
             save_wake_word_recordings (bool): Flag to save the audio buffer that triggered the wake word detection.
             use_notification_sound (bool): Flag to use a notification sound when the wake word is detected.
