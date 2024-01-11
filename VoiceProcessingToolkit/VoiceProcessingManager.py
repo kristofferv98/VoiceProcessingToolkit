@@ -4,7 +4,6 @@ import os
 import time
 
 import pyaudio
-from dotenv import load_dotenv
 from elevenlabs import generate, stream
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
@@ -385,24 +384,6 @@ class VoiceProcessingManager:
 
         # If no recording was made, return None
         return None
-
-
-def main():
-    load_dotenv()
-    try:
-        transcriber = WhisperTranscriber()
-        action_manager = ActionManager()
-        audio_stream_manager = AudioStream(rate=16000, channels=1, _audio_format=pyaudio.paInt16, frames_per_buffer=512)
-        vpm = VoiceProcessingManager(transcriber=transcriber, action_manager=action_manager,
-                                     audio_stream_manager=audio_stream_manager, sensitivity=0.5, use_wake_word=True)
-        text = vpm.run(tts=True, streaming=False)
-        logger.info(f"Text: {text}")
-
-    finally:
-        thread_manager.shutdown()
-        logger.info("Exiting main function.")
-
-
 
 
 if __name__ == '__main__':
