@@ -216,7 +216,7 @@ class VoiceProcessingManager:
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
                    voice_threshold=voice_threshold, silence_limit=silence_limit, inactivity_limit=inactivity_limit,
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
-                   save_wake_word_recordings=save_wake_word_recordings or False)
+                   save_wake_word_recordings=save_wake_word_recordings or False,
                    play_notification_sound=play_notification_sound)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
@@ -356,7 +356,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=True)
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
