@@ -273,40 +273,44 @@ class VoiceProcessingManager:
         """
         logger.info("VoiceProcessingManager run method called.")
         try:
-            try:
             transcription = None
             if self.use_wake_word:
                 # Start wake word detection and wait for it to finish
                 self.wake_word_detector.run_blocking()
+
             # Once wake word is detected, start recording
             self.voice_recorder.perform_recording()
+
             # Wait for the recording to complete
             if self.voice_recorder.recording_thread:
                 self.voice_recorder.recording_thread.join()
+
             # Check if a recording was made
             if self.voice_recorder.last_saved_file:
                 # Transcribe the recording
                 transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
                 logger.info(f"Transcription: {transcription}")
+
                 # If transcription is successful and text-to-speech is enabled, synthesize speech
                 if transcription and tts:
                     if streaming:
                         text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
                     else:
                         text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
-            # If no recording was made or it was too short, log the information
             else:
+                # If no recording was made or it was too short, log the information
                 logger.info("Recording was not made or was too short.")
+
             # Return the transcription or None if no valid recording was made
             return transcription
+
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
+
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, performing cleanup.")
-        finally:
-            thread_manager.shutdown()
-            logger.info("VoiceProcessingManager run method completed.")
+
         finally:
             thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
