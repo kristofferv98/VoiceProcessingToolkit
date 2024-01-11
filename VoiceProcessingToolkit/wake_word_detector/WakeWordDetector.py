@@ -54,8 +54,7 @@ logger = logging.getLogger(__name__)
 
 class WakeWordDetector:
     """
-    A class that encapsulates the functionality for detecting a specified wake word using the Porcupine engine.
-    It manages the audio stream and executes registered actions upon detection of the wake word.
+    Detects a specified wake word using the Porcupine engine and executes registered actions upon detection.
 
     Attributes:
         _access_key (str): The access key for the Porcupine wake word engine.
@@ -132,8 +131,7 @@ class WakeWordDetector:
 
     def initialize_porcupine(self) -> None:
         """
-        Initializes the Porcupine wake word engine with the provided access key, wake word, and sensitivity.
-        Raises an exception if the initialization fails.
+        Initializes the Porcupine wake word engine.
         """
         try:
             if self._porcupine is None:
@@ -141,13 +139,12 @@ class WakeWordDetector:
                                                      sensitivities=[self._sensitivity])
                 self._snippet_frame_count = int(self._porcupine.sample_rate * self._snippet_length)
         except pvporcupine.PorcupineError as e:
-            logger.error("Failed to initialize Porcupine: %s", e)
+            logger.exception("Failed to initialize Porcupine with the given parameters.", exc_info=e)
             raise
 
     def voice_loop(self):
         """
-        Continuously listens for the wake word in the audio stream and triggers actions upon detection.
-        It stops listening if a stop event is set or if the shutdown flag is triggered.
+        The main loop that listens for the wake word and triggers the action function.
         """
         self.is_running = True
         try:
@@ -158,7 +155,7 @@ class WakeWordDetector:
                     self.handle_wake_word_detection()
 
         except Exception as e:
-            logger.error("An error occurred during wake word detection: %s", e)
+            logger.exception("An error occurred during wake word detection.", exc_info=e)
             raise RuntimeError("Wake word detection error.") from e
         finally:
             self.is_running = False
