@@ -302,8 +302,6 @@ class VoiceProcessingManager:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
         finally:
-            if self.play_notification_sound and self.notification_sound_manager:
-                self.notification_sound_manager.cleanup()
             thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
 
@@ -381,7 +379,8 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=False)
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False,
+                                                                play_notification_sound=False)
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
