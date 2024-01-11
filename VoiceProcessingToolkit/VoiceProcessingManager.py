@@ -183,7 +183,8 @@ class VoiceProcessingManager:
     def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
-                                buffer_length=2, use_wake_word=True, save_wake_word_recordings=False):
+                                buffer_length=2, use_wake_word=True, save_wake_word_recordings=False,
+                                play_notification_sound=True):
         """
         Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
 
@@ -378,7 +379,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False, wake_word='jarvis')
+    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=False)
 
     @simple_vpm.action_manager.register_action
     def action_with_notification():
