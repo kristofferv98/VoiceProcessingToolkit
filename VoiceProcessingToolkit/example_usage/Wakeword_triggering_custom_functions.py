@@ -9,12 +9,14 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     """
-    Demonstrates a more advanced and customizable usage of the VoiceProcessingManager using decorators.
+    Demonstrates the basic usage of the VoiceProcessingManager.
 
-    In this example, the VoiceProcessingManager is initialized with default settings. Additionally, custom actions are
-    defined and registered using decorators. These actions are triggered during the voice processing workflow.
+    This script initializes the VoiceProcessingManager with default settings and runs it to process a voice command.
+    It also demonstrates how to register actions with the VoiceProcessingManager that will be triggered when the
+    wake word is detected. The processed text is printed to the console. The script uses text-to-speech
+    functionality without streaming.
 
-    The script showcases asynchronous action handling and can be terminated early by a KeyboardInterrupt (Ctrl+C).
+    The script can be terminated early by a KeyboardInterrupt (Ctrl+C).
     """
     try:
         # Create a VoiceProcessingManager instance with default settings

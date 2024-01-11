@@ -1,7 +1,5 @@
-import asyncio
 import logging
 import os
-import time
 
 import pyaudio
 from elevenlabs import generate, stream
@@ -85,10 +83,10 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 class VoiceProcessingManager:
-    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.5,
+    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.75,
                  output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
+                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=2, buffer_length=2,
                  use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
         """
         Manages the voice processing pipeline, including optional wake word detection, voice recording, transcription,
@@ -101,8 +99,8 @@ class VoiceProcessingManager:
 
         Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
-        This class integrates different components such as wake word detection, voice recording, and speech transcription.
-        It provides a high-level interface to manage the flow of processing voice commands.
+        This class integrates different components such as wake word detection, voice recording, and speech
+        transcription. It provides a high-level interface to manage the flow of processing voice commands.
 
 
         Attributes:
@@ -188,7 +186,7 @@ class VoiceProcessingManager:
         self.recorded_file = None
 
     @classmethod
-    def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
+    def create_default_instance(cls, wake_word='jarvis', sensitivity=0.75, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
                                 buffer_length=2, use_wake_word=True, save_wake_word_recordings=False,
@@ -267,7 +265,7 @@ class VoiceProcessingManager:
         logger.debug("Voice command processing completed.")
         return None
 
-    def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
+    def run(self, tts=False, streaming=False, api_key=None, voice_id=None, transcription=None):
         """
         Main method to start the voice processing workflow. It can be configured to perform different tasks based on
         the provided arguments:
@@ -291,6 +289,10 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         logger.info("VoiceProcessingManager run method called.")
+        if transcription is False and self.use_wake_word:
+            self.wake_word_detector.run_blocking()
+
+            return None
         try:
             transcription = None
             if self.use_wake_word:
@@ -335,10 +337,10 @@ class VoiceProcessingManager:
             logger.info("VoiceProcessingManager run method completed.")
 
     def setup(self):
-        logger.info("Setting up VoiceProcessingManager components.")
         """
         Initializes the wake word detector and voice recorder components of the voice processing manager.
         """
+        logger.info("Setting up VoiceProcessingManager components.")
 
         if self.use_wake_word:
             # Initialize WakeWordDetector
@@ -385,24 +387,3 @@ class VoiceProcessingManager:
         # If no recording was made, return None
         return None
 
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    simple_vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=True)
-
-    # Define actions to be registered with the action manager
-    def action_with_notification():
-        simple_vpm.logger.info("Sync function is running...")
-        time.sleep(4.5)
-
-    async def async_action():
-        simple_vpm.logger.info("Async function is running...")
-        await asyncio.sleep(1)  # Simulate an async wait
-
-    # Register the actions
-    simple_vpm.action_manager.register_action(action_with_notification)
-    simple_vpm.action_manager.register_action(async_action)
-
-
-    simple_vpm.run(tts=True, streaming=True)
-    thread_manager.shutdown()
