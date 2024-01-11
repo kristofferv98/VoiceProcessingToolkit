@@ -378,8 +378,6 @@ def main():
         text = vpm.run(tts=True, streaming=False)
         logger.info(f"Text: {text}")
 
-    except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt received, shutting down gracefully.")
     finally:
         thread_manager.shutdown()
         logger.info("Exiting main function.")
