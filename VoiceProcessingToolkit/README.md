@@ -1,7 +1,7 @@
  # VoiceProcessingToolkit
 
  ## Introduction
- VoiceProcessingToolkit is a comprehensive library for voice processing tasks, including wake word detection, voice recording, transcription, and text-to-speech capabilities. It is designed to facilitate the development of voice-activated applications.
+ VoiceProcessingToolkit is a comprehensive Python library designed for a wide range of voice processing tasks. It provides robust tools for wake word detection, high-quality voice recording, accurate speech-to-text transcription, and customizable text-to-speech synthesis. This toolkit simplifies the development of voice-activated applications and services.
 
  ## Features
  - Wake word detection using state-of-the-art models.
@@ -12,7 +12,7 @@
  ## Installation
  To install VoiceProcessingToolkit, run the following command:
  ```bash
- pip install VoiceProcessingToolkit
+ pip install voice-processing-toolkit
  ```
 
  ## Usage
@@ -25,6 +25,8 @@
  ```
 
  The `VoiceProcessingManager` class provides a high-level interface for managing the voice processing pipeline. It can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection.
+
+ The `VoiceProcessingManager` class is the central component of the toolkit, orchestrating the voice processing workflow. It is highly configurable, allowing you to tailor the behavior to your specific needs.
 
  Attributes of `VoiceProcessingManager` include:
  - `wake_word`: The wake word for triggering voice recording.
@@ -41,13 +43,20 @@
  - `setup()`: Initializes the components of the voice processing manager.
  - `process_voice_command()`: Processes a voice command using the configured components.
 
+ ## Getting Started
+ To get started with VoiceProcessingToolkit, please refer to the [documentation](https://github.com/your-github/VoiceProcessingToolkit/wiki). The documentation provides detailed instructions on configuration, usage examples, and customization options.
+
+
  ## Configuration
  The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. Refer to the documentation for detailed configuration options.
 
  ## Contributing
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
 
- ## License
+ ## Support
+If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/your-github/VoiceProcessingToolkit/issues).
+
+## License
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
 
  ## Acknowledgments
