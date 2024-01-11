@@ -20,6 +20,9 @@ class ThreadManager:
         shutdown_flag.set()
         self.join_all()
         self.shutdown_requested = True
+        # Close the audio stream if it has been initialized
+        if hasattr(self, 'audio_stream_manager') and self.audio_stream_manager:
+            self.audio_stream_manager.cleanup()
 
 
 
