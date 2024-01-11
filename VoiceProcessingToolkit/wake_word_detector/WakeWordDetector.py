@@ -45,7 +45,7 @@ import pyaudio
 from dotenv import load_dotenv
 
 from shared_resources import shutdown_flag
-from wake_word_detector.AudioStreamManager import AudioStream
+from .AudioStreamManager import AudioStream
 from wake_word_detector.NotificationSoundManager import NotificationSoundManager
 from wake_word_detector.ActionManager import ActionManager
 
