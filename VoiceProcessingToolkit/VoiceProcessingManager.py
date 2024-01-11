@@ -114,6 +114,7 @@ class VoiceProcessingManager:
                 min_recording_length (int): Minimum length of a valid recording.
                 buffer_length (int): Length of the audio buffer.
                 use_wake_word (bool): Flag to use wake word detection.
+                save_wake_word_recordings (bool): Flag to save wake word recordings.
 
             Dependencies:
                 audio_stream_manager (AudioStream): Manages the audio stream.
@@ -162,8 +163,8 @@ class VoiceProcessingManager:
         self.inactivity_limit = inactivity_limit
         self.min_recording_length = min_recording_length
         self.buffer_length = buffer_length
-        self.use_wake_word = use_wake_word  # Initialize use_wake_word here
-        self.save_wake_word_recordings = save_wake_word_recordings  # New parameter to control saving wake word recordings
+        self.use_wake_word = use_wake_word
+        self.save_wake_word_recordings = save_wake_word_recordings
 
         self.transcriber = transcriber
         self.action_manager = action_manager
@@ -289,8 +290,7 @@ class VoiceProcessingManager:
                 action_manager=self.action_manager,
                 audio_stream_manager=self.audio_stream_manager,
                 play_notification_sound=True,
-                save_audio_directory=self.output_directory if self.save_wake_word_recordings else None
-                play_notification_sound=True
+                save_audio_directory=self.output_directory if self.save_wake_word_recordings else None,
             )
         # Initialize VoiceRecorder
         self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
