@@ -182,7 +182,6 @@ class VoiceProcessingManager:
     def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
-                                buffer_length=2, use_wake_word=True, save_wake_word_recordings=False):
                                 buffer_length=2, use_wake_word=True, save_wake_word_recordings=False,
                                 use_notification_sound=False):
         """
@@ -219,7 +218,6 @@ class VoiceProcessingManager:
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
                    save_wake_word_recordings=save_wake_word_recordings or False,
                    use_notification_sound=use_notification_sound or False)
-                   save_wake_word_recordings=save_wake_word_recordings or False)
 
     def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
         """
