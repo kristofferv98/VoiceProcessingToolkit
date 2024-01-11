@@ -14,7 +14,13 @@ class ThreadManager:
     def join_all(self):
         for thread in self.threads:
             if thread.is_alive():
-                thread.join()
+                try:
+                    thread.join()
+                except KeyboardInterrupt:
+                    # If a KeyboardInterrupt occurs while joining, we set the shutdown flag
+                    shutdown_flag.set()
+                    # And re-raise the exception to handle it in the outer scope
+                    raise
 
     def shutdown(self):
         shutdown_flag.set()
