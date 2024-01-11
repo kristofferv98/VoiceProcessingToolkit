@@ -90,7 +90,10 @@ class VoiceProcessingManager:
                  output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, buffer_length=2,
-                 use_wake_word=True, save_wake_word_recordings=False):
+                 use_wake_word=True, save_wake_word_recordings=False, use_notification_sound=True):
+        """
+        use_notification_sound (bool): If True, plays a notification sound when the wake word is detected.
+        """
         """
 
         Initializes the voice processing manager with the given configuration.
@@ -203,6 +206,7 @@ class VoiceProcessingManager:
             use_wake_word (bool): Flag to use wake word detection.
             save_wake_word_recordings (bool): Flag to save the audio buffer that triggered the wake word detection.
             use_notification_sound (bool): Flag to use a notification sound when the wake word is detected.
+            use_notification_sound (bool): Flag to use a notification sound when the wake word is detected.
 
         Returns:
             VoiceProcessingManager: An instance of VoiceProcessingManager with default settings and dependencies.
@@ -296,7 +300,7 @@ class VoiceProcessingManager:
                 sensitivity=self.sensitivity,
                 action_manager=self.action_manager,
                 audio_stream_manager=self.audio_stream_manager,
-                play_notification_sound=True,
+                play_notification_sound=self.use_notification_sound,
                 save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None,
             )
         # Initialize VoiceRecorder
@@ -370,4 +374,3 @@ if __name__ == '__main__':
 
     simple_vpm.run(tts=True, streaming=True)
     thread_manager.shutdown()
-
