@@ -289,10 +289,14 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         logger.info("VoiceProcessingManager run method called.")
-        if transcription is False and self.use_wake_word:
-            self.wake_word_detector.run_blocking()
-            return None
         try:
+            if transcription is False and self.use_wake_word:
+                self.wake_word_detector.run_blocking()
+                # Ensure notification sound is played if enabled
+                if self.play_notification_sound:
+                    self.wake_word_detector._notification_sound_manager.play()
+                thread_manager.shutdown()
+                return None
             transcription = None
             if self.use_wake_word:
                 # Initiate wake word detection and block until it completes
@@ -332,7 +336,6 @@ class VoiceProcessingManager:
             logger.info("KeyboardInterrupt received, performing cleanup.")
 
         finally:
-            thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
 
     def setup(self):

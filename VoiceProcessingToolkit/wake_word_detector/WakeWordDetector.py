@@ -174,9 +174,7 @@ class WakeWordDetector:
         action_thread.start()
         # Play the notification sound in a non-blocking manner
         if self._play_notification_sound:
-            sound_thread = threading.Thread(target=self._notification_sound_manager.play)
-            sound_thread.start()
-            sound_thread.join()  # Wait for the notification sound to finish playing
+            self._notification_sound_manager.play()
             self._stop_event.set()  # Signal to stop the detection loop
         else:
             self._stop_event.set()
