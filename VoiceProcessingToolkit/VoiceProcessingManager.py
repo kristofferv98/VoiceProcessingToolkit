@@ -93,7 +93,7 @@ class VoiceProcessingManager:
                  use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
         """
 
-        Initializes the voice processing manager with the given configuration.
+        Constructs a VoiceProcessingManager with the specified configuration and components.
 
         Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
@@ -176,7 +176,11 @@ class VoiceProcessingManager:
         self.wake_word_detector = None
         self.voice_recorder = None
 
-        self.setup()
+        try:
+            self.setup()
+        except Exception as e:
+            logger.error("Failed to set up VoiceProcessingManager: %s", e)
+            raise
         self.recorded_file = None
 
     @classmethod
@@ -258,7 +262,8 @@ class VoiceProcessingManager:
 
     def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
         """
-        The main entry point for the VoiceProcessingManager. It processes a voice command after wake word detection.
+        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
+
         Optionally performs text-to-speech on the transcription and can stream the synthesized speech. It also allows
         for passing an optional API key and voice ID for text-to-speech customization.
 
@@ -275,7 +280,7 @@ class VoiceProcessingManager:
         try:
             transcription = None
             if self.use_wake_word:
-                # Start wake word detection and wait for it to finish
+                # Initiate wake word detection and block until it completes
                 self.wake_word_detector.run_blocking()
 
             # Once wake word is detected, start recording
@@ -305,7 +310,7 @@ class VoiceProcessingManager:
             return transcription
 
         except Exception as e:
-            logger.exception(f"An error occurred during voice processing: {e}")
+            logger.error("An error occurred during voice processing: %s", e)
             raise
 
         except KeyboardInterrupt:
@@ -402,4 +407,3 @@ if __name__ == '__main__':
 
     simple_vpm.run(tts=True, streaming=True)
     thread_manager.shutdown()
-
