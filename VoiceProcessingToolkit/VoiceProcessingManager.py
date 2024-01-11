@@ -169,7 +169,6 @@ class VoiceProcessingManager:
         self.use_wake_word = use_wake_word
         self.save_wake_word_recordings = save_wake_word_recordings
         self.play_notification_sound = play_notification_sound
-        self.notification_sound_manager = NotificationSoundManager() if self.play_notification_sound else None
 
         self.transcriber = transcriber
         self.action_manager = action_manager
@@ -303,8 +302,6 @@ class VoiceProcessingManager:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
         finally:
-            if self.play_notification_sound and self.notification_sound_manager:
-                self.notification_sound_manager.cleanup()
             thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
 
