@@ -21,7 +21,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     package_dir={"": "."},
-    packages=find_packages(),
+    packages=find_packages(where="."),
     package_data={"VoiceProcessingToolkit": ["*.py"]},
     python_requires=">=3.6",
     install_requires=[
