@@ -178,7 +178,7 @@ class VoiceProcessingManager:
     @classmethod
     def create_default_instance(cls, wake_word='jarvis', sensitivity=0.5, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                                voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
+                                voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3, 
                                 buffer_length=2, use_wake_word=True):
         """
         Factory method to create a default instance of VoiceProcessingManager with pre-configured dependencies.
