@@ -93,7 +93,35 @@ class VoiceProcessingManager:
                  use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
         """
 
-        Constructs a VoiceProcessingManager with the specified configuration and components.
+        Initializes the VoiceProcessingManager with the specified configuration and components.
+
+        The manager orchestrates the voice processing workflow, including wake word detection, voice recording,
+        and transcription. It ensures that each component works together to process voice commands effectively.
+
+        Args:
+            transcriber (WhisperTranscriber): The component responsible for transcribing audio to text.
+            action_manager (ActionManager): The component that manages actions triggered by voice commands.
+            audio_stream_manager (AudioStream): The component that manages the audio stream.
+            wake_word (str): The wake word to trigger voice recording.
+            sensitivity (float): The sensitivity for wake word detection.
+            output_directory (str): The directory to save recorded audio files.
+            wake_word_output (str): The directory to save audio that triggered wake word detection.
+            audio_format (int): The audio format for recording (e.g., pyaudio.paInt16).
+            channels (int): The number of audio channels.
+            rate (int): The sample rate of the audio stream.
+            frames_per_buffer (int): The number of audio frames per buffer.
+            voice_threshold (float): The threshold for voice activity detection.
+            silence_limit (int): The duration of silence before stopping the recording.
+            inactivity_limit (int): The duration of inactivity before stopping the recording.
+            min_recording_length (int): The minimum length of a valid recording.
+            buffer_length (int): The length of the audio buffer.
+            use_wake_word (bool): Whether to use wake word detection.
+            save_wake_word_recordings (bool): Whether to save audio that triggered wake word detection.
+            play_notification_sound (bool): Whether to play a notification sound upon wake word detection.
+
+        Raises:
+            ValueError: If any of the initialization parameters are invalid.
+        """
 
         Manages the voice processing pipeline, including wake word detection, voice recording, and transcription.
 
@@ -262,7 +290,21 @@ class VoiceProcessingManager:
 
     def run(self, tts=False, streaming=False, api_key=None, voice_id=None):
         """
-        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
+        Processes a voice command using the configured components.
+
+        This method orchestrates the workflow of detecting the wake word, recording voice, transcribing the audio,
+        and optionally performing text-to-speech on the transcription. It ensures that each step is executed
+        and handles any exceptions that may occur during the process.
+
+        Args:
+            tts (bool): Whether to perform text-to-speech on the transcription.
+            streaming (bool): Whether to use streaming text-to-speech. Only relevant if tts is True.
+            api_key (str, optional): The API key for ElevenLabs, if not provided in config.
+            voice_id (str, optional): The specific voice ID for speech synthesis.
+
+        Returns:
+            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+        """
 
         Optionally performs text-to-speech on the transcription and can stream the synthesized speech. It also allows
         for passing an optional API key and voice ID for text-to-speech customization.
@@ -310,7 +352,7 @@ class VoiceProcessingManager:
             return transcription
 
         except Exception as e:
-            logger.error("An error occurred during voice processing: %s", e)
+            logger.exception("An error occurred during voice processing.", exc_info=e)
             raise
 
         except KeyboardInterrupt:
