@@ -9,12 +9,11 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     """
-    Demonstrates the basic usage of the VoiceProcessingManager.
+    This example demonstrates the basic setup and usage of the VoiceProcessingManager.
 
-    This script initializes the VoiceProcessingManager with default settings and runs it to process a voice command.
-    It also demonstrates how to register actions with the VoiceProcessingManager that will be triggered when the
-    wake word is detected. The processed text is printed to the console. The script uses text-to-speech
-    functionality without streaming a custom voice id.
+    The script initializes the VoiceProcessingManager with default settings, registers a simple action to be
+    triggered by the wake word, and runs the manager to process voice commands. The processed text is printed
+    to the console. It showcases the use of text-to-speech functionality without streaming.
 
     Some basic voice ids can be found here:
     Adam: pNInz6obpgDQGcFmaJgB
@@ -60,12 +59,17 @@ def main():
     """
 
     # Create a VoiceProcessingManager instance with default settings
-    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True)
+    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=False)
+
+    # Register a simple action to be triggered by the wake word
+    @vpm.action_manager.register_action
+    def wake_word_action():
+        print("Wake word detected!")
 
     # Run the voice processing manager with text-to-speech but without streaming
-    text = vpm.run(tts=True, voice_id="XB0fDUnXU5powFXDhCwa", streaming=False)
+    vpm.run(tts=True, streaming=False)
 
-    print(f"Processed text: {text}")
+    # Note: The actual processing and handling of the text should be implemented within the registered actions.
 
 
 if __name__ == '__main__':
