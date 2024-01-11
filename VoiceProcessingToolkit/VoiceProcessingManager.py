@@ -291,7 +291,6 @@ class VoiceProcessingManager:
         logger.info("VoiceProcessingManager run method called.")
         if transcription is False and self.use_wake_word:
             self.wake_word_detector.run_blocking()
-
             return None
         try:
             transcription = None
