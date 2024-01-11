@@ -274,13 +274,18 @@ class VoiceProcessingManager:
         try:
             transcription = self._process_voice_command(streaming=streaming, tts=tts, api_key=api_key,
                                                         voice_id=voice_id)
-            if not tts:
-                return transcription
-            thread_manager.join_all()
+            if tts:
+                thread_manager.join_all()
             logger.info("VoiceProcessingManager setup completed successfully.")
         except Exception as e:
             logger.exception(f"An error occurred during voice processing: {e}")
             raise
+        finally:
+            if self.voice_recorder.recording_thread:
+                self.voice_recorder.recording_thread.join()
+            thread_manager.shutdown()
+            logger.info("VoiceProcessingManager cleanup completed successfully.")
+        return transcription
 
     def setup(self):
         logger.info("Setting up VoiceProcessingManager components.")
