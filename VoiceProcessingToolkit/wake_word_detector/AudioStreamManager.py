@@ -74,10 +74,9 @@ class AudioStream:
         return data
 
 
-class AudioStream:
     def cleanup(self):
         # Check if the stream has been initialized and is open before attempting to stop and close
-        if self._stream and not self._stream.is_closed():
+        if self._stream and not self._stream.is_stopped():
             if not self._stream.is_stopped():
                 self._stream.stop_stream()
             self._stream.close()
