@@ -31,7 +31,7 @@
  Attributes of `VoiceProcessingManager` include:
  - `wake_word`: The wake word for triggering voice recording.
  - `sensitivity`: Sensitivity for wake word detection.
- - `output_directory`: Directory for saving recorded audio files.
+ - `output_directory`: Directory for saving recorded audio files<.
  - `audio_format`, `channels`, `rate`, `frames_per_buffer`: Audio stream parameters.
  - `voice_threshold`, `silence_limit`, `inactivity_limit`, `min_recording_length`, `buffer_length`: Voice recording parameters.
  - `use_wake_word`: Flag to use wake word detection.
@@ -60,6 +60,3 @@ If you encounter any issues or have questions, please file an issue on the [GitH
 
 ## License
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
-
- ## Acknowledgments and References
- Special thanks to all the contributors who have helped shape this toolkit. We also acknowledge the use of open-source models and APIs that have made this toolkit possible. For a list of contributors, please see the CONTRIBUTORS.md file. For third-party licenses and references, please consult the documentation within the respective submodules.

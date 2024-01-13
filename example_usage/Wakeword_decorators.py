@@ -20,7 +20,7 @@ def main():
     """
     try:
         # Create a VoiceProcessingManager instance with default settings
-        vpm = VoiceProcessingManager.create_default_instance()
+        vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, save_wake_word_recordings=True, play_notification_sound=False)
 
         @vpm.action_manager.register_action
         def action_with_notification():

@@ -24,7 +24,7 @@ def main():
                                                                             play_notification_sound=False)
 
         # Run the wake word detector
-        wake_word_detector.run()
+        wake_word_detector.run(transcription=False)
 
     except KeyboardInterrupt:
         logging.info("Interrupted by user, shutting down.")

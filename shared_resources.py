@@ -2,6 +2,7 @@ import threading
 
 shutdown_flag = threading.Event()
 
+
 class ThreadManager:
     def __init__(self):
         self.threads = []
@@ -28,11 +29,10 @@ class ThreadManager:
         self.shutdown_requested = True
         # Additional cleanup logic can be added here if necessary
 
-
-
     def handle_keyboard_interrupt(self):
         if not self.shutdown_requested:
             print("KeyboardInterrupt detected, shutting down threads...")
             self.shutdown()
+
 
 thread_manager = ThreadManager()

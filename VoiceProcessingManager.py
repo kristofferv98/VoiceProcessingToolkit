@@ -5,11 +5,12 @@ import pyaudio
 from elevenlabs import generate, stream
 
 from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
-from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector, AudioStream
+from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
+from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, ElevenLabsConfig
-from shared_resources import thread_manager
+from VoiceProcessingToolkit.shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
             stream(audio_stream)
     except Exception as e:
         logging.exception(f"An error occurred during streaming text-to-speech: {e}")
+
 
 
 class VoiceProcessingManager:
@@ -265,7 +267,7 @@ class VoiceProcessingManager:
         logger.debug("Voice command processing completed.")
         return None
 
-    def run(self, tts=False, streaming=False, api_key=None, voice_id=None, transcription=None):
+    def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
         """
         Main method to start the voice processing workflow. It can be configured to perform different tasks based on
         the provided arguments:
@@ -289,14 +291,10 @@ class VoiceProcessingManager:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
         logger.info("VoiceProcessingManager run method called.")
+        if transcription is False and self.use_wake_word:
+            self.wake_word_detector.run_blocking()
+            return None
         try:
-            if transcription is False and self.use_wake_word:
-                self.wake_word_detector.run_blocking()
-                # Ensure notification sound is played if enabled
-                if self.play_notification_sound:
-                    self.wake_word_detector._notification_sound_manager.play()
-                thread_manager.shutdown()
-                return None
             transcription = None
             if self.use_wake_word:
                 # Initiate wake word detection and block until it completes
@@ -336,6 +334,8 @@ class VoiceProcessingManager:
             logger.info("KeyboardInterrupt received, performing cleanup.")
 
         finally:
+
+            thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
 
     def setup(self):

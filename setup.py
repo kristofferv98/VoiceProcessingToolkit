@@ -27,7 +27,6 @@ setup(
     install_requires=[
         "PyAudio~=0.2.14",
         "python-dotenv~=1.0.0",
-        "setuptools~=68.2.2",
         "openai~=1.3.7",
         "requests~=2.31.0",
         "elevenlabs~=0.2.27",

@@ -1,6 +1,4 @@
-import asyncio
 import logging
-import time
 
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 
@@ -10,14 +8,13 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     """
-    Demonstrates the basic usage of the VoiceProcessingManager.
+    Demonstrates a custom usage of the VoiceProcessingManager.
 
-    This script initializes the VoiceProcessingManager with custom recording settings and runs it to process a voice
-    command. wake word is detected. Streaming is false, which may result in a more stable performance but will
-    also increase the latency.
+    This script initializes the VoiceProcessingManager with custom recording settings and runs it without the wake word
+    detector or text-to-speech functionality. This wil result in a recording with transcription that runs until the
+    custom logic in the action manager is completed.
 
-    The processed text is printed to the console. The script uses text-to-speech
-    functionality without streaming.
+    The processed text is printed to the console.
 
     """
 
@@ -26,7 +23,7 @@ def main():
                                                          min_recording_length=3, inactivity_limit=5)
 
     # Run the voice processing manager with text-to-speech but without streaming and without wake word detection
-    text = vpm.run(tts=True, streaming=False)
+    text = vpm.run(tts=False)
 
     print(f"Processed text: {text}")
 

@@ -5,6 +5,7 @@ from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 # Basic configuration
 logging.basicConfig(level=logging.INFO)
 
+
 def main():
     """
     This example demonstrates the basic setup and usage of the VoiceProcessingManager.
@@ -57,12 +58,11 @@ def main():
     """
 
     # Create a VoiceProcessingManager instance with default settings
-    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True)
+    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=False, play_notification_sound=True)
 
     # Run the voice processing manager with text-to-speech but without streaming
-    text = vpm.run(transcription=True, tts=True, streaming=False)
+    text = vpm.run(transcription=True, tts=True)
     print(f"Processed text: {text}")
-
 
 
 if __name__ == '__main__':
