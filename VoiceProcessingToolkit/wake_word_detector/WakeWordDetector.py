@@ -107,12 +107,13 @@ class WakeWordDetector:
         """
         # Determine the path of the notification sound relative to this file's location
         self._snippet_frame_count = None
-        notification_sound_path = Path(__file__).parent / 'Wav_MP3' / 'notification.wav'
-        if not notification_sound_path.exists():
+        self.notification_sound_path = os.path.join(os.path.dirname(__file__), 'wake_word_detector',
+                                                    'Wav_MP3', 'notification.wav')
+        if not self.notification_sound_path.exists():
             raise FileNotFoundError("Notification sound file not found at expected path.")
         self._pre_buffer_time = 1  # Time in seconds to save before wake word
         self._post_buffer_time = 1.5  # Time in seconds to save after wake word
-        self._notification_sound_manager = NotificationSoundManager(str(notification_sound_path))
+        self._notification_sound_manager = NotificationSoundManager(str(self.notification_sound_path))
 
         self._action_manager = action_manager
         self._play_notification_sound = play_notification_sound
@@ -181,7 +182,6 @@ class WakeWordDetector:
             self._stop_event.set()  # Signal to stop the detection loop
         else:
             self._stop_event.set()
-
 
     def save_audio_snippet(self, pre_detection_frames: int, post_detection_frames: int):
         """
