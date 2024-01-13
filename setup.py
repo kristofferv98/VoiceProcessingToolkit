@@ -22,7 +22,7 @@ setup(
     ],
     package_dir={"": "."},
     packages=find_packages(where="."),
-    package_data={"VoiceProcessingToolkit": ["*.py"]},
+    include_package_data=True,
     python_requires=">=3.6",
     install_requires=[
         "PyAudio~=0.2.14",
