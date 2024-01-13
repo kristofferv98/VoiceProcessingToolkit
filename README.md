@@ -12,8 +12,10 @@
  ## Installation
  To install VoiceProcessingToolkit, run the following command:
  ```bash
- pip install VoiceProcessingToolkit
+ pip install git+https://github.com/your-github/VoiceProcessingToolkit.git
  ```
+
+ Note: Replace the URL with the actual repository URL if the package is not available on PyPI.
 
  ## Usage
  Here is a simple example of how to use the toolkit to detect a wake word and perform an action:
@@ -50,7 +52,7 @@
 
 
  ## Configuration
- The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. Refer to the inline documentation and example usage scripts for detailed configuration options.
+ The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation at [VoiceProcessingToolkit Documentation](https://your-github/VoiceProcessingToolkit/docs).
 
  ## Contributing
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
