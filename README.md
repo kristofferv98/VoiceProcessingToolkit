@@ -42,17 +42,16 @@
  You can also run the toolkit without any recording, and provide your own text to convert to speech:
 
  ```python
- from dotenv import load_dotenv
- from VoiceProcessingManager import text_to_speech_stream
+from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
+from dotenv import load_dotenv
 
- load_dotenv()
+load_dotenv()
 
+text = "Hello, welcome to the Voice Processing Toolkit!"
 
- text = "Hello, welcome to the Voice Processing Toolkit!"
+text = text_to_speech_stream(text=text)
 
- text = text_to_speech_stream(text=text)
-
- print(f"Processed text: {text}")
+print(f"Processed text: {text}")
  ```
 
 
