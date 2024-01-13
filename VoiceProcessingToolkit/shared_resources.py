@@ -28,6 +28,8 @@ class ThreadManager:
         if self.shutdown_requested:
             return
         shutdown_flag.set()
+        # Signal all threads to shutdown
+        shutdown_flag.set()
         self.join_all()
         self.shutdown_requested = True
         # Additional cleanup logic can be added here if necessary
