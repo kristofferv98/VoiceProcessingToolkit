@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="VoiceProcessingToolkit",
-    version="0.2.0",
+    version="0.3.0",  # Increment the version number
     author="Kristoffer Vatnehol",
     author_email="kristoffer.vatnehol@appacia.com",
     description="A comprehensive library for voice processing tasks.",
