@@ -54,7 +54,7 @@
  The toolkit includes several example scripts that demonstrate different use cases and features. You can find these examples in the `example_usage` directory:
 
  - [Simple Setup](example_usage/Simple_setup.py): Demonstrates a simple setup with default configurations.
- - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Shows how to create a dataset for wake word detection.
+ - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Demonstrate how to create a dataset for wake word detection.
  - [Wake Word Decorators](example_usage/Wakeword_decorators.py): Illustrates the use of decorators for wake word actions.
  - [Custom Recording Logic](example_usage/Custom_recording_logic.py): Provides an example of customizing the recording logic.
 

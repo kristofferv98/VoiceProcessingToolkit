@@ -19,11 +19,11 @@ def main():
     """
 
     # Create a VoiceProcessingManager instance with custom settings
-    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=False, voice_threshold=0.5, silence_limit=1,
-                                                         min_recording_length=3, inactivity_limit=5)
+    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=False, voice_threshold=0.5, silence_limit=4,
+                                                         min_recording_length=2, inactivity_limit=5)
 
     # Run the voice processing manager with text-to-speech but without streaming and without wake word detection
-    text = vpm.run(tts=False)
+    text = vpm.run(tts=False, transcription=True)
 
     print(f"Processed text: {text}")
 
