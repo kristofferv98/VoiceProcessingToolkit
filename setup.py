@@ -37,5 +37,8 @@ setup(
         "pvporcupine~=3.0.1",
         "pygame~=2.5.2",
     ],
+    package_data={
+        'VoiceProcessingToolkit': ['wake_word_detector/Wav_MP3/*.wav'],
+    },
     zip_safe=False,
 )

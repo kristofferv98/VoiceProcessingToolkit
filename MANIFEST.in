@@ -5,5 +5,5 @@ include CHANGELOG.md
 include README.md
 recursive-include VoiceProcessingToolkit *.py
 recursive-include VoiceProcessingToolkit/wake_word_detector *.py
-recursive-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3 *.wav
+recursive-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3 notification.wav
 include VoiceProcessingToolkit/wake_word_detector/Wav_MP3/notification.wav
