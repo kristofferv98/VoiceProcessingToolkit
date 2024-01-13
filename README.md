@@ -22,7 +22,7 @@
  ```python
  from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 
- voice_processing_manager = VoiceProcessingManager.create_default_instance(wake_word='jarvis')
+ voice_processing_manager = VoiceProcessingManager.create_default_instance(wake_word='computer')
  voice_processing_manager.run()
  ```
 

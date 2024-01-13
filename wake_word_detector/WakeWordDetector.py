@@ -21,7 +21,7 @@ Example:
     notification_sound_manager = NotificationSoundManager('path/to/sound.wav')
     detector = WakeWordDetector(
         access_key='your-picovoice-api-key',
-        wake_word='jarvis',
+        wake_word='computer',
         sensitivity=0.5,
         action_manager=custom_action,
         audio_stream_manager=audio_stream_manager,
@@ -244,7 +244,7 @@ def main():
     frames_per_buffer = 512
 
     # Set up the wake word parameters
-    wake_word = 'jarvis'
+    wake_word = 'computer'
     sensitivity = 0.5
     snippet_length = 3.0  # Length of the audio snippet in seconds
 

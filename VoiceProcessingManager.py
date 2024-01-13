@@ -85,7 +85,7 @@ def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
 
 
 class VoiceProcessingManager:
-    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='jarvis', sensitivity=0.75,
+    def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='computer', sensitivity=0.75,
                  output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                  voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=2, buffer_length=2,
@@ -188,7 +188,7 @@ class VoiceProcessingManager:
         self.recorded_file = None
 
     @classmethod
-    def create_default_instance(cls, wake_word='jarvis', sensitivity=0.75, output_directory='Wav_MP3',
+    def create_default_instance(cls, wake_word='cumputer', sensitivity=0.75, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
                                 voice_threshold=0.8, silence_limit=2, inactivity_limit=2, min_recording_length=3,
                                 buffer_length=2, use_wake_word=True, save_wake_word_recordings=False,
