@@ -6,19 +6,16 @@ from dotenv import load_dotenv
 from VoiceProcessingManager import text_to_speech, text_to_speech_stream, VoiceProcessingManager
 from openai import OpenAI
 
-load_dotenv()
 client = OpenAI()
 
 # os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')
 
-sessions = {}
-
 
 class ChatBot():
 
     def __init__(self, connection):
-        self.llm = LLM(connection_details)
+        self.llm = client
         self.connection = connection
         self.system_message = {"role": "system", "content": """Jarvis is designed to interpret and respond to transcribed audio, treating them as direct 
                         textual inputs during interactions. This includes instances when the user instructs Jarvis 
@@ -37,9 +34,9 @@ class ChatBot():
         self.history.append(message)
         full_chat = [self.system_message] + self.history
         answer = self.llm.prompt(full_chat).choices[0]
-        message_answer = {"role": "Assistant", "content": answer}
+        message_answer = {"role": "Assistant", "content": answer.text}
         self.history.append(message_answer)
-        self.connection.send(answer)
+        print(f"Assistant: {answer.text}")
 
 
 def on_connect(user_id, connection):
