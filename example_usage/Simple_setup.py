@@ -6,7 +6,6 @@ from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 # Basic configuration
 logging.basicConfig(level=logging.INFO)
 
-os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
 
 
 def main():
