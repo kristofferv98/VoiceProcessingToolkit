@@ -10,7 +10,7 @@ from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordD
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, ElevenLabsConfig
-from VoiceProcessingToolkit.shared_resources import thread_manager
+from shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
 

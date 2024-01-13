@@ -21,10 +21,23 @@
  ## Usage
  Here is a simple example of how to use the toolkit to detect a wake word and perform an action:
  ```python
- from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+ from VoiceProcessingManager import VoiceProcessingManager
+ import os
+ 
+ # Set environment variables for API keys
+ os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+ os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+ os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 
- voice_processing_manager = VoiceProcessingManager.create_default_instance(wake_word='computer')
- voice_processing_manager.run()
+ 
+ # Create a VoiceProcessingManager instance with default settings
+ vpm = VoiceProcessingManager.create_default_instance(wake_word='jarvis')
+
+ # Run the voice processing manager with transcription and text-to-speech
+ text = vpm.run()
+ 
+ 
+ print(f"Processed text: {text}")
  ```
 
  The `VoiceProcessingManager` class is the central component of the toolkit, orchestrating the voice processing workflow. It is highly configurable, allowing you to tailor the behavior to your specific needs. Below are some of the key attributes and methods provided by this class:

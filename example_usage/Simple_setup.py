@@ -1,12 +1,15 @@
 import logging
 import os
 
-from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+from VoiceProcessingManager import VoiceProcessingManager
 
 # Basic configuration
 logging.basicConfig(level=logging.INFO)
 
 
+os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 
 def main():
     """
@@ -60,10 +63,10 @@ def main():
     """
 
     # Create a VoiceProcessingManager instance with default settings
-    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=False, play_notification_sound=True,
+    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
                                                          wake_word='jarvis')
 
-    # Run the voice processing manager with text-to-speech but without streaming
+    # Run the voice processing manager with transcription and text-to-speech
     text = vpm.run(transcription=True, tts=True)
     print(f"Processed text: {text}")
 

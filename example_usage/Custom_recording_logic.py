@@ -1,7 +1,6 @@
 import logging
-import os
 
-from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+from VoiceProcessingManager import VoiceProcessingManager
 
 # Basic configuration
 logging.basicConfig(level=logging.INFO)

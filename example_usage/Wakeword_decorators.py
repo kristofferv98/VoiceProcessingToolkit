@@ -1,7 +1,7 @@
 import logging
 import asyncio
-import time
 import os
+import time
 
 from VoiceProcessingManager import VoiceProcessingManager
 
@@ -9,6 +9,9 @@ from VoiceProcessingManager import VoiceProcessingManager
 logging.basicConfig(level=logging.INFO)
 
 os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+
 
 def main():
     """
