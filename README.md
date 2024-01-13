@@ -65,11 +65,11 @@
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
 
  ## Support
-If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/your-github/VoiceProcessingToolkit/issues).
-
-## License
-VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
-
-## Acknowledgements
-I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
+ If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/your-github/VoiceProcessingToolkit/issues).
+ 
+ ## License
+ VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
+ 
+ ## Acknowledgements
+ I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
