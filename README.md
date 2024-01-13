@@ -20,7 +20,7 @@
 
  ## Usage
  ### Basic Example
- Here is a simple example of how to use the toolkit to detect a wake word and perform an action:
+ Here is a simple example of how to use the toolkit to detect a wake word, perform transcription to English, and speak the result with speech synthesis in English:
  ```python
  from VoiceProcessingManager import VoiceProcessingManager
  import os
@@ -35,10 +35,12 @@
  vpm = VoiceProcessingManager.create_default_instance(wake_word='jarvis')
 
  # Run the voice processing manager with transcription and text-to-speech
- text = vpm.run()
+ text, translation, speech = vpm.run()
 
 
- print(f"Processed text: {text}")
+ print(f"Original text: {text}")
+ print(f"Translated text: {translation}")
+ print(f"Speech synthesis path: {speech}")
  ```
  ### Text-to-Speech Example
 You can also run the toolkit without any recording, and provide your own text to convert to speech:
