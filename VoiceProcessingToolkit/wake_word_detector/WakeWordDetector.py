@@ -34,14 +34,12 @@ Example:
 import asyncio
 import logging
 import os
+from importlib.resources import path
 
-import pkg_resources
-from dotenv import load_dotenv
 import struct
 import threading
 import time
 import wave
-from pathlib import Path
 
 import pvporcupine
 import pyaudio
@@ -107,13 +105,10 @@ class WakeWordDetector:
         Raises:
             ValueError: If any initialization parameter is invalid.
         """
-        # Determine the path of the notification sound relative to this file's location
         self._snippet_frame_count = None
-        self. notification_sound_path = pkg_resources.resource_filename(
-                 __name__,
-                 'wake_word_detector/Wav_MP3/notification.wav')
-
-        if not self.notification_sound_path.exists():
+        with path('VoiceProcessingToolkit.wake_word_detector.Wav_MP3', 'notification.wav') as p:
+                self.notification_sound_path = str(p)
+        if not os.path.exists(self.notification_sound_path):
             raise FileNotFoundError("Notification sound file not found at expected path.")
         self._pre_buffer_time = 1  # Time in seconds to save before wake word
         self._post_buffer_time = 1.5  # Time in seconds to save after wake word
@@ -186,6 +181,7 @@ class WakeWordDetector:
             self._stop_event.set()  # Signal to stop the detection loop
         else:
             self._stop_event.set()
+
 
     def save_audio_snippet(self, pre_detection_frames: int, post_detection_frames: int):
         """
