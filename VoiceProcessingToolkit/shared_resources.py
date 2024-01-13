@@ -24,10 +24,15 @@ class ThreadManager:
                     raise
 
     def shutdown(self):
+        # Ensure that shutdown is only performed once
+        if self.shutdown_requested:
+            return
         shutdown_flag.set()
         self.join_all()
         self.shutdown_requested = True
         # Additional cleanup logic can be added here if necessary
+        # Clean up the threads list
+        self.threads = []
 
     def handle_keyboard_interrupt(self):
         if not self.shutdown_requested:

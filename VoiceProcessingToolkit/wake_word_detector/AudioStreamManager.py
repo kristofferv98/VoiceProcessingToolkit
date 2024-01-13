@@ -74,8 +74,14 @@ class AudioStream:
         return data
 
 
+class AudioStream:
     def cleanup(self):
-        if self._stream and not self._stream.is_stopped():
-            self._stream.stop_stream()
-        self._stream.close()
-        self._py_audio.terminate()
+        # Check if the stream has been initialized and is open before attempting to stop and close
+        if self._stream and not self._stream.is_closed():
+            if not self._stream.is_stopped():
+                self._stream.stop_stream()
+            self._stream.close()
+        # Check if PyAudio instance has been initialized before terminating
+        if self._py_audio:
+            self._py_audio.terminate()
+            self._py_audio = None
