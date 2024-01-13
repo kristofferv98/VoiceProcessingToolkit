@@ -50,6 +50,14 @@
  ## Getting Started
  To get started with VoiceProcessingToolkit, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
 
+ ## Example Usage
+ The toolkit includes several example scripts that demonstrate different use cases and features. You can find these examples in the `example_usage` directory:
+
+ - [Simple Setup](example_usage/Simple_setup.py): Demonstrates a simple setup with default configurations.
+ - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Shows how to create a dataset for wake word detection.
+ - [Wake Word Decorators](example_usage/Wakeword_decorators.py): Illustrates the use of decorators for wake word actions.
+ - [Custom Recording Logic](example_usage/Custom_recording_logic.py): Provides an example of customizing the recording logic.
+
 
  ## Configuration
  The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation in the example_usage folder.
