@@ -52,7 +52,7 @@
 
 
  ## Configuration
- The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation at [VoiceProcessingToolkit Documentation](https://your-github/VoiceProcessingToolkit/docs).
+ The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation in the example_usage folder.
 
  ## Contributing
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
