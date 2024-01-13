@@ -1,24 +1,25 @@
  # VoiceProcessingToolkit
 
  ## Introduction
- VoiceProcessingToolkit is a comprehensive Python library designed for a wide range of voice processing tasks, including wake word detection, voice recording, speech-to-text transcription, and text-to-speech synthesis. It aims to simplify the development of voice-activated applications and services by providing robust and easy-to-use tools.
+ VoiceProcessingToolkit is a comprehensive Python library for voice processing tasks such as wake word detection, transcription, and synthesis, simplifying the development of voice-activated applications.
 
  ## Features
- - Wake word detection using Picovoice Porcupine for reliable voice activation.
- - Voice recording with adjustable settings for voice activity detection to ensure high-quality audio capture.
- - Speech-to-text transcription leveraging OpenAI's Whisper model for accurate and fast conversion of speech into text.
- - Text-to-speech synthesis utilizing ElevenLabs' API, offering a wide range of customizable voices and languages.
- - Environment variable configuration for API keys to ensure secure and flexible integration with third-party services.
- - Example usage scripts provided to demonstrate the toolkit's capabilities and ease of use.
- - Extensible architecture allowing for the addition of new features and customization to fit specific use cases.
+ + Wake word detection using Picovoice Porcupine.
+ + High-quality voice recording with adjustable settings.
+ + Fast and accurate speech-to-text transcription with OpenAI's Whisper.
+ + Customizable text-to-speech synthesis via ElevenLabs' API.
+ + Secure API key management with environment variables.
+ + Example scripts for easy demonstration and usage.
+ + Extensible architecture for feature additions and customization.
 
  ## Installation
- To install VoiceProcessingToolkit, run the following command:
+ The VoiceProcessingToolkit is available on PyPI. To install, run the following command:
  ```bash
  pip install VoiceProcessingToolkit
  ```
 
  ## Usage
+ ### Basic Example
  Here is a simple example of how to use the toolkit to detect a wake word and perform an action:
  ```python
  from VoiceProcessingManager import VoiceProcessingManager
@@ -39,7 +40,8 @@
 
  print(f"Processed text: {text}")
  ```
- You can also run the toolkit without any recording, and provide your own text to convert to speech:
+ ### Text-to-Speech Example
+You can also run the toolkit without any recording, and provide your own text to convert to speech:
 
  ```python
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
@@ -88,7 +90,7 @@ print(f"Processed text: {text}")
 
 
  ## Configuration
- The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation in the example_usage folder.
+ The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please refer to the inline documentation and example scripts.
 
  ## Contributing
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
@@ -97,8 +99,7 @@ print(f"Processed text: {text}")
  If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
 
  ## License
- VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
+ VoiceProcessingToolkit is licensed under the MIT License as detailed in the LICENSE file.
 
  ## Acknowledgements
- I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
- VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
+ Special thanks to OpenAI, ElevenLabs, and Picovoice for their tools that significantly contributed to this project.
