@@ -23,20 +23,20 @@
  ```python
  from VoiceProcessingManager import VoiceProcessingManager
  import os
- 
+
  # Set environment variables for API keys
  os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
  os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
  os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 
- 
+
  # Create a VoiceProcessingManager instance with default settings
  vpm = VoiceProcessingManager.create_default_instance(wake_word='jarvis')
 
  # Run the voice processing manager with transcription and text-to-speech
  text = vpm.run()
- 
- 
+
+
  print(f"Processed text: {text}")
  ```
  You can also run the toolkit without any recording, and provide your own text to convert to speech:
@@ -44,12 +44,12 @@
  ```python
  from dotenv import load_dotenv
  from VoiceProcessingManager import text_to_speech_stream
- 
+
  load_dotenv()
- 
- 
+
+
  text = "Hello, welcome to the Voice Processing Toolkit!"
- 
+
  text = text_to_speech_stream(text=text)
 
  print(f"Processed text: {text}")
@@ -81,10 +81,11 @@
  ## Example Usage
  The toolkit includes several example scripts that demonstrate different use cases and features. You can find these examples in the `example_usage` directory:
 
- - [Simple Setup](example_usage/Simple_setup.py): Demonstrates a simple setup with default configurations.
- - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Demonstrate how to create a dataset for wake word detection.
- - [Wake Word Decorators](example_usage/Wakeword_decorators.py): Illustrates the use of decorators for wake word actions.
- - [Custom Recording Logic](example_usage/Custom_recording_logic.py): Provides an example of customizing the recording logic.
+ - [Simple Setup](example_usage/Simple_setup.py): Demonstrates the basic setup and usage of the VoiceProcessingManager.
+ - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Demonstrates how to create a wake word dataset using the VoiceProcessingManager.
+ - [Wake Word Decorators](example_usage/Wakeword_decorators.py): Demonstrates how to register actions with the VoiceProcessingManager that will be triggered when the wake word is detected.
+ - [Custom Recording Logic](example_usage/Custom_recording_logic.py): Demonstrates custom recording settings and runs the VoiceProcessingManager without the wake word detector.
+ - [Text to Speech](example_usage/Text_to_speach.py): Demonstrates the text to speech functionality with text as input using the VoiceProcessingManager.
 
 
  ## Configuration
@@ -95,10 +96,10 @@
 
  ## Support
  If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/your-github/VoiceProcessingToolkit/issues).
- 
+
  ## License
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
- 
+
  ## Acknowledgements
  I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
