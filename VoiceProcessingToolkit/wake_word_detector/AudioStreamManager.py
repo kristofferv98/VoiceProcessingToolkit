@@ -84,3 +84,4 @@ class AudioStream:
         if self._py_audio:
             self._py_audio.terminate()
             self._py_audio = None
+

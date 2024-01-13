@@ -61,7 +61,6 @@ def main():
     Thomas: GBv7mTt0atIp3Br8iCZE
 
     """
-
     # Create a VoiceProcessingManager instance with default settings
     vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
                                                          wake_word='jarvis')
