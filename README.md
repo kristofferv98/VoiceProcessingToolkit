@@ -62,5 +62,5 @@ If you encounter any issues or have questions, please file an issue on the [GitH
 VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
 
 ## Acknowledgements
-We would like to extend our gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of VoiceProcessingToolkit.
+I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
