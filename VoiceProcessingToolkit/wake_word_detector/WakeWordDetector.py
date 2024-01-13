@@ -34,6 +34,8 @@ Example:
 import asyncio
 import logging
 import os
+
+import pkg_resources
 from dotenv import load_dotenv
 import struct
 import threading
@@ -107,8 +109,10 @@ class WakeWordDetector:
         """
         # Determine the path of the notification sound relative to this file's location
         self._snippet_frame_count = None
-        self.notification_sound_path = os.path.join(os.path.dirname(__file__), 'wake_word_detector',
-                                                    'Wav_MP3', 'notification.wav')
+        self. notification_sound_path = pkg_resources.resource_filename(
+                 __name__,
+                 'wake_word_detector/Wav_MP3/notification.wav')
+
         if not self.notification_sound_path.exists():
             raise FileNotFoundError("Notification sound file not found at expected path.")
         self._pre_buffer_time = 1  # Time in seconds to save before wake word
