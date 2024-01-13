@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="VoiceProcessingToolkit",
-    version="0.1.3",
+    version="0.1.4",
     author="Kristoffer Vatnehol",
     author_email="kristoffer.vatnehol@appacia.com",
     description="A comprehensive library for voice processing tasks such as wake word detection, speech recognition, "
