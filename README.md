@@ -60,15 +60,6 @@
  ## Configuration
  The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation in the example_usage folder.
 
- ## Environment Variables
- The VoiceProcessingToolkit requires setting up several environment variables to function properly:
-
- - `PICOVOICE_APIKEY`: Your Picovoice API key, used for wake word detection.
- - `OPENAI_API_KEY`: Your OpenAI API key, used for speech-to-text transcription with Whisper.
- - `ELEVENLABS_API_KEY`: Your ElevenLabs API key, used for text-to-speech synthesis.
-
- These keys are necessary for accessing the respective services and must be set in your environment or passed directly to the toolkit's configuration. Ensure that you keep these keys secure and do not expose them in public repositories or shared spaces.
-
  ## Contributing
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
 
