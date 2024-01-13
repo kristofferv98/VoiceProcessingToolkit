@@ -1,23 +1,17 @@
-import logging
-import os
 
-from dotenv import load_dotenv
 
-from VoiceProcessingManager import text_to_speech, text_to_speech_stream, VoiceProcessingManager
+from VoiceProcessingManager import VoiceProcessingManager
 from openai import OpenAI
 
-client = OpenAI()
 
-# os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
-elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')
 
 
 class ChatBot():
 
     def __init__(self, connection):
-        self.llm = client
+        self.llm = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         self.connection = connection
-        self.system_message = {"role": "system", "content": """Jarvis is designed to interpret and respond to transcribed audio, treating them as direct 
+        self.system_message = {"role": "system", "content": "Jarvis is designed to interpret and respond to transcribed audio, treating them as direct 
                         textual inputs during interactions. This includes instances when the user instructs Jarvis 
                         to 'listen to' or similar phrases. The subsequent text provided by user will be treated 
                         as transcribed audio. In order to maintain the illusion of a voice-based assistant, 
@@ -40,7 +34,10 @@ class ChatBot():
 
 
 def on_connect(user_id, connection):
-    sessions[user_id] = Chatbot(connection)
+    global sessions
+    if 'sessions' not in globals():
+        sessions = {}
+    sessions[user_id] = ChatBot(connection)
 
 
 def on_message(user_id, query):
@@ -49,6 +46,8 @@ def on_message(user_id, query):
 
 def main():
 
+    global sessions
+    sessions = {}
 
     # Create a VoiceProcessingManager instance with default settings
     vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
@@ -57,13 +56,16 @@ def main():
     while:
         try:
             # Run the voice processing manager with transcription and text-to-speech
-            transcription = vpm.run(transcription=True, tts=True)
+            transcription = vpm.run(transcription=True)
 
             # Send the transcription to the chatbot
-            chatbot = ChatBot(transcription)
-            chatbot.ask(transcription)
+            user_id = 'default_user'  # This should be replaced with actual user identification logic
+            if user_id not in sessions:
+                on_connect(user_id, None)
+            sessions[user_id].ask(transcription)
 
-            text = text_to_speech_stream(text=transcription)
+            # Assuming the text_to_speech functionality is part of the VoiceProcessingManager
+            vpm.text_to_speech(text=transcription)
 
             print(text)
 
