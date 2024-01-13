@@ -8,7 +8,8 @@ setup(
     version="0.1.1",
     author="Kristoffer Vatnehol",
     author_email="kristoffer.vatnehol@appacia.com",
-    description="A comprehensive library for voice processing tasks.",
+    description="A comprehensive library for voice processing tasks such as wake word detection, speech recognition, "
+                "translation, and text-to-speech.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kristofferv98/VoiceProcessingToolkit.git",

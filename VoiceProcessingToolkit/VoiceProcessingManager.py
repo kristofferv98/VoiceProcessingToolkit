@@ -14,6 +14,25 @@ from shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
 
+def tts(text, voice_id=None, api_key=None):
+    """
+    Converts text to speech using the ElevenLabs API.
+
+    This function synthesizes speech from the given text using ElevenLabs' text-to-speech technology. It handles
+    the creation of an ElevenLabsTextToSpeech object and manages the API key retrieval from the environment
+    variable or the provided parameter.
+
+    Args:
+        text (str): Text to be converted to speech.
+        voice_id (str, optional): Specific voice ID for speech synthesis.
+        api_key (str, optional): API key for ElevenLabs, if not provided in config.
+
+    Returns:
+        str or None: File path to the saved audio file, or None if synthesis fails.
+    """
+    config = ElevenLabsConfig(voice_id=voice_id, api_key=api_key or None)
+    tts = ElevenLabsTextToSpeech(config=config, voice_id=voice_id)
+    return tts.synthesize_speech(text)
 
 def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
     """

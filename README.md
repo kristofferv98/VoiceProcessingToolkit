@@ -39,6 +39,22 @@
  
  print(f"Processed text: {text}")
  ```
+ You can also run the toolkit without any recording, and provide your own text to convert to speech:
+
+ ```python
+ from dotenv import load_dotenv
+ from VoiceProcessingManager import text_to_speech_stream
+ 
+ load_dotenv()
+ 
+ 
+ text = "Hello, welcome to the Voice Processing Toolkit!"
+ 
+ text = text_to_speech_stream(text=text)
+
+ print(f"Processed text: {text}")
+ ```
+
 
  The `VoiceProcessingManager` class is the central component of the toolkit, orchestrating the voice processing workflow. It is highly configurable, allowing you to tailor the behavior to your specific needs. Below are some of the key attributes and methods provided by this class:
 
