@@ -94,7 +94,7 @@ print(f"Processed text: {text}")
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
 
  ## Support
- If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/your-github/VoiceProcessingToolkit/issues).
+ If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
 
  ## License
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
