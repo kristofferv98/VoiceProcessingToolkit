@@ -7,3 +7,4 @@ numpy~=1.26.2
 pvcobra~=2.0.1
 pvporcupine~=3.0.1
 pygame~=2.5.2
+python-dotenv~=1.0.0
