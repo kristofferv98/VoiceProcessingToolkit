@@ -34,6 +34,7 @@ Example:
 import asyncio
 import logging
 import os
+from dotenv import load_dotenv
 import struct
 import threading
 import time
@@ -233,6 +234,7 @@ class WakeWordDetector:
 def main():
     logging.basicConfig(level=logging.DEBUG)
 
+    load_dotenv()
     load_dotenv()
     # Set up the access key for Porcupine
     access_key = os.getenv('PICOVOICE_APIKEY')

@@ -5,6 +5,10 @@ import os
 
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 
+os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+
 # Basic configuration
 logging.basicConfig(level=logging.INFO)
 

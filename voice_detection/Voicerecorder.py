@@ -2,6 +2,7 @@
 import collections
 import logging
 import os
+from dotenv import load_dotenv
 import wave
 import time
 import threading
@@ -312,6 +313,7 @@ class AudioRecorder:
 if __name__ == '__main__':
     # Set up logging
     logging.basicConfig(level=logging.INFO)
+    load_dotenv()
 
     # Set up the audio recorder
     recorder = AudioRecorder()

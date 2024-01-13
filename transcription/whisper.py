@@ -1,5 +1,6 @@
 import logging
 import os
+from dotenv import load_dotenv
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ class WhisperTranscriber:
 
     def __init__(self):
         # The API key for OpenAI's Whisper ASR system can be set as an environment variable 'OPENAI_API_KEY'.
+        load_dotenv()
         self.client = OpenAI()
 
     def transcribe_audio(self, audio_filepath):

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from dotenv import load_dotenv
 import tempfile
 import time
 
@@ -149,4 +150,5 @@ class ElevenLabsTextToSpeech:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    load_dotenv()
 
