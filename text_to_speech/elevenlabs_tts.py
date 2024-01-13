@@ -5,8 +5,6 @@ import tempfile
 import time
 
 import pygame
-from dotenv import load_dotenv
-
 import requests
 
 # Constants
@@ -150,6 +148,5 @@ class ElevenLabsTextToSpeech:
 
 
 if __name__ == '__main__':
-    load_dotenv()
     logging.basicConfig(level=logging.DEBUG)
 

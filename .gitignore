@@ -1,6 +1,6 @@
 .aider*
 .env
-```
+.venv
 VoiceProcessingToolkit.egg-info/
 __pycache__/
 build/
@@ -11,3 +11,4 @@ voice_detection/Wav_MP3/recording.wav
 .idea/
 .vscode/
 *.swp
+```

@@ -12,10 +12,8 @@
  ## Installation
  To install VoiceProcessingToolkit, run the following command:
  ```bash
- pip install git+https://github.com/your-github/VoiceProcessingToolkit.git
+ pip install VoiceProcessingToolkit
  ```
-
- Note: Replace the URL with the actual repository URL if the package is not available on PyPI.
 
  ## Usage
  Here is a simple example of how to use the toolkit to detect a wake word and perform an action:

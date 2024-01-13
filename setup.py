@@ -11,9 +11,9 @@ setup(
     description="A comprehensive library for voice processing tasks.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-github/VoiceProcessingToolkit",
+    url="https://github.com/kristofferv98/VoiceProcessingToolkit.git",
     project_urls={
-        "Bug Tracker": "https://github.com/your-github/VoiceProcessingToolkit/issues",
+        "Bug Tracker": "https://github.com/kristofferv98/VoiceProcessingToolkit.git",
     },
     classifiers=[
         "Programming Language :: Python :: 3",

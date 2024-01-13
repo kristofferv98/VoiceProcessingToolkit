@@ -5,13 +5,11 @@ import os
 import wave
 import time
 import threading
-from dotenv import load_dotenv
 import numpy as np
 import pyaudio
 import pvcobra
 
 logger = logging.getLogger(__name__)
-load_dotenv()
 
 
 # Audio Data Provider Class

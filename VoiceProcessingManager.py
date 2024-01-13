@@ -185,7 +185,9 @@ class VoiceProcessingManager:
         except Exception as e:
             logger.error("Failed to set up VoiceProcessingManager: %s", e)
             raise
-        self.recorded_file = None
+
+        finally:
+            self.recorded_file = None
 
     @classmethod
     def create_default_instance(cls, wake_word='cumputer', sensitivity=0.75, output_directory='Wav_MP3',
