@@ -7,9 +7,9 @@ from VoiceProcessingManager import VoiceProcessingManager
 logging.basicConfig(level=logging.INFO)
 
 
-os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
-os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
-os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+#os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+#os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+#os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 
 def main():
     """
@@ -66,6 +66,7 @@ def main():
     vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
                                                          wake_word='jarvis')
 
+
     # Run the voice processing manager with transcription and text-to-speech
     text = vpm.run(transcription=True, tts=True)
     print(f"Processed text: {text}")
@@ -74,4 +75,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+        while True:
+            main()

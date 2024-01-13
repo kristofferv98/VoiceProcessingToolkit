@@ -5,7 +5,7 @@
 
  ## Features
  + Wake word detection using Picovoice Porcupine.
- + High-quality voice recording with adjustable settings.
+ + High-quality voice recording with adjustable settings for Voice Activation Detection.
  + Fast and accurate speech-to-text transcription with OpenAI's Whisper.
  + Customizable text-to-speech synthesis via ElevenLabs' API.
  + Secure API key management with environment variables.
@@ -20,7 +20,7 @@
 
  ## Usage
  ### Basic Example
- Here is a simple example of how to use the toolkit to detect a wake word, perform transcription to English, and speak the result with speech synthesis in English:
+ Here is a simple example of how to use the toolkit to detect a wake word, record and speak the result with speech synthesis in English:
  ```python
  from VoiceProcessingManager import VoiceProcessingManager
  import os
@@ -35,15 +35,14 @@
  vpm = VoiceProcessingManager.create_default_instance(wake_word='jarvis')
 
  # Run the voice processing manager with transcription and text-to-speech
- text, translation, speech = vpm.run()
+ text = vpm.run()
 
 
- print(f"Original text: {text}")
- print(f"Translated text: {translation}")
- print(f"Speech synthesis path: {speech}")
+ print(f"Processed text: {text}")
  ```
  ### Text-to-Speech Example
-You can also run the toolkit without any recording, and provide your own text to convert to speech:
+
+ You can also run the toolkit without any recording, and provide your own text to convert to speech:
 
  ```python
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
@@ -92,7 +91,7 @@ print(f"Processed text: {text}")
 
 
  ## Configuration
- The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please refer to the inline documentation and example scripts.
+ The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation in the example_usage folder.
 
  ## Contributing
  Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
@@ -101,7 +100,8 @@ print(f"Processed text: {text}")
  If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
 
  ## License
- VoiceProcessingToolkit is licensed under the MIT License as detailed in the LICENSE file.
+ VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
 
  ## Acknowledgements
- Special thanks to OpenAI, ElevenLabs, and Picovoice for their tools that significantly contributed to this project.
+ I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
+ VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.

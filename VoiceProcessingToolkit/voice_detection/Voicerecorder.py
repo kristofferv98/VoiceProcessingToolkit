@@ -91,6 +91,7 @@ class AudioRecorder:
         if self._audio_data_provider:
             self._audio_data_provider.stop_stream()
 
+
     def perform_recording(self) -> str:
         """
         Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.

@@ -286,6 +286,9 @@ class VoiceProcessingManager:
                     text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
             return transcription
         logger.debug("Voice command processing completed.")
+        #clean up
+        thread_manager.join_all()
+        thread_manager.shutdown()
         return None
 
     def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
@@ -311,61 +314,53 @@ class VoiceProcessingManager:
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
         """
-        while True:
-            logger.info("VoiceProcessingManager run method called.")
-            if transcription is False and self.use_wake_word:
+        logger.info("VoiceProcessingManager run method called.")
+        if transcription is False and self.use_wake_word:
+            self.wake_word_detector.run_blocking()
+            return None
+        try:
+            transcription = None
+            if self.use_wake_word:
+                # Initiate wake word detection and block until it completes
                 self.wake_word_detector.run_blocking()
-                return None
-            try:
-                transcription = None
-                if self.use_wake_word:
-                    # Initiate wake word detection and block until it completes
-                    self.wake_word_detector.run_blocking()
 
-                # Once wake word is detected, start recording
-                self.voice_recorder.perform_recording()
+            # Once wake word is detected, start recording
+            self.voice_recorder.perform_recording()
 
-                # Wait for the recording to complete
-                if self.voice_recorder.recording_thread:
-                    self.voice_recorder.recording_thread.join()
+            # Wait for the recording to complete
+            if self.voice_recorder.recording_thread:
+                self.voice_recorder.recording_thread.join()
 
-                # Check if a recording was made
-                if self.voice_recorder.last_saved_file:
-                    # Transcribe the recording
-                    transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-                    logger.info(f"Transcription: {transcription}")
+            # Check if a recording was made
+            if self.voice_recorder.last_saved_file:
+                # Transcribe the recording
+                transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
+                logger.info(f"Transcription: {transcription}")
 
-                    # If transcription is successful and text-to-speech is enabled, synthesize speech
-                    if transcription and tts:
-                        if streaming:
-                            text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
-                        else:
-                            text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
-                else:
-                    # If no recording was made or it was too short, log the information
-                    logger.info("Recording was not made or was too short.")
+                # If transcription is successful and text-to-speech is enabled, synthesize speech
+                if transcription and tts:
+                    if streaming:
+                        text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
+                    else:
+                        text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
+            else:
+                # If no recording was made or it was too short, log the information
+                logger.info("Recording was not made or was too short.")
 
-                # Check for a stop condition here (e.g., a specific command or signal)
-                # if stop_condition:
-                #     break
+            # Return the transcription or None if no valid recording was made
+            return transcription
 
-            except Exception as e:
-                logger.exception("An error occurred during voice processing.", exc_info=e)
-                raise
+        except Exception as e:
+            logger.exception("An error occurred during voice processing.", exc_info=e)
+            raise
 
-            except KeyboardInterrupt:
-                logger.info("KeyboardInterrupt received, performing cleanup.")
-                break
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt received, performing cleanup.")
 
-            finally:
-                # Perform necessary cleanup after each iteration
-                if self.voice_recorder:
-                    self.voice_recorder.cleanup()
-                if self.wake_word_detector:
-                    self.wake_word_detector.cleanup()
-
-        thread_manager.shutdown()
-        logger.info("VoiceProcessingManager run method completed.")
+        finally:
+            thread_manager.join_all()
+            thread_manager.shutdown()
+            logger.info("VoiceProcessingManager run method completed.")
 
     def setup(self):
         """
@@ -416,5 +411,6 @@ class VoiceProcessingManager:
             return transcription
 
         # If no recording was made, return None
+        thread_manager.join_all()
+        thread_manager.shutdown()
         return None
-

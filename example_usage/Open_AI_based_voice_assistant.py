@@ -99,14 +99,3 @@ def initiate_jarvis_loop():
     while True:
         initiate_jarvis()
 
-
-if __name__ == '__main__':
-    try:
-        initiate_jarvis_loop()
-    except KeyboardInterrupt:
-        print("Voice assistant stopped by user.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        # Perform any necessary cleanup here
-        pass
