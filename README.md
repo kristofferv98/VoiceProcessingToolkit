@@ -4,10 +4,13 @@
  VoiceProcessingToolkit is a comprehensive Python library designed for a wide range of voice processing tasks, including wake word detection, voice recording, speech-to-text transcription, and text-to-speech synthesis. It aims to simplify the development of voice-activated applications and services by providing robust and easy-to-use tools.
 
  ## Features
- - Wake word detection using state-of-the-art models provided by picovoice porcupine.
- - High-quality voice recording with voice activity detection provided by picovoice rhino .
- - Accurate transcription of speech to text.
- - Text-to-speech synthesis with customizable voices.
+ - Wake word detection using Picovoice Porcupine for reliable voice activation.
+ - Voice recording with adjustable settings for voice activity detection to ensure high-quality audio capture.
+ - Speech-to-text transcription leveraging OpenAI's Whisper model for accurate and fast conversion of speech into text.
+ - Text-to-speech synthesis utilizing ElevenLabs' API, offering a wide range of customizable voices and languages.
+ - Environment variable configuration for API keys to ensure secure and flexible integration with third-party services.
+ - Example usage scripts provided to demonstrate the toolkit's capabilities and ease of use.
+ - Extensible architecture allowing for the addition of new features and customization to fit specific use cases.
 
  ## Installation
  To install VoiceProcessingToolkit, run the following command:
