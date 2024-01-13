@@ -1,3 +1,13 @@
 .aider*
 .env
 ```
+VoiceProcessingToolkit.egg-info/
+__pycache__/
+build/
+dist/
+voice_detection/Wav_MP3/recording.wav
+*.pyc
+*.pyo
+.idea/
+.vscode/
+*.swp
