@@ -4,8 +4,8 @@
  VoiceProcessingToolkit is a comprehensive Python library designed for a wide range of voice processing tasks, including wake word detection, voice recording, speech-to-text transcription, and text-to-speech synthesis. It aims to simplify the development of voice-activated applications and services by providing robust and easy-to-use tools.
 
  ## Features
- - Wake word detection using state-of-the-art models.
- - High-quality voice recording with voice activity detection.
+ - Wake word detection using state-of-the-art models provided by picovoice porcupine.
+ - High-quality voice recording with voice activity detection provided by picovoice rhino .
  - Accurate transcription of speech to text.
  - Text-to-speech synthesis with customizable voices.
 
@@ -23,8 +23,6 @@
  voice_processing_manager = VoiceProcessingManager.create_default_instance(wake_word='computer')
  voice_processing_manager.run()
  ```
-
- The `VoiceProcessingManager` class provides a high-level interface for managing the voice processing pipeline. It can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection.
 
  The `VoiceProcessingManager` class is the central component of the toolkit, orchestrating the voice processing workflow. It is highly configurable, allowing you to tailor the behavior to your specific needs. Below are some of the key attributes and methods provided by this class:
 

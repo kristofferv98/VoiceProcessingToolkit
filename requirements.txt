@@ -5,6 +5,5 @@ requests~=2.31.0
 elevenlabs~=0.2.27
 numpy~=1.26.2
 pvcobra~=2.0.1
-pvkoala~=2.0.0
 pvporcupine~=3.0.1
 pygame~=2.5.2
