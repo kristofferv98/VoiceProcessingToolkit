@@ -45,10 +45,10 @@ import pvporcupine
 import pyaudio
 from dotenv import load_dotenv
 
-from VoiceProcessingToolkit.shared_resources import shutdown_flag
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.NotificationSoundManager import NotificationSoundManager
+from shared_resources import shutdown_flag
 
 logger = logging.getLogger(__name__)
 
