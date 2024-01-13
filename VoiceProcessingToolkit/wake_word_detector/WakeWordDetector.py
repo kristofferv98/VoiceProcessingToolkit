@@ -34,7 +34,7 @@ Example:
 import asyncio
 import logging
 import os
-from importlib.resources import path
+import importlib.resources as pkg_resources
 
 import struct
 import threading
@@ -106,8 +106,8 @@ class WakeWordDetector:
             ValueError: If any initialization parameter is invalid.
         """
         self._snippet_frame_count = None
-        with path('VoiceProcessingToolkit.wake_word_detector.Wav_MP3', 'notification.wav') as p:
-                self.notification_sound_path = str(p)
+        with pkg_resources.path('VoiceProcessingToolkit.wake_word_detector.Wav_MP3', 'notification.wav') as p:
+            self.notification_sound_path = str(p)
         if not os.path.exists(self.notification_sound_path):
             raise FileNotFoundError("Notification sound file not found at expected path.")
         self._pre_buffer_time = 1  # Time in seconds to save before wake word
