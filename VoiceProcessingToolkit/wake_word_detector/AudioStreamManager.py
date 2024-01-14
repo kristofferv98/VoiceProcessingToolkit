@@ -35,6 +35,17 @@ class AudioStream:
         """
         return bytes(self._rolling_buffer)
 
+    def is_stream_closed(self):
+        """
+        Checks if the audio stream is closed.
+
+        Returns:
+            bool: True if the stream is closed, False otherwise.
+        """
+        if self._stream:
+            return self._stream.is_stopped()
+        return True
+
     def _initialize_stream(self, rate: int, channels: int, _audio_format: int, frames_per_buffer: int):
         """
         Initializes the audio stream with the given parameters.
