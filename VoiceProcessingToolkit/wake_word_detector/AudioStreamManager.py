@@ -1,4 +1,5 @@
 import logging
+from collections import deque
 import pyaudio
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ class AudioStream:
         self._post_buffer_seconds = 1.5  # Duration to keep after wake word
         # Calculate the buffer size based on the duration and sample rate
         self._buffer_size = int(rate * self._frames_per_buffer * (self._pre_buffer_seconds + self._post_buffer_seconds))
-        self._rolling_buffer = bytearray(self._buffer_size)
+        self._rolling_buffer = deque(maxlen=self._buffer_size)
         self._stream = self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
 
 
@@ -23,10 +24,8 @@ class AudioStream:
         Args:
             data (bytes): The audio data to add to the rolling buffer.
         """
-        # Append new data to the end of the rolling buffer
-        self._rolling_buffer += data
-        # Remove the oldest data to maintain the buffer size
-        self._rolling_buffer = self._rolling_buffer[-self._buffer_size:]
+        # Extend the deque with new data, automatically discarding the oldest data if necessary
+        self._rolling_buffer.extend(data)
 
     def get_rolling_buffer(self) -> bytes:
         """
@@ -35,6 +34,7 @@ class AudioStream:
         Returns:
             bytes: The current audio data in the rolling buffer.
         """
+        # Convert the deque to bytes before returning
         return bytes(self._rolling_buffer)
 
     def is_stream_closed(self):
