@@ -1,32 +1,49 @@
 import logging
 import os
 
-import autogen
 from dotenv import load_dotenv
 from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
-from VoiceProcessingManager import text_to_speech_stream, VoiceProcessingManager
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
 
+# Configure logging
 logging.basicConfig(level=logging.INFO)
+
+# Load environment variables
 load_dotenv()
 
+# Retrieve API keys from environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
-os.getenv("ELEVENLABS_API_KEY")
-os.getenv("PICOVOICE_APIKEY")
+elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
+picovoice_api_key = os.getenv("PICOVOICE_APIKEY")
 
+# Define configuration for language models
 config_list = [
-    {
-        "model": "gpt-4-1106-preview",
-        "api_key": openai_api_key
-    },
-    {
-        "model": "gpt-3.5-turbo-1106-preview",
-        "api_key": openai_api_key
-    },
+    {"model": "gpt-4-1106-preview", "api_key": openai_api_key},
+    {"model": "gpt-3.5-turbo-1106-preview", "api_key": openai_api_key},
 ]
-llm_config = {
-    "config_list": config_list,
-    "cache_seed": 42,
-}
+llm_config = {"config_list": config_list, "cache_seed": 42}
+
+# Initialize the GPT Assistant Agent with specific instructions and configuration
+assistant = GPTAssistantAgent(
+    name="agent",
+    instructions="""...""",  # Instructions omitted for brevity
+    llm_config=llm_config
+)
+
+# Initialize the User Proxy Agent to represent the user in the conversation
+user_proxy = autogen.UserProxyAgent(
+    "user_proxy",
+    max_consecutive_auto_reply=10,
+    human_input_mode="NEVER",
+    system_message="A human admin for Jarvis",
+    is_termination_msg=lambda x: "content" in x and x["content"] is not None and x["content"].rstrip().endswith("TERMINATE" or "TERMINATE."),
+)
+
+# Function to capture user input via voice and transcribe it
+def get_user_input():
+    """
+    Captures user input via voice, transcribes it, and returns the transcription.
 
 # Create the agent that uses the LLM.
 assistant = GPTAssistantAgent(
@@ -73,16 +90,18 @@ def get_user_input():
     vpm = VoiceProcessingManager.create_default_instance(
         use_wake_word=True,
         play_notification_sound=True,
-        wake_word='jarvis',
-        min_recording_length=1
+        wake_word="jarvis",
+        min_recording_length=1,
     )
-    print("Say something to Jarvis")
+    logging.info("Say something to Jarvis")
 
-    # Run the voice processing manager with transcription and text-to-speech
-    transcription = vpm.run(transcription=True, tts=False)
-    print(f"Processed text: {transcription}")
+    # Run the voice processing manager to capture and transcribe user input
+    transcription = vpm.run(tts=False, streaming=False)
+    logging.info(f"Processed text: {transcription}")
 
     return transcription
+
+# Function to initiate a conversation with Jarvis using the transcribed user input
 
 
 def initiate_jarvis(transcription):
@@ -92,17 +111,25 @@ def initiate_jarvis(transcription):
         clear_history=False,
 
     )
+    # Retrieve the latest response from Jarvis
+    latest_message = assistant.last_message().get("content", "")
+    stripped_answer = latest_message.replace("TERMINATE", "").strip()
 
-    # Get and print the latest message
-    latest_message = assistant.last_message()["content"]
-    stipped_answer = latest_message.replace("TERMINATE", "").strip()
-    final_answer = text_to_speech_stream(text=stipped_answer)
-    print("Jarvis said: ", final_answer)
+    # Convert Jarvis's response to speech and stream it
+    text_to_speech_stream(text=stripped_answer, api_key=elevenlabs_api_key)
+    logging.info(f"Jarvis said: {stripped_answer}")
+
+# Function to continuously interact with Jarvis
+def initiate_jarvis_loop():
+    """
+    Continuously interacts with Jarvis by capturing user input, transcribing it, and obtaining responses.
 
 def initiate_jarvis_loop():
     while True:
         transcription = get_user_input()
         initiate_jarvis(transcription)
+
+# Main entry point for the script
 
 if __name__ == '__main__':
     initiate_jarvis_loop()
