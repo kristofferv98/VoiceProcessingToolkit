@@ -427,7 +427,4 @@ class VoiceProcessingManager:
             logger.info(f"Transcription: {transcription}")
             return transcription
 
-        # If no recording was made, return None
-        thread_manager.join_all()
-        thread_manager.shutdown()
         return None
