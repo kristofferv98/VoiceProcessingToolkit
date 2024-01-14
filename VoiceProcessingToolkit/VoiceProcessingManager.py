@@ -311,14 +311,21 @@ class VoiceProcessingManager:
         Returns:
             bool: True if the stream is closed, False otherwise.
         """
-        return self.audio_stream_manager.is_stream_closed()
+        try:
+            return self.audio_stream_manager.is_stream_closed()
+        except Exception as e:
+            logger.error("Error checking if stream is closed: %s", e)
+            return True
 
     def reinitialize_stream(self):
         """
         Reinitializes the audio stream if it has been closed.
         """
-        if self.is_stream_closed():
-            self.audio_stream_manager.initialize_stream(self.rate, self.channels, self.audio_format, self.frames_per_buffer)
+        try:
+            if self.is_stream_closed():
+                self.audio_stream_manager._initialize_stream(self.rate, self.channels, self.audio_format, self.frames_per_buffer)
+        except Exception as e:
+            logger.error("Error reinitializing stream: %s", e)
 
     def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
         """
