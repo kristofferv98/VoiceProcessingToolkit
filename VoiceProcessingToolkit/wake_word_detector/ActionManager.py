@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from VoiceProcessingToolkit.shared_resources import shutdown_flag
 
 
 class ActionManager:
