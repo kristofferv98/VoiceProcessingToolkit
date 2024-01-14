@@ -231,10 +231,10 @@ class VoiceProcessingManager:
             rate (int): Sample rate of the audio stream.
             frames_per_buffer (int): Number of audio frames per buffer.
             voice_threshold (float): Threshold for voice activity detection.
-            silence_limit (int): Duration of silence before stopping the recording.
-            inactivity_limit (int): Duration of inactivity before stopping the recording.
-            min_recording_length (int): Minimum length of a valid recording.
-            buffer_length (int): Length of the audio buffer.
+            silence_limit (float): Duration of silence before stopping the recording.
+            inactivity_limit (float): Duration of inactivity before stopping the recording.
+            min_recording_length (float): Minimum length of a valid recording.
+            buffer_length (float): Length of the audio buffer.
             use_wake_word (bool): Flag to use wake word detection.
             save_wake_word_recordings (bool): Flag to save the audio buffer that triggered the wake word detection.
 

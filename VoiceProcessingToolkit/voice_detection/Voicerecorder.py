@@ -53,9 +53,9 @@ class AudioRecorder:
             output_directory (str): The directory where recordings will be saved.
             access_key (str): The access key for the Cobra VAD engine.
             voice_threshold (float): The threshold for voice detection.
-            inactivity_limit (int): The number of seconds of inactivity before stopping the recording.
-            min_recording_length (int): The minimum length of a valid recording.
-            buffer_length (int): The length of the audio buffer.
+            inactivity_limit (float): The number of seconds of inactivity before stopping the recording.
+            min_recording_length (float): The minimum length of a valid recording.
+            buffer_length (float): The length of the audio buffer.
         """
         self.SILENCE_LIMIT = None
         self.last_saved_file = None
