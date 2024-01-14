@@ -304,6 +304,22 @@ class VoiceProcessingManager:
         except KeyboardInterrupt:
             logger.info("Thread monitoring interrupted by user.")
 
+    def is_stream_closed(self):
+        """
+        Checks if the audio stream is closed.
+
+        Returns:
+            bool: True if the stream is closed, False otherwise.
+        """
+        return self.audio_stream_manager.is_stream_closed()
+
+    def reinitialize_stream(self):
+        """
+        Reinitializes the audio stream if it has been closed.
+        """
+        if self.is_stream_closed():
+            self.audio_stream_manager.initialize_stream(self.rate, self.channels, self.audio_format, self.frames_per_buffer)
+
     def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
         """
         Main method to start the voice processing workflow. It can be configured to perform different tasks based on
@@ -334,6 +350,7 @@ class VoiceProcessingManager:
             return None
         try:
             transcription = None
+            self.reinitialize_stream()
             if self.use_wake_word:
                 # Initiate wake word detection and block until it completes
                 self.wake_word_detector.run_blocking()

@@ -74,12 +74,35 @@ class AudioStream:
         return data
 
 
+    def is_stream_closed(self):
+        """
+        Checks if the audio stream is closed.
+
+        Returns:
+            bool: True if the stream is closed, False otherwise.
+        """
+        return self._stream is None or self._stream.is_stopped()
+
+    def initialize_stream(self, rate, channels, _audio_format, frames_per_buffer):
+        """
+        Initializes the audio stream with the given parameters.
+
+        Args:
+            rate (int): Sample rate of the audio stream.
+            channels (int): Number of audio channels.
+            _audio_format (int): Format of the audio stream.
+            frames_per_buffer (int): Number of audio frames per buffer.
+        """
+        self.cleanup()  # Ensure any existing stream is cleaned up before initializing a new one
+        self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
+
     def cleanup(self):
         # Check if the stream has been initialized and is open before attempting to stop and close
         if self._stream and not self._stream.is_stopped():
             if not self._stream.is_stopped():
                 self._stream.stop_stream()
             self._stream.close()
+        self._stream = None
         # Check if PyAudio instance has been initialized before terminating
         if self._py_audio:
             self._py_audio.terminate()
