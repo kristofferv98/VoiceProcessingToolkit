@@ -8,7 +8,6 @@
 3. [Installation](#installation)
 4. [Usage](#usage)
    - [Basic Example](#basic-example)
-   - [Advanced Examples](#advanced-examples)
 5. [Configuration](#configuration)
 6. [Example Usage](#example-usage)
 7. [Contributing](#contributing)
@@ -152,6 +151,7 @@ text_to_speech_stream(text=text)
 
  ### Acknowledgements
  Thanks to OpenAI, ElevenLabs, and Picovoice for their tools that enhance this project.
+
  ### Contact Information
 For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).
 
