@@ -167,15 +167,15 @@ class VoiceProcessingManager:
             raise ValueError("Channels must be a positive integer")
         if not (isinstance(frames_per_buffer, int) and frames_per_buffer > 0):
             raise ValueError("Frames per buffer must be a positive integer")
-        if not (voice_threshold > 0):
+        if not (voice_threshold > 0.0):
             raise ValueError("Voice threshold must be a positive number")
-        if not (silence_limit > 0):
+        if not (silence_limit > 0.0):
             raise ValueError("Silence limit must be a positive number")
-        if not (inactivity_limit > 0):
+        if not (inactivity_limit > 0.0):
             raise ValueError("Inactivity limit must be a positive number")
-        if not (min_recording_length > 0):
+        if not (min_recording_length > 0.0):
             raise ValueError("Minimum recording length must be a positive number")
-        if not (buffer_length > 0):
+        if not (buffer_length > 0.0):
             raise ValueError("Buffer length must be a positive number")
 
         self.wake_word = wake_word
