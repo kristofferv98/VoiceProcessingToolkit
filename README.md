@@ -46,18 +46,17 @@ import os
 # logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
+
 # Set environment variables for API keys
 os.getenv('PICOVOICE_APIKEY')
 os.getenv('OPENAI_API_KEY')
 os.getenv('ELEVENLABS_API_KEY')
-
 
  # Create a VoiceProcessingManager instance with default settings
  vpm = VoiceProcessingManager.create_default_instance(wake_word='computer')
 
  # Run the voice processing manager with transcription and text-to-speech
  text = vpm.run()
-
  print(f"Processed text: {text}")
  ```
  ### Text-to-Speech Example
@@ -65,18 +64,16 @@ os.getenv('ELEVENLABS_API_KEY')
  For text-to-speech conversion without recording, provide your own text as follows:
 
  ```python
-import os
-
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
 from dotenv import load_dotenv
+
 import logging
+import os
 
 #logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 # Set environment variables for API keys
-os.getenv('PICOVOICE_APIKEY')
-os.getenv('OPENAI_API_KEY')
 os.getenv('ELEVENLABS_API_KEY')
 
 
