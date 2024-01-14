@@ -35,6 +35,7 @@ class ThreadManager:
         # Additional cleanup logic can be added here if necessary
         # Clean up the threads list
         self.threads = []
+        shutdown_flag.clear()
 
     def handle_keyboard_interrupt(self):
         if not self.shutdown_requested:

@@ -4,7 +4,7 @@ import os
 from VoiceProcessingManager import VoiceProcessingManager
 
 # Basic configuration
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 #os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
@@ -65,7 +65,6 @@ def main():
     vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
                                                          wake_word='jarvis')
 
-
     # Run the voice processing manager with transcription and text-to-speech
     text = vpm.run(transcription=True, tts=True)
     print(f"Processed text: {text}")
@@ -73,6 +72,9 @@ def main():
 
 
 
+
+
 if __name__ == '__main__':
-        while True:
-            main()
+    prossess = True
+    while prossess:
+        main()

@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+import time
 
 import pyaudio
 from elevenlabs import generate, stream
@@ -205,7 +206,6 @@ class VoiceProcessingManager:
         except Exception as e:
             logger.error("Failed to set up VoiceProcessingManager: %s", e)
             raise
-
         finally:
             self.recorded_file = None
 
@@ -288,8 +288,6 @@ class VoiceProcessingManager:
             return transcription
         logger.debug("Voice command processing completed.")
         #clean up
-        thread_manager.join_all()
-        thread_manager.shutdown()
         return None
 
     def monitor_active_threads(self):
@@ -332,6 +330,7 @@ class VoiceProcessingManager:
         logger.info("VoiceProcessingManager run method called.")
         if transcription is False and self.use_wake_word:
             self.wake_word_detector.run_blocking()
+
             return None
         try:
             transcription = None
@@ -372,11 +371,8 @@ class VoiceProcessingManager:
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, performing cleanup.")
 
-            # Start monitoring active threads
-            self.monitor_active_threads()
 
         finally:
-            thread_manager.join_all()
             thread_manager.shutdown()
             logger.info("VoiceProcessingManager run method completed.")
 

@@ -1,3 +1,4 @@
+import logging
 import os
 
 import autogen
@@ -5,6 +6,7 @@ from dotenv import load_dotenv
 from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
 from VoiceProcessingManager import text_to_speech_stream, VoiceProcessingManager
 
+logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -66,6 +68,10 @@ user_proxy = autogen.UserProxyAgent(
         "TERMINATE" or "TERMINATE."),
 )
 
+# Create a VoiceProcessingManager instance with default settings
+vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
+                                                     wake_word='jarvis')
+
 
 def get_user_input():
     # Create a VoiceProcessingManager instance with default settings
@@ -79,9 +85,7 @@ def get_user_input():
     return transcription
 
 
-def initiate_jarvis():
-    transcription = get_user_input()
-
+def initiate_jarvis(transcription):
     user_proxy.initiate_chat(
         recipient=assistant,
         message=transcription,
@@ -97,5 +101,9 @@ def initiate_jarvis():
 
 def initiate_jarvis_loop():
     while True:
-        initiate_jarvis()
+        transcription = get_user_input()
+        initiate_jarvis(transcription)
+
+if __name__ == '__main__':
+    initiate_jarvis_loop()
 
