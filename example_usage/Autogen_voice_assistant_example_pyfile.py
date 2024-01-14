@@ -63,17 +63,11 @@ user_proxy = autogen.UserProxyAgent(
 )
 
 
-def get_user_input():
+def get_user_input(vpm):
     """
     Captures user input via voice, transcribes it, and returns the transcription.
     """
-    vpm = VoiceProcessingManager.create_default_instance(
-        use_wake_word=True,
-        play_notification_sound=True,
-        wake_word="jarvis",
-        min_recording_length=3.5,
-        inactivity_limit=2.5,
-    )
+
 
     logging.info("Say something to Jarvis")
 
@@ -111,8 +105,15 @@ def initiate_jarvis_loop():
     """
     Continuously interacts with Jarvis by capturing user input, transcribing it, and obtaining responses.
     """
+    vpm = VoiceProcessingManager.create_default_instance(
+        use_wake_word=True,
+        play_notification_sound=True,
+        wake_word="jarvis",
+        min_recording_length=3.5,
+        inactivity_limit=2.5,
+    )
     while True:
-        transcription = get_user_input()
+        transcription = get_user_input(vpm)
         if transcription is not None:
             ask_assistant(transcription)
 
