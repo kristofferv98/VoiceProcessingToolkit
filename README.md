@@ -5,7 +5,10 @@
 
  1. [Introduction](#introduction)
 2. [Features](#features)
-3. [Getting Started](#getting-started)
+3. [Installation](#installation)
+4. [Usage](#usage)
+   - [Basic Example](#basic-example)
+   - [Advanced Examples](#advanced-examples)
 5. [Configuration](#configuration)
 6. [Example Usage](#example-usage)
 7. [Contributing](#contributing)
@@ -31,35 +34,30 @@
  ```
 
  ## Usage
- ## Getting Started
- To begin using VoiceProcessingToolkit, follow these steps:
+ ### Basic Example
+ The following is a quick-start guide to using the toolkit for wake word detection and speech synthesis with auto-translation from any language to English.
 
- 1. Install the toolkit via pip:
-    ```bash
-    pip install VoiceProcessingToolkit
-    ```
- 2. Obtain API keys from Picovoice, OpenAI, and ElevenLabs.
- 3. Set the API keys as environment variables.
- 4. Run an example script from the `example_usage` directory.
- 5. Customize `VoiceProcessingManager` settings as needed.
-
- Here is a quick-start example of using the toolkit for wake word detection and speech synthesis in English:
  ```python
-from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
- import os
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+from dotenv import load_dotenv
 
- # Set environment variables for API keys
- os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
- os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
- os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+import logging
+import os
+
+# logging.basicConfig(level=logging.INFO)
+load_dotenv()
+
+# Set environment variables for API keys
+os.getenv('PICOVOICE_APIKEY')
+os.getenv('OPENAI_API_KEY')
+os.getenv('ELEVENLABS_API_KEY')
 
 
  # Create a VoiceProcessingManager instance with default settings
- vpm = VoiceProcessingManager.create_default_instance(wake_word='jarvis')
+ vpm = VoiceProcessingManager.create_default_instance(wake_word='computer')
 
  # Run the voice processing manager with transcription and text-to-speech
  text = vpm.run()
-
 
  print(f"Processed text: {text}")
  ```
@@ -85,9 +83,8 @@ os.getenv('ELEVENLABS_API_KEY')
 
 text = "Hello, welcome to the Voice Processing Toolkit!"
 
-text = text_to_speech_stream(text=text)
-
-print(f"Processed text: {text}")
+print("Text to speech conversion in progress...")
+text_to_speech_stream(text=text)
  ```
 
 
