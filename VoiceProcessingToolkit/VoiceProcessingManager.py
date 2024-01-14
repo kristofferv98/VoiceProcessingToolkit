@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 
 import pyaudio
 from elevenlabs import generate, stream
