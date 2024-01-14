@@ -287,7 +287,7 @@ class VoiceProcessingManager:
                     text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
             return transcription
         logger.debug("Voice command processing completed.")
-        #clean up
+        thread_manager.shutdown()
         return None
 
     def monitor_active_threads(self):

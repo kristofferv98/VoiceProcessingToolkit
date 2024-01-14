@@ -8,6 +8,7 @@
 3. [Installation](#installation)
 4. [Usage](#usage)
    - [Basic Example](#basic-example)
+   - [Example with Autogen](example_usage/Autogen_voice_assistant_example_pyfile.py)
 5. [Configuration](#configuration)
 6. [Example Usage](#example-usage)
 7. [Contributing](#contributing)
@@ -148,5 +149,5 @@ text_to_speech_stream(text=text)
  Thanks to OpenAI, ElevenLabs, and Picovoice for their tools that enhance this project.
 
  ### Contact Information
-For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).
+ For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).
 

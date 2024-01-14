@@ -7,8 +7,11 @@ import os
 import autogen
 import logging
 
+# Run pip install pyautogen==0.2.6 in terminal to install autogen
+
 # logging.basicConfig(level=logging.INFO)
 load_dotenv()
+logging.basicConfig(level=logging.CRITICAL)
 
 # Set environment variables for API keys
 os.getenv('PICOVOICE_APIKEY')
@@ -20,24 +23,25 @@ config_list = [
     {"model": "gpt-4-1106-preview", "api_key": openai_api_key},
     {"model": "gpt-3.5-turbo-1106-preview", "api_key": openai_api_key},
 ]
-llm_config = {"config_list": config_list, "cache_seed": 42}
+
+jarvis_assistant_id = "asst_auCTYeOaVgpFLEeKVW7RhIrQ"
+llm_config = {"config_list": config_list, "cache_seed": 42, "assistant_id": jarvis_assistant_id}
+
 
 # Create the agent that uses the LLM.
 assistant = GPTAssistantAgent(
-    name="agent",
+    name="Jarvis",
     instructions="""You are a personal assistant named Jarvis.
 
-    You are designed to assist the user with their tasks, 
-    Refine dialogue comprehension to capture subtleties and implicit cues, ensuring responses are 
-    not only accurate but also contextually enriched. Evolve to predict and suggest actions not 
-    only based on explicit commands but also from inferred intentions, enhancing the support 
-    offered. As for your character traits, you should be helpful, attentive, and efficient while 
-    extremly inteligent. You should have a professional yet friendly tone, much like a dedicated 
-    personal assistant, unless asked not too. You should be able to engage in casual conversation 
-    but also provide detailed assistance when needed. Reflecting on your personality, you should 
-    be extremely intelligent, with a hint of dry humor. You should respond in a concise manner, 
-    always within three sentences unless a comprehecive answer is asked for. "Example: (Good day, 
-    Kristoffer. How can I assist you today? TERMINATE)"
+    You are designed to assist the user with their tasks, Refine dialogue comprehension to capture subtleties and 
+    implicit cues, ensuring responses are not only accurate but also contextually enriched. Evolve to predict and 
+    suggest actions not only based on explicit commands but also from inferred intentions, enhancing the support 
+    offered. As for your character traits, you should be helpful, attentive, and efficient while extremly inteligent. 
+    You should have a professional yet friendly tone, much like a dedicated personal assistant, unless asked not too. 
+    You should be able to engage in casual conversation but also provide detailed assistance when needed. Reflecting 
+    on your personality, you should be extremely intelligent, with a hint of dry humor. You should respond in a 
+    concise manner, always within three sentences unless a comprehecive answer is asked for. "Example: (As always 
+    sir, a great pleasure watching you work. TERMINATE)"
 
     Jarvis is designed to interpret and respond to transcribed audio, treating them as direct 
     textual inputs during interactions. This includes instances when the user instructs Jarvis 
@@ -68,8 +72,7 @@ def get_user_input(vpm):
     Captures user input via voice, transcribes it, and returns the transcription.
     """
 
-
-    logging.info("Say something to Jarvis")
+    print("Say something to Jarvis")
 
     transcription = vpm.run(tts=False, streaming=True)
     logging.info(f"Processed text: {transcription}")
@@ -109,9 +112,10 @@ def initiate_jarvis_loop():
         use_wake_word=True,
         play_notification_sound=True,
         wake_word="jarvis",
-        min_recording_length=3.5,
+        min_recording_length=3,
         inactivity_limit=2.5,
     )
+
     while True:
         transcription = get_user_input(vpm)
         if transcription is not None:
