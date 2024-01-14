@@ -1,6 +1,7 @@
 import logging
 import os
 
+import autogen
 from dotenv import load_dotenv
 from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
@@ -24,32 +25,11 @@ config_list = [
 ]
 llm_config = {"config_list": config_list, "cache_seed": 42}
 
-# Initialize the GPT Assistant Agent with specific instructions and configuration
-assistant = GPTAssistantAgent(
-    name="agent",
-    instructions="""...""",  # Instructions omitted for brevity
-    llm_config=llm_config
-)
-
-# Initialize the User Proxy Agent to represent the user in the conversation
-user_proxy = autogen.UserProxyAgent(
-    "user_proxy",
-    max_consecutive_auto_reply=10,
-    human_input_mode="NEVER",
-    system_message="A human admin for Jarvis",
-    is_termination_msg=lambda x: "content" in x and x["content"] is not None and x["content"].rstrip().endswith("TERMINATE" or "TERMINATE."),
-)
-
-# Function to capture user input via voice and transcribe it
-def get_user_input():
-    """
-    Captures user input via voice, transcribes it, and returns the transcription.
-
 # Create the agent that uses the LLM.
 assistant = GPTAssistantAgent(
     name="agent",
     instructions="""You are a personal assistant named Jarvis.
-    
+
     You are designed to assist the user with their tasks, 
     Refine dialogue comprehension to capture subtleties and implicit cues, ensuring responses are 
     not only accurate but also contextually enriched. Evolve to predict and suggest actions not 
@@ -61,7 +41,7 @@ assistant = GPTAssistantAgent(
     be extremely intelligent, with a hint of dry humor. You should respond in a concise manner, 
     always within three sentences unless a comprehecive answer is asked for. "Example: (Good day, 
     Kristoffer. How can I assist you today? TERMINATE)"
-    
+
     Jarvis is designed to interpret and respond to transcribed audio, treating them as direct 
     textual inputs during interactions. This includes instances when the user instructs Jarvis 
     to 'listen to' or similar phrases. The subsequent text provided by user will be treated 
@@ -75,24 +55,26 @@ assistant = GPTAssistantAgent(
     indicate your message is finished but in the same message.""",
     llm_config=llm_config)
 
-# Create the agent that represents the user in the conversation.
+# Initialize the User Proxy Agent to represent the user in the conversation
 user_proxy = autogen.UserProxyAgent(
     "user_proxy",
     max_consecutive_auto_reply=10,
     human_input_mode="NEVER",
-    system_message=f"""A human admin for Jarvis""",
-    is_termination_msg=lambda x: "content" in x and x["content"] is not None and x["content"].rstrip().endswith(
-        "TERMINATE" or "TERMINATE."),
+    system_message="A human admin for Jarvis",
+    is_termination_msg=lambda x: "content" in x and x["content"] is not None and x["content"].rstrip().endswith("TERMINATE" or "TERMINATE."),
 )
 
 def get_user_input():
-    # Create a VoiceProcessingManager instance with default settings
+    """
+    Captures user input via voice, transcribes it, and returns the transcription.
+    """
     vpm = VoiceProcessingManager.create_default_instance(
         use_wake_word=True,
         play_notification_sound=True,
         wake_word="jarvis",
-        min_recording_length=1,
+        min_recording_length=2,
     )
+
     logging.info("Say something to Jarvis")
 
     # Run the voice processing manager to capture and transcribe user input
@@ -100,8 +82,6 @@ def get_user_input():
     logging.info(f"Processed text: {transcription}")
 
     return transcription
-
-# Function to initiate a conversation with Jarvis using the transcribed user input
 
 
 def initiate_jarvis(transcription):
@@ -119,17 +99,15 @@ def initiate_jarvis(transcription):
     text_to_speech_stream(text=stripped_answer, api_key=elevenlabs_api_key)
     logging.info(f"Jarvis said: {stripped_answer}")
 
-# Function to continuously interact with Jarvis
+
 def initiate_jarvis_loop():
     """
     Continuously interacts with Jarvis by capturing user input, transcribing it, and obtaining responses.
-
-def initiate_jarvis_loop():
+    """
     while True:
         transcription = get_user_input()
         initiate_jarvis(transcription)
 
-# Main entry point for the script
 
 if __name__ == '__main__':
     initiate_jarvis_loop()
