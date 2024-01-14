@@ -98,7 +98,42 @@ class AudioStream:
         # add thread to thread manager
         self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
 
+from shared_resources import thread_manager
+
+class AudioStream:
+    ...
+    def __init__(self, rate: int, channels: int, _audio_format: int, frames_per_buffer: int):
+        self._py_audio = None
+        self._frames_per_buffer = frames_per_buffer
+        self._pre_buffer_seconds = 1.5  # Duration to keep before wake word
+        self._post_buffer_seconds = 0  # Duration to keep after wake word
+        # Calculate the buffer size based on the duration and sample rate
+        self._buffer_size = int(rate * (self._pre_buffer_seconds + self._post_buffer_seconds))
+        self._rolling_buffer = bytearray(self._buffer_size)
+        self._stream = None
+        self._stream_thread = None
+        try:
+            self._py_audio = pyaudio.PyAudio()
+            self._stream = self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
+            self._stream_thread = threading.Thread(target=self.stream_read_loop)
+            thread_manager.add_thread(self._stream_thread)
+            self._stream_thread.start()
+        except Exception as e:
+            self.cleanup()
+            raise e
+
+    def stream_read_loop(self):
+        while not thread_manager.shutdown_flag.is_set():
+            self.read()
+
+    ...
     def cleanup(self):
+        # Check if the stream thread is running and stop it
+        if self._stream_thread and self._stream_thread.is_alive():
+            thread_manager.shutdown_flag.set()
+            self._stream_thread.join()
+        self._stream_thread = None
+
         # Check if the stream has been initialized and is open before attempting to stop and close
         if self._stream and not self._stream.is_stopped():
             if not self._stream.is_stopped():
@@ -107,6 +142,7 @@ class AudioStream:
                     self._stream.close()
                 except Exception as e:
                     logger.exception("An error occurred while stopping the audio stream.", exc_info=e)
+                    # Do not raise here, continue with cleanup
                     raise
         self._stream = None
         # Check if PyAudio instance has been initialized before terminating
