@@ -1,9 +1,24 @@
  # VoiceProcessingToolkit
 
  ## Introduction
- VoiceProcessingToolkit is a comprehensive Python library for voice processing tasks such as wake word detection, transcription, and synthesis, simplifying the development of voice-activated applications.
+ VoiceProcessingToolkit is a Python library designed for voice processing tasks, including wake word detection, transcription, and synthesis. It aims to streamline the creation of voice-activated applications.
 
- ## Features
+ 1. [Introduction](#introduction)
+2. [Features](#features)
+3. [Installation](#installation)
+4. [Usage](#usage)
+   - [Basic Example](#basic-example)
+   - [Advanced Examples](#advanced-examples)
+5. [Configuration](#configuration)
+6. [Example Usage](#example-usage)
+7. [Contributing](#contributing)
+8. [Support](#support)
+9. [License](#license)
+10. [Development Status](#development-status)
+11. [Acknowledgements](#acknowledgements)
+12. [Contact Information](#contact-information)
+
+## Features
  + Wake word detection using Picovoice Porcupine.
  + High-quality voice recording with adjustable settings for Voice Activation Detection.
  + Fast and accurate speech-to-text transcription with OpenAI's Whisper.
@@ -20,7 +35,7 @@
 
  ## Usage
  ### Basic Example
- Here is a simple example of how to use the toolkit to detect a wake word, record and speak the result with speech synthesis in English:
+ The following is a quick-start guide to using the toolkit for wake word detection and speech synthesis in English:
  ```python
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
  import os
@@ -42,7 +57,7 @@ from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
  ```
  ### Text-to-Speech Example
 
- You can also run the toolkit without any recording, and provide your own text to convert to speech:
+ For text-to-speech conversion without recording, provide your own text as follows:
 
  ```python
 import os
@@ -88,32 +103,24 @@ print(f"Processed text: {text}")
  For a more detailed explanation of these attributes and methods, please refer to the inline documentation within the `VoiceProcessingManager.py` file.
 
  ## Getting Started
- To get started with VoiceProcessingToolkit, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
+ To begin using VoiceProcessingToolkit, follow these steps:
 
  To get started with the VoiceProcessingToolkit, follow these simple steps:
 
- 1. **Installation**: Install the toolkit using pip:
-    ```bash
-    pip install VoiceProcessingToolkit
-    ```
+ 1. Install the toolkit via pip: `pip install VoiceProcessingToolkit`
 
- 2. **API Keys**: Obtain the necessary API keys from Picovoice, OpenAI, and ElevenLabs.
+ 2. Obtain API keys from Picovoice, OpenAI, and ElevenLabs.
 
- 3. **Environment Variables**: Set the API keys as environment variables:
-    ```bash
-    export PICOVOICE_APIKEY='your-picovoice-api-key'
-    export OPENAI_API_KEY='your-openai-api-key'
-    export ELEVENLABS_API_KEY='your-elevenlabs-api-key'
-    ```
+ 3. Set the API keys as environment variables.
 
- 4. **Run an Example**: Navigate to the `example_usage` directory and run one of the example scripts to see the toolkit in action.
+ 4. Run an example script from the `example_usage` directory.
 
- 5. **Customize**: Customize the settings in the `VoiceProcessingManager` to fit your application's needs.
+ 5. Customize `VoiceProcessingManager` settings as needed.
 
  For a more detailed explanation of these steps, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
 
  ## Example Usage
- The toolkit includes several example scripts that demonstrate different use cases and features. You can find these examples in the `example_usage` directory:
+ The `example_usage` directory contains scripts showcasing various features:
 
  - [Simple Setup](example_usage/Simple_setup.py): Demonstrates the basic setup and usage of the VoiceProcessingManager.
  - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Demonstrates how to create a wake word dataset using the VoiceProcessingManager.
@@ -124,20 +131,22 @@ print(f"Processed text: {text}")
 
 
  ## Configuration
- The toolkit can be configured with various settings such as wake word sensitivity, audio sample rate, and text-to-speech voice selection. For detailed configuration options, please see the `configuration.md` or visit the documentation in the example_usage folder.
+ Customize the toolkit with settings like wake word sensitivity and audio sample rate. See `configuration.md` for details.
 
  ## Contributing
- Contributions to the VoiceProcessingToolkit are welcome! Please read the CONTRIBUTING.md file for guidelines on how to contribute.
+ Contributions are welcome! See CONTRIBUTING.md for guidelines.
 
  ## Support
- If you encounter any issues or have questions, please file an issue on the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
+ For issues or questions, please use the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
 
  ## License
- VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
+ Licensed under the MIT License. See LICENSE for details.
 
  ## Development Status
- VoiceProcessingToolkit is still in development, and feedback is greatly appreciated. If you have suggestions or encounter any issues, please feel free to open an issue on the GitHub repository or contribute to the project.
+ The project is in development. Feedback and contributions are appreciated.
 
  ## Acknowledgements
- I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
- VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
+ Thanks to OpenAI, ElevenLabs, and Picovoice for their tools that enhance this project.
+ ## Contact Information
+For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).
+
