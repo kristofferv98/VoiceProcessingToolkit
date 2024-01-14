@@ -5,10 +5,7 @@
 
  1. [Introduction](#introduction)
 2. [Features](#features)
-3. [Installation](#installation)
-4. [Usage](#usage)
-   - [Basic Example](#basic-example)
-   - [Advanced Examples](#advanced-examples)
+3. [Getting Started](#getting-started)
 5. [Configuration](#configuration)
 6. [Example Usage](#example-usage)
 7. [Contributing](#contributing)
@@ -34,8 +31,19 @@
  ```
 
  ## Usage
- ### Basic Example
- The following is a quick-start guide to using the toolkit for wake word detection and speech synthesis in English:
+ ## Getting Started
+ To begin using VoiceProcessingToolkit, follow these steps:
+
+ 1. Install the toolkit via pip:
+    ```bash
+    pip install VoiceProcessingToolkit
+    ```
+ 2. Obtain API keys from Picovoice, OpenAI, and ElevenLabs.
+ 3. Set the API keys as environment variables.
+ 4. Run an example script from the `example_usage` directory.
+ 5. Customize `VoiceProcessingManager` settings as needed.
+
+ Here is a quick-start example of using the toolkit for wake word detection and speech synthesis in English:
  ```python
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
  import os
