@@ -9,9 +9,9 @@ logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
-#os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
-#os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
-#os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 
 def main():
     """

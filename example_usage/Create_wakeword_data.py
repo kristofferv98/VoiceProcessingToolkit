@@ -26,7 +26,7 @@ def main():
 
     try:
         # Create a WakeWordDetector instance with default settings
-        wake_word_detector = VoiceProcessingManager.create_default_instance(use_wake_word=True,
+        wake_word_detector = VoiceProcessingManager.create_default_instance(use_wake_word=True, wake_word='computer',
                                                                             save_wake_word_recordings=True,
                                                                             play_notification_sound=False)
 
