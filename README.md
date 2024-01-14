@@ -35,7 +35,7 @@
 
  ## Usage
  ### Basic Example
- The following is a quick-start guide to using the toolkit for wake word detection and speech synthesis with auto-translation from any language to English.
+ The following is a quick-start guide to using the toolkit for wake word detection and speech synthesis with auto-translation from any language to English. 
 
  ```python
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
@@ -119,6 +119,8 @@ text_to_speech_stream(text=text)
 
  For a more detailed explanation of these steps, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
 
+ If you have downloaded the github repository, you can run the examples from the `example_usage` directory. 
+ Rename the `REMOVE_THIS_TEXT.env` file to `.env` and add your API keys.
  ## Example Usage
  The `example_usage` directory contains scripts showcasing various features:
 
