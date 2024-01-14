@@ -80,6 +80,28 @@ print(f"Processed text: {text}")
  ## Getting Started
  To get started with VoiceProcessingToolkit, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
 
+ To get started with the VoiceProcessingToolkit, follow these simple steps:
+
+ 1. **Installation**: Install the toolkit using pip:
+    ```bash
+    pip install VoiceProcessingToolkit
+    ```
+
+ 2. **API Keys**: Obtain the necessary API keys from Picovoice, OpenAI, and ElevenLabs.
+
+ 3. **Environment Variables**: Set the API keys as environment variables:
+    ```bash
+    export PICOVOICE_APIKEY='your-picovoice-api-key'
+    export OPENAI_API_KEY='your-openai-api-key'
+    export ELEVENLABS_API_KEY='your-elevenlabs-api-key'
+    ```
+
+ 4. **Run an Example**: Navigate to the `example_usage` directory and run one of the example scripts to see the toolkit in action.
+
+ 5. **Customize**: Customize the settings in the `VoiceProcessingManager` to fit your application's needs.
+
+ For a more detailed explanation of these steps, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
+
  ## Example Usage
  The toolkit includes several example scripts that demonstrate different use cases and features. You can find these examples in the `example_usage` directory:
 
