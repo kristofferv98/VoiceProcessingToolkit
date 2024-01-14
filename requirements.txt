@@ -1,9 +1,9 @@
-PyAudio
-setuptools
-openai
-requests
-elevenlabs
-numpy
+PyAudio~=0.2.14
+setuptools~=68.2.2
+openai~=1.6.1
+requests~=2.31.0
+elevenlabs~=0.2.27
+numpy~=1.26.2
 pvcobra
 pvporcupine
 pygame
