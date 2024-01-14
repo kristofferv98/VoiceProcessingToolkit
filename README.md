@@ -18,7 +18,7 @@
 11. [Acknowledgements](#acknowledgements)
 12. [Contact Information](#contact-information)
 
-## Features
+### Features
  + Wake word detection using Picovoice Porcupine.
  + High-quality voice recording with adjustable settings for Voice Activation Detection.
  + Fast and accurate speech-to-text transcription with OpenAI's Whisper.
@@ -27,7 +27,7 @@
  + Example scripts for easy demonstration and usage.
  + Extensible architecture for feature additions and customization.
 
- ## Installation
+ ### Installation
  The VoiceProcessingToolkit is available on PyPI. To install, run the following command:
  ```bash
  pip install VoiceProcessingToolkit
@@ -135,23 +135,23 @@ text_to_speech_stream(text=text)
  - [Autogen_voice_assistant](example_usage/Autogen_voice_assistant_example.ipynb): Demonstrates how to use the VoiceProcessingManager to create a voice assistant with custom wake words and instructions.
 
 
- ## Configuration
+ ### Configuration
  Customize the toolkit with settings like wake word sensitivity and audio sample rate. See `configuration.md` for details.
 
- ## Contributing
+ ### Contributing
  Contributions are welcome! See CONTRIBUTING.md for guidelines.
 
- ## Support
+ ### Support
  For issues or questions, please use the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
 
- ## License
+ ### License
  Licensed under the MIT License. See LICENSE for details.
 
- ## Development Status
+ ### Development Status
  The project is in development. Feedback and contributions are appreciated.
 
- ## Acknowledgements
+ ### Acknowledgements
  Thanks to OpenAI, ElevenLabs, and Picovoice for their tools that enhance this project.
- ## Contact Information
+ ### Contact Information
 For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).
 
