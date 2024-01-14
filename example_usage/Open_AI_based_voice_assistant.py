@@ -1,5 +1,7 @@
 import logging
 import os
+import sys
+import signal
 
 import autogen
 from dotenv import load_dotenv
@@ -7,11 +9,13 @@ from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+def setup_logging():
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
 
-# Load environment variables
-load_dotenv()
+def load_environment_variables():
+    # Load environment variables
+    load_dotenv()
 
 # Retrieve API keys from environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -112,3 +116,80 @@ def initiate_jarvis_loop():
 if __name__ == '__main__':
     initiate_jarvis_loop()
 
+def get_user_input(vpm):
+    """
+    Captures user input via voice, transcribes it, and returns the transcription.
+
+    Args:
+        vpm (VoiceProcessingManager): Instance of VoiceProcessingManager to capture and transcribe user input.
+
+    Returns:
+        str or None: Transcribed text or None if transcription fails.
+    """
+    logging.info("Say something to Jarvis")
+
+    # Run the voice processing manager to capture and transcribe user input
+    transcription = vpm.run(tts=False, streaming=False)
+    logging.info(f"Processed text: {transcription}")
+
+    return transcription
+
+def initiate_jarvis(transcription, assistant, user_proxy):
+    """
+    Sends the transcribed user input to Jarvis and handles the response.
+
+    Args:
+        transcription (str): Transcribed user input.
+        assistant (GPTAssistantAgent): Instance of GPTAssistantAgent to process the input.
+        user_proxy (autogen.UserProxyAgent): Instance of UserProxyAgent representing the user.
+    """
+    if transcription is None:
+        logging.warning("No transcription received.")
+        return
+
+    user_proxy.initiate_chat(
+        recipient=assistant,
+        message=transcription,
+        clear_history=False,
+    )
+    # Retrieve the latest response from Jarvis
+    latest_message = assistant.last_message().get("content", "")
+    stripped_answer = latest_message.replace("TERMINATE", "").strip()
+
+    # Convert Jarvis's response to speech and stream it
+    text_to_speech_stream(text=stripped_answer, api_key=elevenlabs_api_key)
+    logging.info(f"Jarvis said: {stripped_answer}")
+
+def initiate_jarvis_loop(vpm, assistant, user_proxy):
+    """
+    Continuously interacts with Jarvis by capturing user input, transcribing it, and obtaining responses.
+    """
+    try:
+        while True:
+            transcription = get_user_input(vpm)
+            initiate_jarvis(transcription, assistant, user_proxy)
+    except KeyboardInterrupt:
+        logging.info("Exiting the Jarvis loop.")
+        sys.exit(0)
+
+def main():
+    setup_logging()
+    load_environment_variables()
+
+    # Initialize the VoiceProcessingManager
+    vpm = VoiceProcessingManager.create_default_instance(
+        use_wake_word=True,
+        play_notification_sound=True,
+        wake_word="jarvis",
+        min_recording_length=2,
+    )
+
+    # Initialize the GPTAssistantAgent and UserProxyAgent
+    assistant = create_assistant()
+    user_proxy = create_user_proxy()
+
+    # Start the Jarvis interaction loop
+    initiate_jarvis_loop(vpm, assistant, user_proxy)
+
+if __name__ == '__main__':
+    main()
