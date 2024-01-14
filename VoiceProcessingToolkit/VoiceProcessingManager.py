@@ -212,8 +212,8 @@ class VoiceProcessingManager:
     @classmethod
     def create_default_instance(cls, wake_word='cumputer', sensitivity=0.75, output_directory='Wav_MP3',
                                 audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
-                                voice_threshold=0.8, silence_limit=2.0, inactivity_limit=2.0, min_recording_length=3.0,
-                                buffer_length=2.0, use_wake_word=True, save_wake_word_recordings=False,
+                                voice_threshold=0.65, inactivity_limit=2.5, min_recording_length=3,
+                                buffer_length=2, use_wake_word=True, save_wake_word_recordings=False,
                                 play_notification_sound=True):
 
         """
@@ -231,7 +231,6 @@ class VoiceProcessingManager:
             rate (int): Sample rate of the audio stream.
             frames_per_buffer (int): Number of audio frames per buffer.
             voice_threshold (float): Threshold for voice activity detection.
-            silence_limit (float): Duration of silence before stopping the recording.
             inactivity_limit (float): Duration of inactivity before stopping the recording.
             min_recording_length (float): Minimum length of a valid recording.
             buffer_length (float): Length of the audio buffer.
@@ -249,7 +248,7 @@ class VoiceProcessingManager:
         return cls(transcriber=transcriber, action_manager=action_manager, audio_stream_manager=audio_stream_manager,
                    wake_word=wake_word, sensitivity=sensitivity, output_directory=output_directory,
                    audio_format=audio_format, channels=channels, rate=rate, frames_per_buffer=frames_per_buffer,
-                   voice_threshold=voice_threshold, silence_limit=silence_limit, inactivity_limit=inactivity_limit,
+                   voice_threshold=voice_threshold, inactivity_limit=inactivity_limit,
                    min_recording_length=min_recording_length, buffer_length=buffer_length, use_wake_word=use_wake_word,
                    save_wake_word_recordings=save_wake_word_recordings or False,
                    play_notification_sound=play_notification_sound)
@@ -397,7 +396,7 @@ class VoiceProcessingManager:
         # Initialize VoiceRecorder
         self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
                                             voice_threshold=self.voice_threshold,
-                                            silence_limit=self.silence_limit, inactivity_limit=self.inactivity_limit,
+                                            inactivity_limit=self.inactivity_limit,
                                             min_recording_length=self.min_recording_length,
                                             buffer_length=self.buffer_length)
         # Add the voice recorder's thread to the thread manager
