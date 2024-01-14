@@ -11,7 +11,7 @@ class AudioStream:
         self._pre_buffer_seconds = 1.5  # Duration to keep before wake word
         self._post_buffer_seconds = 1.5  # Duration to keep after wake word
         # Calculate the buffer size based on the duration and sample rate
-        self._buffer_size = int(rate * (self._pre_buffer_seconds + self._post_buffer_seconds))
+        self._buffer_size = int(rate * self._frames_per_buffer * (self._pre_buffer_seconds + self._post_buffer_seconds))
         self._rolling_buffer = bytearray(self._buffer_size)
         self._stream = self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
 
@@ -23,8 +23,10 @@ class AudioStream:
         Args:
             data (bytes): The audio data to add to the rolling buffer.
         """
-        # Ensure the rolling buffer contains the correct duration of audio data
-        self._rolling_buffer = (self._rolling_buffer[-(self._buffer_size - len(data)):] + data)
+        # Append new data to the end of the rolling buffer
+        self._rolling_buffer += data
+        # Remove the oldest data to maintain the buffer size
+        self._rolling_buffer = self._rolling_buffer[-self._buffer_size:]
 
     def get_rolling_buffer(self) -> bytes:
         """
@@ -81,7 +83,8 @@ class AudioStream:
             else:
                 raise
 
-        self.update_rolling_buffer(data)
+        # Update the rolling buffer with the new data
+        self.update_rolling_buffer(bytes(data))
         return data
 
     def cleanup(self):
