@@ -1,5 +1,4 @@
-from VoiceProcessingManager import VoiceProcessingManager
-
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 from dotenv import load_dotenv
 import logging
 import os

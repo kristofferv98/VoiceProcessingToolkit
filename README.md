@@ -22,7 +22,7 @@
  ### Basic Example
  Here is a simple example of how to use the toolkit to detect a wake word, record and speak the result with speech synthesis in English:
  ```python
- from VoiceProcessingManager import VoiceProcessingManager
+from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
  import os
 
  # Set environment variables for API keys

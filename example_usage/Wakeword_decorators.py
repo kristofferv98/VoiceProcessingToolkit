@@ -3,7 +3,7 @@ import asyncio
 import os
 import time
 
-from VoiceProcessingManager import VoiceProcessingManager
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 
 # Basic configuration
 logging.basicConfig(level=logging.INFO)

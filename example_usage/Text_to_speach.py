@@ -3,8 +3,7 @@ import os
 
 from dotenv import load_dotenv
 
-from VoiceProcessingManager import text_to_speech, text_to_speech_stream
-
+from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
 load_dotenv()
 
 # Basic configuration
