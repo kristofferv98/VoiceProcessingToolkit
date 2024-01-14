@@ -111,7 +111,7 @@ class AudioStream:
         self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
 
     def stream_read_loop(self):
-        while not thread_manager.shutdown_flag.is_set():
+        while not shutdown_flag.is_set():
             self.read()
 
     def cleanup(self):
