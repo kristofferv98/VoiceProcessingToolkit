@@ -291,6 +291,20 @@ class VoiceProcessingManager:
         thread_manager.shutdown()
         return None
 
+    def monitor_active_threads(self):
+        """
+        Monitors and logs the status of active threads every second.
+        """
+        try:
+            while True:
+                active_threads = threading.enumerate()
+                logger.info(f"Active threads: {len(active_threads)}")
+                for thread in active_threads:
+                    logger.info(f"Thread {thread.name} is {'alive' if thread.is_alive() else 'not alive'}.")
+                time.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("Thread monitoring interrupted by user.")
+
     def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
         """
         Main method to start the voice processing workflow. It can be configured to perform different tasks based on
@@ -356,6 +370,9 @@ class VoiceProcessingManager:
 
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, performing cleanup.")
+
+            # Start monitoring active threads
+            self.monitor_active_threads()
 
         finally:
             thread_manager.join_all()
