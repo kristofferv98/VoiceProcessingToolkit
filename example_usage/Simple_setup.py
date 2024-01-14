@@ -3,13 +3,10 @@ import os
 
 from VoiceProcessingManager import VoiceProcessingManager
 
-# Basic configuration
-logging.basicConfig(level=logging.DEBUG)
 
-
-#os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
-#os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
-#os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
+os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
 
 def main():
     """
@@ -75,6 +72,5 @@ def main():
 
 
 if __name__ == '__main__':
-    prossess = True
-    while prossess:
+    while True:
         main()
