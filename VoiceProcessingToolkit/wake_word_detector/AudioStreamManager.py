@@ -38,10 +38,12 @@ class AudioStream:
         """
         Initializes the audio stream with the given parameters.
         """
+        if self._py_audio is None:
+            self._py_audio = pyaudio.PyAudio()
         try:
             return self._py_audio.open(rate=rate, channels=channels, format=_audio_format,
                                        input=True, frames_per_buffer=frames_per_buffer)
-        except pyaudio.PyAudioError as e:
+        except (pyaudio.PyAudioError, IOError) as e:
             logger.exception("Failed to initialize audio stream: %s", e)
             raise
         except Exception as e:
