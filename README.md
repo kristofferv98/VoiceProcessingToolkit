@@ -46,7 +46,6 @@ import os
 # logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-
 # Set environment variables for API keys
 os.getenv('PICOVOICE_APIKEY')
 os.getenv('OPENAI_API_KEY')
@@ -70,12 +69,11 @@ from dotenv import load_dotenv
 import logging
 import os
 
-#logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 # Set environment variables for API keys
 os.getenv('ELEVENLABS_API_KEY')
-
 
 text = "Hello, welcome to the Voice Processing Toolkit!"
 
