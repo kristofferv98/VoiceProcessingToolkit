@@ -45,7 +45,7 @@ class AudioDataProvider:
 
 
 class AudioRecorder:
-    def __init__(self, output_directory=None, access_key=None, voice_threshold=0.8, silence_limit=2, inactivity_limit=2,
+    def __init__(self, output_directory=None, access_key=None, voice_threshold=0.8, inactivity_limit=2,
                  min_recording_length=3, buffer_length=2):
         """
         Initializes the audio recorder with the given parameters.
@@ -53,11 +53,11 @@ class AudioRecorder:
             output_directory (str): The directory where recordings will be saved.
             access_key (str): The access key for the Cobra VAD engine.
             voice_threshold (float): The threshold for voice detection.
-            silence_limit (int): The number of seconds of silence before stopping the recording.
             inactivity_limit (int): The number of seconds of inactivity before stopping the recording.
             min_recording_length (int): The minimum length of a valid recording.
             buffer_length (int): The length of the audio buffer.
         """
+        self.SILENCE_LIMIT = None
         self.last_saved_file = None
         self._logger = logger  # Logger is now private
         self._py_audio = pyaudio.PyAudio()
@@ -67,7 +67,6 @@ class AudioRecorder:
         self._output_directory = output_directory or os.path.join(os.path.dirname(__file__),
                                                                   'Wav_MP3')  # Output directory is now private
         self.VOICE_THRESHOLD = voice_threshold
-        self.SILENCE_LIMIT = silence_limit
         self.INACTIVITY_LIMIT = inactivity_limit
         self.MIN_RECORDING_LENGTH = min_recording_length
         self.BUFFER_LENGTH = buffer_length
