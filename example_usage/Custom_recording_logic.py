@@ -1,11 +1,16 @@
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+from dotenv import load_dotenv
+
+import os
 import logging
 
-from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+#logging.basicConfig(level=logging.INFO)
+load_dotenv()
 
-# Basic configuration
-logging.basicConfig(level=logging.INFO)
-
-
+# Set environment variables for API keys
+os.getenv('PICOVOICE_APIKEY')
+os.getenv('OPENAI_API_KEY')
+os.getenv('ELEVENLABS_API_KEY')
 
 def main():
     """

@@ -1,16 +1,18 @@
-import logging
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+from dotenv import load_dotenv
+
 import asyncio
 import os
 import time
+import logging
 
-from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+# logging.basicConfig(level=logging.INFO)
+load_dotenv()
 
-# Basic configuration
-logging.basicConfig(level=logging.INFO)
-
-os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
-os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
-os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+# Set environment variables for API keys
+os.getenv('PICOVOICE_APIKEY')
+os.getenv('OPENAI_API_KEY')
+os.getenv('ELEVENLABS_API_KEY')
 
 
 def main():
@@ -48,6 +50,7 @@ def main():
 
     except KeyboardInterrupt:
         logging.info("Interrupted by user, shutting down.")
+
 
 if __name__ == '__main__':
     main()

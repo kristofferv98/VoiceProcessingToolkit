@@ -45,10 +45,20 @@ from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
  You can also run the toolkit without any recording, and provide your own text to convert to speech:
 
  ```python
+import os
+
 from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
 from dotenv import load_dotenv
+import logging
 
+#logging.basicConfig(level=logging.INFO)
 load_dotenv()
+
+# Set environment variables for API keys
+os.getenv('PICOVOICE_APIKEY')
+os.getenv('OPENAI_API_KEY')
+os.getenv('ELEVENLABS_API_KEY')
+
 
 text = "Hello, welcome to the Voice Processing Toolkit!"
 
@@ -110,6 +120,7 @@ print(f"Processed text: {text}")
  - [Wake Word Decorators](example_usage/Wakeword_decorators.py): Demonstrates how to register actions with the VoiceProcessingManager that will be triggered when the wake word is detected.
  - [Custom Recording Logic](example_usage/Custom_recording_logic.py): Demonstrates custom recording settings and runs the VoiceProcessingManager without the wake word detector.
  - [Text to Speech](example_usage/Text_to_speach.py): Demonstrates the text to speech functionality with text as input using the VoiceProcessingManager.
+ - [Autogen_voice_assistant](example_usage/Autogen_voice_assistant_example.ipynb): Demonstrates how to use the VoiceProcessingManager to create a voice assistant with custom wake words and instructions.
 
 
  ## Configuration

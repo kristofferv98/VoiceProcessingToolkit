@@ -1,17 +1,17 @@
-import logging
-import os
-
+from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
 from dotenv import load_dotenv
 
-from VoiceProcessingToolkit.VoiceProcessingManager import text_to_speech_stream
+import os
+import logging
+
+# logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-# Basic configuration
-logging.basicConfig(level=logging.INFO)
+# Set environment variables for API keys
+os.getenv('PICOVOICE_APIKEY')
+os.getenv('OPENAI_API_KEY')
+os.getenv('ELEVENLABS_API_KEY')
 
-
-#os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
-elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')
 
 
 def main():
@@ -66,12 +66,11 @@ def main():
     api_key = elevenlabs_api_key
 
     # uncomment the following line to use text_to_speech instead of text_to_speech_stream
-    #text_to_speech(text=text, api_key=api_key, voice_id=voice_id)
+    # text_to_speech(text=text, api_key=api_key, voice_id=voice_id)
 
     text = text_to_speech_stream(text=text, api_key=api_key, voice_id=voice_id)
 
     print(text)
-
 
 
 if __name__ == '__main__':

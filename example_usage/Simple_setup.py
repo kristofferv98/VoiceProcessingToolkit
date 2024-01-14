@@ -1,16 +1,17 @@
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 from dotenv import load_dotenv
+
 import logging
 import os
 
-# Basic configuration
-logging.basicConfig(level=logging.INFO)
-
+# logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-os.environ['PICOVOICE_APIKEY'] = 'your-picovoice-api-key'
-os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
-os.environ['ELEVENLABS_API_KEY'] = 'your-elevenlabs-api-key'
+# Set environment variables for API keys
+os.getenv('PICOVOICE_APIKEY')
+os.getenv('OPENAI_API_KEY')
+os.getenv('ELEVENLABS_API_KEY')
+
 
 def main():
     """
@@ -69,8 +70,6 @@ def main():
     # Run the voice processing manager with transcription and text-to-speech
     text = vpm.run(transcription=True, tts=True)
     print(f"Processed text: {text}")
-
-
 
 
 if __name__ == '__main__':
