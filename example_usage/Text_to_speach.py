@@ -61,7 +61,7 @@ def main():
 
     """
 
-    text = "Hello, my name is Dorothy. I am a voice assistant. How can I help you?"
+    text = """Hello, my name is Dorothy. I am a voice assistant. How can I help you?"""
     voice_id = "ThT5KcBeYPX3keUQqHPh"
     api_key = elevenlabs_api_key
 

@@ -1,7 +1,9 @@
+import logging
 import threading
 
 shutdown_flag = threading.Event()
 
+logger = logging.getLogger(__name__)
 
 class ThreadManager:
     def __init__(self):
@@ -10,11 +12,14 @@ class ThreadManager:
 
     def add_thread(self, thread):
         if thread and isinstance(thread, threading.Thread):
+            logger.info("Adding thread %s to thread manager", thread.name)
             self.threads.append(thread)
 
     def join_all(self):
         for thread in self.threads:
+            logger.info("Joining thread %s", thread.name)
             if thread.is_alive():
+                logger.info("Thread %s is alive, joining...", thread.name)
                 try:
                     thread.join()
                 except KeyboardInterrupt:
@@ -25,6 +30,7 @@ class ThreadManager:
 
     def shutdown(self):
         # Ensure that shutdown is only performed once
+        logger.info("Shutdown requested")
         if self.shutdown_requested:
             return
         shutdown_flag.set()
@@ -39,7 +45,7 @@ class ThreadManager:
 
     def handle_keyboard_interrupt(self):
         if not self.shutdown_requested:
-            print("KeyboardInterrupt detected, shutting down threads...")
+            logger.info("KeyboardInterrupt detected, shutting down threads...")
             self.shutdown()
 
 

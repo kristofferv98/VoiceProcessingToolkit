@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 import os
 import autogen
 import logging
-
-#logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 # Set environment variables for API keys
@@ -21,9 +20,7 @@ config_list = [
     {"model": "gpt-3.5-turbo-1106-preview", "api_key": openai_api_key},
 ]
 
-jarvis_assistant_id = "asst_auCTYeOaVgpFLEeKVW7RhIrQ"
-llm_config = {"config_list": config_list, "cache_seed": 42, "assistant_id": jarvis_assistant_id}
-
+llm_config = {"config_list": config_list, "cache_seed": 42}
 
 # Create the agent that uses the LLM.
 assistant = GPTAssistantAgent(
@@ -113,9 +110,12 @@ def initiate_jarvis_loop():
     Continuously interacts with Jarvis by capturing user input, transcribing it, and obtaining responses.
     """
     while True:
+        try:
             transcription = get_user_input()
-            if transcription is not None:
-                ask_assistant(transcription)
+            ask_assistant(transcription)
+        except KeyboardInterrupt:
+            logging.info("Interrupted by user, shutting down.")
+            break
 
 
 if __name__ == '__main__':
