@@ -24,7 +24,6 @@ class AudioDataProvider:
         self._py_audio = pyaudio.PyAudio()
         self.recording_finished_event = threading.Event()  # New event to signal recording completion
 
-
     def start_stream(self):
         self._stream = self._py_audio.open(
             format=self._audio_format,
@@ -70,8 +69,7 @@ class AudioRecorder:
         self.INACTIVITY_LIMIT = inactivity_limit
         self.MIN_RECORDING_LENGTH = min_recording_length
         self.BUFFER_LENGTH = buffer_length
-        self._audio_buffer = collections.deque(maxlen=self.BUFFER_LENGTH * self._cobra_handle.sample_rate // self.
-                                               _cobra_handle.frame_length)
+        self._audio_buffer = collections.deque(maxlen=int(self.BUFFER_LENGTH * self._cobra_handle.sample_rate))
         self._inactivity_frames = 0  # Inactivity frames counter is now private
         self._is_recording = False  # Recording state is now private
         self._recording = False  # Recording state is now private
@@ -89,7 +87,6 @@ class AudioRecorder:
             self.recording_thread.join()
         if self._audio_data_provider:
             self._audio_data_provider.stop_stream()
-
 
     def perform_recording(self) -> str:
         """
@@ -307,7 +304,6 @@ class AudioRecorder:
             self.recording_thread.join()
             self._py_audio.terminate()
         self._logger.info("Recording stopped.")
-
 
 
 if __name__ == '__main__':

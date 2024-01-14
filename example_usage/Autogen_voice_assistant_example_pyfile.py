@@ -7,11 +7,8 @@ import os
 import autogen
 import logging
 
-# Run pip install pyautogen==0.2.6 in terminal to install autogen
-
-# logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
 load_dotenv()
-logging.basicConfig(level=logging.CRITICAL)
 
 # Set environment variables for API keys
 os.getenv('PICOVOICE_APIKEY')
@@ -67,12 +64,19 @@ user_proxy = autogen.UserProxyAgent(
 )
 
 
-def get_user_input(vpm):
+def get_user_input():
     """
     Captures user input via voice, transcribes it, and returns the transcription.
     """
+    vpm = VoiceProcessingManager.create_default_instance(
+        use_wake_word=True,
+        play_notification_sound=True,
+        wake_word="jarvis",
+        min_recording_length=3.5,
+        inactivity_limit=2.5,
+    )
 
-    print("Say something to Jarvis")
+    logging.info("Say something to Jarvis")
 
     transcription = vpm.run(tts=False, streaming=True)
     logging.info(f"Processed text: {transcription}")
@@ -108,18 +112,10 @@ def initiate_jarvis_loop():
     """
     Continuously interacts with Jarvis by capturing user input, transcribing it, and obtaining responses.
     """
-    vpm = VoiceProcessingManager.create_default_instance(
-        use_wake_word=True,
-        play_notification_sound=True,
-        wake_word="jarvis",
-        min_recording_length=3,
-        inactivity_limit=2.5,
-    )
-
     while True:
-        transcription = get_user_input(vpm)
-        if transcription is not None:
-            ask_assistant(transcription)
+            transcription = get_user_input()
+            if transcription is not None:
+                ask_assistant(transcription)
 
 
 if __name__ == '__main__':

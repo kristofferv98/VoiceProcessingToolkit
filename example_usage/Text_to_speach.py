@@ -10,7 +10,7 @@ load_dotenv()
 # Set environment variables for API keys
 os.getenv('PICOVOICE_APIKEY')
 os.getenv('OPENAI_API_KEY')
-os.getenv('ELEVENLABS_API_KEY')
+elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')
 
 
 

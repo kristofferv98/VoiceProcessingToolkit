@@ -287,7 +287,6 @@ class VoiceProcessingManager:
                     text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
             return transcription
         logger.debug("Voice command processing completed.")
-        thread_manager.shutdown()
         return None
 
     def monitor_active_threads(self):
@@ -311,21 +310,14 @@ class VoiceProcessingManager:
         Returns:
             bool: True if the stream is closed, False otherwise.
         """
-        try:
-            return self.audio_stream_manager.is_stream_closed()
-        except Exception as e:
-            logger.error("Error checking if stream is closed: %s", e)
-            return True
+        return self.audio_stream_manager.is_stream_closed()
 
     def reinitialize_stream(self):
         """
         Reinitializes the audio stream if it has been closed.
         """
-        try:
-            if self.is_stream_closed():
-                self.audio_stream_manager._initialize_stream(self.rate, self.channels, self.audio_format, self.frames_per_buffer)
-        except Exception as e:
-            logger.error("Error reinitializing stream: %s", e)
+        if self.is_stream_closed():
+            self.audio_stream_manager.initialize_stream(self.rate, self.channels, self.audio_format, self.frames_per_buffer)
 
     def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
         """

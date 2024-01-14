@@ -64,7 +64,7 @@ def main():
 
     """
     # Create a VoiceProcessingManager instance with default settings
-    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
+    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=False, play_notification_sound=False,
                                                          wake_word='jarvis')
 
     # Run the voice processing manager with transcription and text-to-speech
