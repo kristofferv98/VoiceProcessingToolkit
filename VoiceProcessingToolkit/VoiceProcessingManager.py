@@ -407,7 +407,7 @@ class VoiceProcessingManager:
                 action_manager=self.action_manager,
                 audio_stream_manager=self.audio_stream_manager,
                 play_notification_sound=self.play_notification_sound,
-                save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None,
+                save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else False,
             )
         # Initialize VoiceRecorder
         self.voice_recorder = AudioRecorder(output_directory=self.output_directory,
