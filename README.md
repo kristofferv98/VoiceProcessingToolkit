@@ -132,7 +132,7 @@ text_to_speech_stream(text=text)
 
 
  ### Configuration
- Customize the toolkit with settings like wake word sensitivity and audio sample rate. See `configuration.md` for details.
+ Customize the toolkit with settings like wake word sensitivity and audio sample rate. See the examples for more details.
 
  ### Contributing
  Contributions are welcome! See CONTRIBUTING.md for guidelines.
