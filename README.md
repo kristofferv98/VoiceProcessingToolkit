@@ -124,6 +124,9 @@ print(f"Processed text: {text}")
  ## License
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
 
+ ## Development Status
+ VoiceProcessingToolkit is still in development, and feedback is greatly appreciated. If you have suggestions or encounter any issues, please feel free to open an issue on the GitHub repository or contribute to the project.
+
  ## Acknowledgements
  I would like to extend my gratitude to OpenAI, ElevenLabs, and Picovoice for their exceptional tools that have significantly contributed to the development of this project. Their innovative technologies have been instrumental in enabling the capabilities of the VoiceProcessingToolkit.
  VoiceProcessingToolkit is licensed under the MIT License. See the LICENSE file for more details.
