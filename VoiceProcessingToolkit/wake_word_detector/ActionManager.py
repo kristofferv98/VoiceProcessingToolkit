@@ -32,13 +32,14 @@ class ActionManager:
         """
         Executes all registered action functions concurrently.
         """
-        # Ensure that each action is a coroutine before gathering
-        coroutines = [action() if asyncio.iscoroutinefunction(action) else asyncio.to_thread(action) for action in
-                      self.__actions]
-        results = await asyncio.gather(*coroutines, return_exceptions=True)
-        for result in results:
-            if isinstance(result, Exception):
-                self.__logger.exception("An exception occurred while executing an action: %s", result, exc_info=result)
+        if not shutdown_flag.is_set():
+            # Ensure that each action is a coroutine before gathering
+            coroutines = [action() if asyncio.iscoroutinefunction(action) else asyncio.to_thread(action) for action in
+                          self.__actions]
+            results = await asyncio.gather(*coroutines, return_exceptions=True)
+            for result in results:
+                if isinstance(result, Exception):
+                    self.__logger.exception("An exception occurred while executing an action: %s", result, exc_info=result)
 
 
 def register_action_decorator(action_manager):
