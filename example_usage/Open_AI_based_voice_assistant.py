@@ -68,20 +68,20 @@ user_proxy = autogen.UserProxyAgent(
         "TERMINATE" or "TERMINATE."),
 )
 
-# Create a VoiceProcessingManager instance with default settings
-vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
-                                                     wake_word='jarvis')
-
-
 def get_user_input():
     # Create a VoiceProcessingManager instance with default settings
-    vpm = VoiceProcessingManager.create_default_instance(use_wake_word=True, play_notification_sound=True,
-                                                         wake_word='jarvis', min_recording_length=2)
+    vpm = VoiceProcessingManager.create_default_instance(
+        use_wake_word=True,
+        play_notification_sound=True,
+        wake_word='jarvis',
+        min_recording_length=1
+    )
+    print("Say something to Jarvis")
 
     # Run the voice processing manager with transcription and text-to-speech
-    print("Say something to Jarvis")
     transcription = vpm.run(transcription=True, tts=False)
-    # cleanup
+    print(f"Processed text: {transcription}")
+
     return transcription
 
 
