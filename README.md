@@ -57,7 +57,7 @@ os.getenv('ELEVENLABS_API_KEY')
 
  # Run the voice processing manager with transcription and text-to-speech
  text = vpm.run()
- print(f"Processed text: {text}")
+ print(text)
  ```
  ### Text-to-Speech Example
 
