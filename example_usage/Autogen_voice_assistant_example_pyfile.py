@@ -9,7 +9,7 @@ import logging
 # logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-# Set environment variables for API keys
+# Set environment variables for API keys in .env file
 os.getenv('PICOVOICE_APIKEY')
 openai_api_key = os.getenv('OPENAI_API_KEY')
 elevenlabs_api_key = os.getenv('ELEVENLABS_API_KEY')

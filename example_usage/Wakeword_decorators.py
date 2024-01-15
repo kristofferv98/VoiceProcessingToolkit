@@ -8,8 +8,9 @@ import logging
 
 # logging.basicConfig(level=logging.INFO)
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
-# Set environment variables for API keys
+# Set environment variables for API keys in .env file
 os.getenv('PICOVOICE_APIKEY')
 os.getenv('OPENAI_API_KEY')
 os.getenv('ELEVENLABS_API_KEY')
@@ -32,7 +33,7 @@ def main():
             use_wake_word=True,
             wake_word="computer",
             save_wake_word_recordings=True,
-            play_notification_sound=False
+            play_notification_sound=True,
         )
 
         @vpm.action_manager.register_action
