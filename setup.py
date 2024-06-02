@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="VoiceProcessingToolkit",
-    version="0.1.7.1",
+    version="0.1.7.2",
     author="Kristoffer Vatnehol",
     author_email="kristoffer.vatnehol@appacia.com",
     description="A comprehensive library for voice processing tasks such as wake word detection, speech recognition, "
@@ -30,7 +30,7 @@ setup(
         "openai~=1.6.1",
         "python-dotenv~=1.0.0",
         "requests~=2.31.0",
-        "elevenlabs~=0.2.27",
+        "elevenlabs==0.2.27",
         "numpy~=1.26.2",
         "pvcobra~=2.0.1",
         "pvkoala~=2.0.0",
