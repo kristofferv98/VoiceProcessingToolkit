@@ -24,10 +24,9 @@ setup(
     package_dir={"": "."},
     packages=find_packages(where="."),
     include_package_data=True,
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     install_requires=[
         "PyAudio~=0.2.14",
-        "openai>=1.10.0,<2.0.0",
         "python-dotenv",
         "requests~=2.31.0",
         "elevenlabs==0.2.27",

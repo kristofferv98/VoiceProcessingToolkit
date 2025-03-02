@@ -6,7 +6,7 @@ import time
 import pyaudio
 from elevenlabs import generate, stream
 
-from VoiceProcessingToolkit.transcription.whisper import WhisperTranscriber
+from VoiceProcessingToolkit.transcription.elevenlabs import ElevenLabsTranscriber
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
@@ -147,7 +147,7 @@ class VoiceProcessingManager:
             audio_stream_manager (AudioStream): Manages the audio stream.
             wake_word_detector (WakeWordDetector): Handles wake word detection.
             voice_recorder (AudioRecorder): Manages audio recording.
-            transcriber (WhisperTranscriber): Transcribes recorded audio.
+            transcriber (ElevenLabsTranscriber): Transcribes recorded audio.
             action_manager (ActionManager): Manages actions triggered by voice commands.
             recorded_file (str): Path to the last recorded audio file.
             elevenlabs_config (ElevenLabsConfig): Configuration for ElevenLabs text-to-speech service.
@@ -241,7 +241,7 @@ class VoiceProcessingManager:
         Returns:
             VoiceProcessingManager: An instance of VoiceProcessingManager with default settings and dependencies.
         """
-        transcriber = WhisperTranscriber()
+        transcriber = ElevenLabsTranscriber()
         action_manager = ActionManager()
         audio_stream_manager = AudioStream(rate=rate, channels=channels, _audio_format=audio_format,
                                            frames_per_buffer=frames_per_buffer)

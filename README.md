@@ -21,7 +21,7 @@
 ### Features
  + Wake word detection using Picovoice Porcupine.
  + High-quality voice recording with adjustable settings for Voice Activation Detection.
- + Fast and accurate speech-to-text transcription with OpenAI's Whisper.
+ + Fast and accurate speech-to-text transcription with ElevenLabs Speech-to-Text API.
  + Customizable text-to-speech synthesis via ElevenLabs' API.
  + Secure API key management with environment variables.
  + Example scripts for easy demonstration and usage.
@@ -49,7 +49,6 @@ load_dotenv()
 
 # Set environment variables for API keys
 os.getenv('PICOVOICE_APIKEY')
-os.getenv('OPENAI_API_KEY')
 os.getenv('ELEVENLABS_API_KEY')
 
  # Create a VoiceProcessingManager instance with default settings
@@ -109,7 +108,7 @@ text_to_speech_stream(text=text)
 
  1. Install the toolkit via pip: `pip install VoiceProcessingToolkit`
 
- 2. Obtain API keys from Picovoice, OpenAI, and ElevenLabs.
+ 2. Obtain API keys from Picovoice and ElevenLabs.
 
  3. Set the API keys as environment variables.
 
@@ -148,7 +147,7 @@ text_to_speech_stream(text=text)
  The project is in development. Feedback and contributions are appreciated.
 
  ### Acknowledgements
- Thanks to OpenAI, ElevenLabs, and Picovoice for their tools that enhance this project.
+ Thanks to ElevenLabs and Picovoice for their tools that enhance this project.
 
  ### Contact Information
  For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).

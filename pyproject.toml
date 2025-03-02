@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "VoiceProcessingToolkit"
+version = "0.1.8.3"
+description = "A comprehensive library for voice processing tasks such as wake word detection, speech recognition, translation, and text-to-speech."
+readme = "README.md"
+authors = [
+    {name = "Kristoffer Vatnehol", email = "kristoffer.vatnehol@appacia.com"},
+]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "PyAudio~=0.2.14",
+    "python-dotenv",
+    "requests==2.31.0",
+    "elevenlabs==0.2.27",
+    "numpy~=1.26.2",
+    "pvcobra~=2.0.1",
+    "pvkoala~=2.0.0",
+    "pvporcupine~=3.0.1",
+    "pygame~=2.5.2",
+]
+requires-python = ">=3.9"
+
+[project.urls]
+"Homepage" = "https://github.com/kristofferv98/VoiceProcessingToolkit.git"
+"Bug Tracker" = "https://github.com/kristofferv98/VoiceProcessingToolkit.git"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = ["VoiceProcessingToolkit"]
+
+[tool.setuptools.package-data]
+"VoiceProcessingToolkit" = ["wake_word_detector/Wav_MP3/*.wav"] 
