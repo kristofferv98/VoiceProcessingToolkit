@@ -3,28 +3,33 @@
         "provider": "elevenlabs",
         "model_id": "whisper-1",
         "max_retries": 3,
-        "retry_delay": 2.0,
-        "timeout": 30.0
+        "retry_delay": 2,
+        "timeout": 30
     },
     "audio": {
         "rate": 16000,
         "channels": 1,
-        "audio_format": 16,
-        "frames_per_buffer": 1024,
-        "energy_threshold": 300.0,
-        "silence_threshold": 50.0,
-        "min_speaking_time": 1.0,
-        "min_silence_time": 1.5,
-        "max_speaking_time": 30.0,
-        "frame_duration_ms": 30.0
+        "audio_format": "paInt16",
+        "frames_per_buffer": 512,
+        "energy_threshold": 300,
+        "silence_threshold": 50,
+        "min_speaking_time": 0.5,
+        "min_silence_time": 0.5,
+        "max_speaking_time": 10,
+        "use_cobra_vad": true,
+        "voice_threshold": 0.8,
+        "silence_limit": 2.0,
+        "inactivity_limit": 2.0,
+        "min_recording_length": 2.0,
+        "buffer_length": 2.0
     },
     "wake_word": {
-        "wake_word": "jarvis",
-        "sensitivity": 0.8,
-        "access_key": null
+        "wake_word": "computer",
+        "sensitivity": 0.7,
+        "access_key": "YOUR_PICOVOICE_ACCESS_KEY"
     },
     "paths": {
-        "output_dir": "./recordings",
-        "notification_sound_dir": "./sounds"
+        "output_dir": "Wav_MP3",
+        "notification_sound_dir": "notification_sounds"
     }
 } 

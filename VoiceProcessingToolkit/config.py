@@ -34,6 +34,13 @@ class AudioConfig:
     min_silence_time: float = 1.5  # Minimum duration of silence to end recording (seconds)
     max_speaking_time: float = 30.0  # Maximum speaking time for a single recording (seconds)
     frame_duration_ms: float = 30.0  # Duration of each audio frame in milliseconds
+    
+    # Cobra VAD specific parameters
+    voice_threshold: float = 0.8  # Threshold for Cobra VAD (0.0 to 1.0)
+    inactivity_limit: float = 2.0  # Duration of inactivity before stopping recording (seconds)
+    min_recording_length: float = 2.0  # Minimum recording length for a valid sample (seconds)
+    buffer_length: float = 2.0  # Length of audio buffer in seconds (for context before speech)
+    use_cobra_vad: bool = True  # Whether to use Cobra VAD instead of energy-based detection
 
 
 @dataclass

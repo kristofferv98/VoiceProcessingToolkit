@@ -2,6 +2,7 @@ import logging
 import threading
 import traceback
 from typing import List, Dict, Optional, Callable, Any
+import pyaudio
 
 shutdown_flag = threading.Event()
 
@@ -158,3 +159,126 @@ class ThreadManager:
 # Create a global instance
 thread_manager = ThreadManager()
 shutdown_flag = thread_manager.shutdown_requested
+
+class AudioDataProvider:
+    """
+    Provides audio data from the microphone.
+    This class manages a PyAudio stream and provides convenient methods for reading audio data.
+    """
+    def __init__(
+        self,
+        rate: int = 16000,
+        channels: int = 1,
+        audio_format: int = pyaudio.paInt16,
+        frames_per_buffer: int = 512
+    ):
+        """
+        Initialize a new AudioDataProvider.
+        
+        Args:
+            rate: Sample rate for audio recording (Hz)
+            channels: Number of audio channels
+            audio_format: PyAudio format (e.g. pyaudio.paInt16)
+            frames_per_buffer: Number of frames per buffer
+        """
+        self.rate = rate
+        self.channels = channels
+        self.audio_format = audio_format
+        self.frames_per_buffer = frames_per_buffer
+        
+        # Initialize PyAudio
+        self._pyaudio = pyaudio.PyAudio()
+        self._stream = None
+        self._is_streaming = False
+        
+        # Thread safety
+        self._lock = threading.Lock()
+        
+        logger.debug(f"AudioDataProvider initialized: rate={rate}, channels={channels}, format={audio_format}")
+    
+    def start_stream(self) -> bool:
+        """
+        Start the audio stream.
+        
+        Returns:
+            bool: True if the stream was started successfully, False otherwise
+        """
+        with self._lock:
+            if self._is_streaming:
+                logger.debug("Stream is already running")
+                return True
+            
+            try:
+                self._stream = self._pyaudio.open(
+                    format=self.audio_format,
+                    channels=self.channels,
+                    rate=self.rate,
+                    input=True,
+                    frames_per_buffer=self.frames_per_buffer
+                )
+                self._is_streaming = True
+                logger.debug("Audio stream started successfully")
+                return True
+            except Exception as e:
+                logger.error(f"Error starting audio stream: {e}")
+                return False
+    
+    def read_audio(self, exception_on_overflow=False) -> Optional[bytes]:
+        """
+        Read audio data from the stream.
+        
+        Args:
+            exception_on_overflow: Whether to raise an exception on buffer overflow
+            
+        Returns:
+            bytes or None: Audio data if read successfully, None if the stream is not active
+        """
+        with self._lock:
+            if not self._is_streaming or self._stream is None:
+                return None
+            
+            try:
+                data = self._stream.read(self.frames_per_buffer, exception_on_overflow)
+                return data
+            except Exception as e:
+                logger.error(f"Error reading audio data: {e}")
+                return None
+    
+    def stop_stream(self) -> None:
+        """
+        Stop the audio stream and release resources.
+        """
+        with self._lock:
+            if self._stream:
+                try:
+                    self._stream.stop_stream()
+                    self._stream.close()
+                except Exception as e:
+                    logger.error(f"Error stopping audio stream: {e}")
+                finally:
+                    self._stream = None
+                    self._is_streaming = False
+    
+    def get_sample_size(self) -> int:
+        """
+        Get the sample size in bytes for the current audio format.
+        
+        Returns:
+            int: Sample size in bytes
+        """
+        return self._pyaudio.get_sample_size(self.audio_format)
+    
+    def cleanup(self) -> None:
+        """
+        Clean up all resources used by the audio provider.
+        """
+        self.stop_stream()
+        if self._pyaudio:
+            self._pyaudio.terminate()
+            self._pyaudio = None
+    
+    def __del__(self) -> None:
+        """
+        Ensure resources are properly cleaned up when the object is garbage collected.
+        """
+        self.cleanup()

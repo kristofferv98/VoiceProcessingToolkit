@@ -8,21 +8,22 @@ This toolkit provides an end-to-end solution for voice processing applications, 
 
 ## Features
 
-- **Wake Word Detection**: Detect custom wake words using Porcupine engine
-- **Voice Recording**: Record voice commands with automatic silence detection
-- **Transcription**: Convert speech to text using the ElevenLabs API
-- **Modular Design**: Well-defined interfaces for extending functionality
-- **Resource Management**: Proper resource cleanup to prevent memory leaks
-- **Thread Safety**: Robust thread management for concurrent operations
-- **Comprehensive Configuration**: Flexible configuration system with sensible defaults
+- Wake word detection using Picovoice Porcupine
+- Voice activity detection using Picovoice Cobra VAD
+- Advanced recording with configurable thresholds and timing parameters
+- Audio transcription with multiple providers supported
+- Modular design for easy extension and customization
+- Comprehensive configuration system
 
 ## Major Changes in v2.0
 
-- **Interface-Based Architecture**: All major components now implement interfaces, making the system more modular and extensible
-- **Improved Thread Management**: Robust thread handling with proper resource cleanup
-- **Centralized Configuration**: New configuration system with sensible defaults
-- **Enhanced Error Handling**: Comprehensive error handling with retries
-- **Better Resource Management**: Proper cleanup of resources to prevent memory leaks
+- **Interface-based Architecture**: All components implement well-defined interfaces for better extensibility and testability.
+- **Centralized Configuration**: Unified configuration system with dataclasses and JSON support.
+- **Advanced Voice Detection**: Integration of Picovoice Cobra VAD for superior voice activity detection.
+- **Improved Thread Management**: Better thread handling and resource management.
+- **Enhanced Error Handling**: Comprehensive error handling with retry mechanisms.
+- **Resource Management**: Proper cleanup of resources across all components.
+- **Testing Framework**: Comprehensive unit and integration test suite.
 
 ## Installation
 
@@ -88,48 +89,56 @@ transcription = transcriber.transcribe_audio(recording_path)  # Transcribe
 
 ## Configuration
 
-The toolkit uses a comprehensive configuration system with sensible defaults. You can customize the configuration in several ways:
+VoiceProcessingToolkit uses a flexible configuration system that supports environment variables, constructor parameters, and JSON configuration files.
 
 ### Environment Variables
 
-Set these environment variables to configure API keys:
+- `PICOVOICE_APIKEY`: Your Picovoice API key for wake word detection and Cobra VAD
+- `ELEVENLABS_API_KEY`: Your Eleven Labs API key for transcription
 
-- `ELEVEN_LABS_API_KEY`: API key for ElevenLabs transcription service
-- `PORCUPINE_ACCESS_KEY`: Access key for Porcupine wake word detection
+### JSON Configuration
 
-### Configuration File
-
-Create a JSON configuration file with your desired settings:
+You can provide a configuration file with the following structure:
 
 ```json
 {
     "transcriber": {
         "provider": "elevenlabs",
         "model_id": "whisper-1",
-        "max_retries": 3
+        "max_retries": 3,
+        "retry_delay": 2,
+        "timeout": 30
     },
     "audio": {
         "rate": 16000,
-        "energy_threshold": 300.0,
-        "min_speaking_time": 1.0
+        "channels": 1,
+        "audio_format": "paInt16",
+        "frames_per_buffer": 512,
+        "energy_threshold": 300,
+        "silence_threshold": 50,
+        "min_speaking_time": 0.5,
+        "min_silence_time": 0.5,
+        "max_speaking_time": 10,
+        "use_cobra_vad": true,
+        "voice_threshold": 0.8,
+        "silence_limit": 2.0,
+        "inactivity_limit": 2.0,
+        "min_recording_length": 2.0,
+        "buffer_length": 2.0
     },
     "wake_word": {
         "wake_word": "computer",
-        "sensitivity": 0.75
+        "sensitivity": 0.7,
+        "access_key": "YOUR_PICOVOICE_ACCESS_KEY"
     },
     "paths": {
-        "output_dir": "/path/to/recordings"
+        "output_dir": "Wav_MP3",
+        "notification_sound_dir": "notification_sounds"
     }
 }
 ```
 
-Load the configuration in your code:
-
-```python
-from VoiceProcessingToolkit import config
-
-custom_config = config.get_config("config.json")
-```
+See `example_config.json` for a complete configuration example.
 
 ## Testing
 
