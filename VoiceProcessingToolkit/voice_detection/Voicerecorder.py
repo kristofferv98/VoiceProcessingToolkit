@@ -9,301 +9,461 @@ import threading
 import numpy as np
 import pyaudio
 import pvcobra
+from typing import Optional, Tuple, List, Dict, Any, Union
+
+from VoiceProcessingToolkit.interfaces import AudioRecorderInterface
+from VoiceProcessingToolkit.config import default_config
+from VoiceProcessingToolkit.shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
 
 
 # Audio Data Provider Class
 class AudioDataProvider:
-    def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
-        self._audio_format = audio_format
-        self._channels = channels
-        self._rate = rate
-        self._frames_per_buffer = frames_per_buffer
-        self._stream = None
-        self._py_audio = pyaudio.PyAudio()
-        self.recording_finished_event = threading.Event()  # New event to signal recording completion
-
-    def start_stream(self):
-        self._stream = self._py_audio.open(
-            format=self._audio_format,
-            channels=self._channels,
-            rate=self._rate,
-            input=True,
-            frames_per_buffer=self._frames_per_buffer
-        )
-
-    def get_next_frame(self):
-        return self._stream.read(self._frames_per_buffer, exception_on_overflow=False)
-
-    def stop_stream(self):
-        if self._stream:
-            self._stream.stop_stream()
-            self._stream.close()
-            self._py_audio.terminate()
-
-
-class AudioRecorder:
-    def __init__(self, output_directory=None, access_key=None, voice_threshold=0.8, inactivity_limit=2,
-                 min_recording_length=3, buffer_length=2):
+    def __init__(self, frames_per_buffer: int = 1024, channels: int = 1, 
+                 rate: int = 16000, audio_format: int = pyaudio.paInt16):
         """
-        Initializes the audio recorder with the given parameters.
+        Initialize a new AudioDataProvider.
+        
         Args:
-            output_directory (str): The directory where recordings will be saved.
-            access_key (str): The access key for the Cobra VAD engine.
-            voice_threshold (float): The threshold for voice detection.
-            inactivity_limit (float): The number of seconds of inactivity before stopping the recording.
-            min_recording_length (float): The minimum length of a valid recording.
-            buffer_length (float): The length of the audio buffer.
+            frames_per_buffer: Number of frames per buffer.
+            channels: Number of audio channels.
+            rate: Sample rate.
+            audio_format: Audio format (e.g., pyaudio.paInt16).
         """
-        self.SILENCE_LIMIT = None
-        self.last_saved_file = None
-        self._logger = logger  # Logger is now private
-        self._py_audio = pyaudio.PyAudio()
-        self._access_key = access_key or os.environ.get('PICOVOICE_APIKEY')  # Access key is now private
-        self._vad_engine = self._cobra_handle = pvcobra.create(
-            access_key=self._access_key)  # VAD engine and Cobra handle are now private
-        self._output_directory = output_directory or os.path.join(os.path.dirname(__file__),
-                                                                  'Wav_MP3')  # Output directory is now private
-        self.VOICE_THRESHOLD = voice_threshold
-        self.INACTIVITY_LIMIT = inactivity_limit
-        self.MIN_RECORDING_LENGTH = min_recording_length
-        self.BUFFER_LENGTH = buffer_length
-        self._audio_buffer = collections.deque(maxlen=int(self.BUFFER_LENGTH * self._cobra_handle.sample_rate))
-        self._inactivity_frames = 0  # Inactivity frames counter is now private
-        self._is_recording = False  # Recording state is now private
-        self._recording = False  # Recording state is now private
-        self._frames_to_save = []  # Frames to save are now private
-        self._frames = []  # Frames are now private
-        self._lock = threading.Lock()  # Lock for thread safety is now private
-        self.recording_thread = None  # Recording thread is now private
-        self._audio_data_provider = None  # Audio data provider is now private
+        self.frames_per_buffer = frames_per_buffer
+        self.channels = channels
+        self.rate = rate
+        self.audio_format = audio_format
+        
+        self.py_audio: Optional[pyaudio.PyAudio] = None
+        self.stream: Optional[pyaudio.Stream] = None
+        self.logger = logging.getLogger(__name__)
+        
+        # Cache of audio devices
+        self._input_device_info: Optional[Dict[str, Any]] = None
 
-    def cleanup(self):
+    def start_stream(self) -> bool:
         """
-        Cleans up the resources used by the audio recorder.
-        """
-        if self.recording_thread and self.recording_thread.is_alive():
-            self.recording_thread.join()
-        if self._audio_data_provider:
-            self._audio_data_provider.stop_stream()
-
-    def perform_recording(self) -> str:
-        """
-        Starts the recording process, handles KeyboardInterrupt, and ensures cleanup.
+        Start the audio input stream.
+        
         Returns:
-            str: The path to the recorded audio file.
+            bool: True if the stream was started successfully, False otherwise.
         """
-        self._audio_data_provider = AudioDataProvider()
-        self.recording_thread = threading.Thread(target=self.start_recording, args=(self._audio_data_provider,))
-        self.recording_thread.start()
         try:
-            while self._is_recording:
-                time.sleep(0.1)
-        except KeyboardInterrupt:
-            self._logger.info("Recording interrupted by user.")
-        finally:
-            self.stop_recording()
-            return self.last_saved_file if self.last_saved_file else None
-
-    def start_recording(self, audio_data_provider: AudioDataProvider) -> None:
-        """
-        Starts the audio recording process using the provided audio data provider.
-        Args:
-            audio_data_provider (AudioDataProvider): The provider of audio data frames.
-        """
-        self._audio_data_provider = audio_data_provider
-        self._audio_data_provider.start_stream()
-        self._is_recording = True
-        self.recording_thread = threading.Thread(target=self.record_loop, args=(audio_data_provider,))
-        self.recording_thread.start()
-        self._logger.info("Recording started.")
-
-    def record_loop(self, audio_data_provider: AudioDataProvider) -> None:
-        """
-        The main loop for recording audio, processing frames, and managing recording state.
-        Args:
-            audio_data_provider (AudioDataProvider): The provider of audio data frames.
-        """
-        silent_frames = 0
-        while self._is_recording:
-            try:
-                frame = audio_data_provider.get_next_frame()
-                self.process_frame(frame)
-                if not self._recording:
-                    self.buffer_audio_frame(frame)
-                else:
-                    voice_activity_detected = self.detect_voice_activity(frame)
-                    if voice_activity_detected:
-                        self._inactivity_frames = 0  # Inactivity frames counter is now private
-                        self._frames_to_save.append(frame)
-                    else:
-                        self._inactivity_frames += 1
-                        silent_frames += 1
-
-                        if self.should_finalize_recording(silent_frames):
-                            self._logger.info("Inactivity limit exceeded. Finalizing recording...")
-                            return
-            except Exception as e:
-                self._logger.error(f"An error occurred during recording: {e}")
-                break
-
-    def should_finalize_recording(self, silent_frames: int) -> bool:
-        """
-        Determines whether the recording should be finalized based on the number of silent frames.
-        Args:
-            silent_frames (int): The number of consecutive silent frames.
-        Returns:
-            bool: True if the recording should be finalized, False otherwise.
-        """
-        if (self._inactivity_frames * self._cobra_handle.frame_length / self._cobra_handle.sample_rate > self.
-                INACTIVITY_LIMIT):
-            self._logger.info("No voice detected for a while. Finalizing recording...")
-            self.finalize_recording()
+            # Clean up any existing stream first
+            self.stop_stream()
+            
+            self.py_audio = pyaudio.PyAudio()
+            
+            # Get default input device
+            device_info = self._get_default_input_device()
+            if device_info:
+                self.logger.info(f"Using input device: {device_info['name']}")
+            
+            self.stream = self.py_audio.open(
+                format=self.audio_format,
+                channels=self.channels,
+                rate=self.rate,
+                input=True,
+                frames_per_buffer=self.frames_per_buffer
+            )
+            
+            self.logger.debug("Audio stream started successfully")
             return True
-        if (silent_frames * self._cobra_handle.frame_length / self._cobra_handle.sample_rate > self.
-                SILENCE_LIMIT):
-            self._logger.info("Exceeded silence limit. Finalizing recording...")
-            self.finalize_recording()
-            return True
-        return False
-
-    def process_frame(self, frame: bytes) -> None:
-        """
-        Processes a single frame of audio data, detecting voice activity and managing recording state.
-        Args:
-            frame (bytes): A frame of audio data.
-        """
-        if frame is not None:
-            voice_activity_detected = self.detect_voice_activity(frame)
-            self.manage_recording_state(frame, voice_activity_detected)
-
-    def detect_voice_activity(self, frame: bytes) -> bool:
-        """
-        Detects voice activity in a frame of audio data.
-        Args:
-            frame (bytes): A frame of audio data.
-        Returns:
-            bool: True if voice activity is detected, False otherwise.
-        """
-        audio_frame = np.frombuffer(frame, dtype=np.int16)
-        voice_probability = self._vad_engine.process(audio_frame)
-        return voice_probability > self.VOICE_THRESHOLD
-
-    def manage_recording_state(self, frame: bytes, voice_activity_detected: bool) -> None:
-        """
-        Manages the recording state based on voice activity detection.
-        Args:
-            frame (bytes): A frame of audio data.
-            voice_activity_detected (bool): Whether voice activity was detected in the frame.
-        """
-        with self._lock:
-            if voice_activity_detected:
-                self._inactivity_frames = 0  # Inactivity frames counter is now private
-                if not self._is_recording:
-                    self.start_new_recording()
-                self._frames_to_save.append(frame)
-            else:
-                self.buffer_audio_frame(frame)
-                self._inactivity_frames += 1
-                if self._is_recording:
-                    self._frames_to_save.append(frame)
-                    if (
-                            self._inactivity_frames * self._cobra_handle.frame_length / self._cobra_handle.sample_rate >
-                            self.INACTIVITY_LIMIT):
-                        self.finalize_recording()
-
-    def start_new_recording(self) -> None:
-        """
-        Starts a new recording, saving the buffered audio frames.
-        """
-        self._recording = True
-        self._frames_to_save = list(self._audio_buffer)  # Collect buffered audio when voice is detected
-        self._logger.info("Voice Detected - Starting Recording")
-
-    def buffer_audio_frame(self, frame: bytes) -> None:
-        """
-        Buffers an audio frame for potential inclusion in a recording.
-        Args:
-            frame (bytes): A frame of audio data.
-        """
-        if len(self._audio_buffer) == self._audio_buffer.maxlen:
-            self._audio_buffer.popleft()
-        self._audio_buffer.append(frame)
-
-    def check_inactivity_duration(self) -> None:
-        """
-        Checks the duration of inactivity and finalizes the recording if necessary.
-        """
-        if (
-                self._inactivity_frames * self._cobra_handle.frame_length / self._cobra_handle.sample_rate >
-                self.INACTIVITY_LIMIT):
-            self.finalize_recording()
-
-    def finalize_recording(self) -> str:
-        """
-        Finalizes the recording, saving it to a file if it meets the minimum length requirement.
-        Returns:
-            str or bool: The path to the saved recording file, or False if the recording was not saved.
-        """
-        saved_file_path = None
-        if self._frames_to_save:
-            recording_length = len(
-                self._frames_to_save) * self._cobra_handle.frame_length / self._cobra_handle.sample_rate
-            if recording_length >= self.MIN_RECORDING_LENGTH:
-                saved_file_path = self.save_to_wav_file(self._frames_to_save)
-                self._logger.info(f"Recording of {recording_length:.2f} seconds saved.")
-            else:
-                self._logger.info(
-                    f"Recording of {recording_length:.2f} seconds is under the minimum length. Discarded.")
-            self._recording = False  # Ensure recording state is reset
-            self._frames_to_save = []  # Clear the frames to save
-            self._is_recording = False  # Ensure is_recording state is reset
-            if self.recording_thread:
-                self.recording_thread = None  # Reset the recording thread
-        self._recording = False  # Recording state is now private
-        self._frames_to_save = []  # Frames to save are now private
-        self._is_recording = False  # Recording state is now private
-        self.last_saved_file = saved_file_path if saved_file_path else False
-        return self.last_saved_file
-
-    def save_to_wav_file(self, frames: list):
-        """
-        Saves the recorded audio frames to a WAV file.
-        Args:
-            frames (list): A list of audio frames to be saved.
-        Returns:
-            str or bool: The path to the saved WAV file, or False if the recording was not saved.
-        """
-        duration = len(frames) * self._cobra_handle.frame_length / self._cobra_handle.sample_rate
-        if duration < self.MIN_RECORDING_LENGTH:
+            
+        except Exception as e:
+            self.logger.error(f"Failed to start audio stream: {e}")
+            self.stop_stream()  # Clean up partial resources
             return False
-
-        recordings_dir = os.path.join(os.path.dirname(__file__), 'Wav_MP3')
-
-        # Check if the directory exists, if not, create it
-        if not os.path.exists(recordings_dir):
-            os.makedirs(recordings_dir)
-
-        filename = os.path.join(recordings_dir, "recording.wav")
-
-        with wave.open(filename, 'wb') as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16))
-            wf.setframerate(self._cobra_handle.sample_rate)
-            wf.writeframes(b''.join(frames))
-        logger.info(f"Saved to {filename}")
-        return os.path.abspath(filename)
-
-    def stop_recording(self) -> None:
+    
+    def stop_stream(self) -> None:
+        """Stop the audio input stream and clean up resources."""
+        if self.stream:
+            try:
+                self.stream.stop_stream()
+                self.stream.close()
+                self.logger.debug("Audio stream closed")
+            except Exception as e:
+                self.logger.warning(f"Error closing audio stream: {e}")
+            finally:
+                self.stream = None
+                
+        if self.py_audio:
+            try:
+                self.py_audio.terminate()
+                self.logger.debug("PyAudio terminated")
+            except Exception as e:
+                self.logger.warning(f"Error terminating PyAudio: {e}")
+            finally:
+                self.py_audio = None
+    
+    def read_audio(self) -> Optional[bytes]:
         """
-        Stops the recording process and joins the recording thread.
+        Read audio data from the stream.
+        
+        Returns:
+            bytes or None: Audio data read from the stream, or None if an error occurred.
         """
-        self._is_recording = False  # Recording state is now private
-        if self.recording_thread:
+        if not self.stream:
+            self.logger.error("Cannot read audio: stream not started")
+            return None
+        
+        try:
+            data = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
+            return data
+        except Exception as e:
+            self.logger.error(f"Error reading audio data: {e}")
+            return None
+    
+    def _get_default_input_device(self) -> Optional[Dict[str, Any]]:
+        """
+        Get information about the default input device.
+        
+        Returns:
+            dict or None: Information about the default input device, or None if not available.
+        """
+        if not self.py_audio:
+            return None
+            
+        if self._input_device_info is not None:
+            return self._input_device_info
+            
+        try:
+            default_input_device_index = self.py_audio.get_default_input_device_info()['index']
+            self._input_device_info = self.py_audio.get_device_info_by_index(default_input_device_index)
+            return self._input_device_info
+        except Exception as e:
+            self.logger.warning(f"Could not get default input device info: {e}")
+            return None
+    
+    def get_sample_size(self) -> int:
+        """
+        Get the sample size in bytes for the audio format.
+        
+        Returns:
+            int: Sample size in bytes.
+        """
+        if self.py_audio:
+            return self.py_audio.get_sample_size(self.audio_format)
+        return 2  # Default for paInt16
+    
+    def __del__(self):
+        """Ensure cleanup when the object is garbage collected."""
+        self.stop_stream()
+
+
+class VoiceActivityDetector:
+    """
+    Detects voice activity in audio data.
+    
+    Attributes:
+        energy_threshold (float): Threshold for energy-based voice detection.
+        silence_threshold (float): Energy level below which audio is considered silence.
+        min_speaking_time (float): Minimum duration of speech to be considered a valid segment.
+        min_silence_time (float): Minimum duration of silence to finish recording.
+        max_speaking_time (float): Maximum allowed duration for a recording.
+        frame_duration_ms (float): Duration of each audio frame in milliseconds.
+        logger (logging.Logger): Logger for this class.
+    """
+    
+    def __init__(self, 
+                 energy_threshold: float = None,
+                 silence_threshold: float = None,
+                 min_speaking_time: float = None,
+                 min_silence_time: float = None,
+                 max_speaking_time: float = None,
+                 frame_duration_ms: float = None):
+        """
+        Initialize a new VoiceActivityDetector.
+        
+        Args:
+            energy_threshold: Threshold for energy-based voice detection.
+            silence_threshold: Energy level below which audio is considered silence.
+            min_speaking_time: Minimum duration of speech to be considered a valid segment.
+            min_silence_time: Minimum duration of silence to finish recording.
+            max_speaking_time: Maximum allowed duration for a recording.
+            frame_duration_ms: Duration of each audio frame in milliseconds.
+        """
+        audio_config = default_config.audio
+        
+        self.energy_threshold = energy_threshold if energy_threshold is not None else audio_config.energy_threshold
+        self.silence_threshold = silence_threshold if silence_threshold is not None else audio_config.silence_threshold
+        self.min_speaking_time = min_speaking_time if min_speaking_time is not None else audio_config.min_speaking_time
+        self.min_silence_time = min_silence_time if min_silence_time is not None else audio_config.min_silence_time
+        self.max_speaking_time = max_speaking_time if max_speaking_time is not None else audio_config.max_speaking_time
+        self.frame_duration_ms = frame_duration_ms if frame_duration_ms is not None else audio_config.frame_duration_ms
+        
+        self.logger = logging.getLogger(__name__)
+    
+    def is_speech(self, audio_data: bytes, audio_format: int, channels: int) -> Tuple[bool, float]:
+        """
+        Determine if the audio data contains speech based on energy levels.
+        
+        Args:
+            audio_data: Raw audio data bytes.
+            audio_format: Audio format (e.g., pyaudio.paInt16).
+            channels: Number of audio channels.
+            
+        Returns:
+            tuple: (is_speech, energy) where is_speech is a boolean indicating
+                   if speech was detected, and energy is the calculated energy level.
+        """
+        # Convert audio bytes to NumPy array
+        if audio_format == pyaudio.paInt16:
+            numpy_data = np.frombuffer(audio_data, dtype=np.int16)
+        else:
+            self.logger.warning(f"Unsupported audio format: {audio_format}, treating as int16")
+            numpy_data = np.frombuffer(audio_data, dtype=np.int16)
+        
+        # For multi-channel audio, average the channels
+        if channels > 1:
+            numpy_data = numpy_data.reshape(-1, channels)
+            numpy_data = np.mean(numpy_data, axis=1)
+        
+        # Calculate energy (RMS of the signal)
+        energy = np.sqrt(np.mean(numpy_data.astype(np.float32)**2))
+        
+        # Detect speech based on energy threshold
+        is_speech = energy > self.energy_threshold
+        is_silence = energy < self.silence_threshold
+        
+        return is_speech, is_silence, energy
+
+
+class AudioRecorder(AudioRecorderInterface):
+    """
+    Records audio from a microphone when voice activity is detected.
+    Implements the AudioRecorderInterface.
+    
+    Attributes:
+        audio_provider (AudioDataProvider): Provider of audio data.
+        vad (VoiceActivityDetector): Voice activity detector.
+        output_dir (str): Directory to save recorded audio files.
+        recording_started (bool): Flag indicating if recording is in progress.
+        frames (List[bytes]): List of recorded audio frames.
+        speaking_start_time (float): Time when speaking started.
+        last_speech_time (float): Time of the last detected speech.
+        silence_start_time (float): Time when silence started.
+        current_file_path (str): Path to the current recording file.
+        recording_thread (threading.Thread): Thread for recording.
+        lock (threading.Lock): Lock for thread-safe operations.
+        logger (logging.Logger): Logger for this class.
+    """
+    
+    def __init__(self, 
+                 audio_provider: Optional[AudioDataProvider] = None,
+                 vad: Optional[VoiceActivityDetector] = None,
+                 output_dir: Optional[str] = None):
+        """
+        Initialize a new AudioRecorder.
+        
+        Args:
+            audio_provider: Provider of audio data. If None, creates a new one.
+            vad: Voice activity detector. If None, creates a new one.
+            output_dir: Directory to save recorded audio files. If None, uses default from config.
+        """
+        self.audio_provider = audio_provider or AudioDataProvider()
+        self.vad = vad or VoiceActivityDetector()
+        self.output_dir = output_dir or default_config.paths.output_dir
+        
+        # Ensure the output directory exists
+        os.makedirs(self.output_dir, exist_ok=True)
+        
+        # Recording state
+        self.recording_started = False
+        self.frames: List[bytes] = []
+        self.speaking_start_time = 0.0
+        self.last_speech_time = 0.0
+        self.silence_start_time = 0.0
+        self.current_file_path: Optional[str] = None
+        
+        # Thread management
+        self.recording_thread: Optional[threading.Thread] = None
+        self.lock = threading.Lock()
+        self.logger = logging.getLogger(__name__)
+    
+    def perform_recording(self) -> Optional[str]:
+        """
+        Start the recording process.
+        
+        Returns:
+            str or None: The path to the recorded audio file, or None if no file was recorded.
+        """
+        with self.lock:
+            if self.recording_started:
+                self.logger.warning("Recording already in progress")
+                return None
+            
+            # Reset recording state
+            self._reset_recording_state()
+            
+            # Start the audio stream
+            if not self.audio_provider.start_stream():
+                self.logger.error("Failed to start audio stream")
+                return None
+            
+            # Start recording in a new thread
+            self.recording_thread = thread_manager.create_daemon_thread(
+                target=self._recording_loop,
+                name="AudioRecordingThread"
+            )
+            self.recording_thread.start()
+            
+            # Wait for recording to complete
             self.recording_thread.join()
-            self._py_audio.terminate()
-        self._logger.info("Recording stopped.")
+            
+            # Return the path to the recorded file
+            if self.current_file_path and os.path.exists(self.current_file_path):
+                self.logger.info(f"Recording completed: {self.current_file_path}")
+                return self.current_file_path
+            
+            self.logger.warning("No valid recording was made")
+            return None
+    
+    def _recording_loop(self) -> None:
+        """
+        Main recording loop that records audio when speech is detected.
+        """
+        self.recording_started = True
+        start_time = time.time()
+        
+        try:
+            while self.recording_started and not thread_manager.is_shutdown_requested():
+                # Read audio data
+                audio_data = self.audio_provider.read_audio()
+                if not audio_data:
+                    continue
+                
+                # Add frame to the buffer
+                with self.lock:
+                    self.frames.append(audio_data)
+                
+                # Check for voice activity
+                is_speech, is_silence, energy = self.vad.is_speech(
+                    audio_data, 
+                    self.audio_provider.audio_format,
+                    self.audio_provider.channels
+                )
+                
+                current_time = time.time()
+                
+                # Handle speech detection
+                if is_speech:
+                    # If this is the first speech detected, set the start time
+                    if self.speaking_start_time == 0:
+                        self.speaking_start_time = current_time
+                    
+                    # Update the last speech time
+                    self.last_speech_time = current_time
+                    self.silence_start_time = 0  # Reset silence timer
+                    
+                    # Log speech detection with energy level
+                    self.logger.debug(f"Speech detected: Energy = {energy:.2f}")
+                
+                # Handle silence detection
+                elif is_silence and self.speaking_start_time > 0:
+                    # If this is the first silence after speech, set the silence start time
+                    if self.silence_start_time == 0:
+                        self.silence_start_time = current_time
+                    
+                    # Check if we've had enough silence to stop recording
+                    silence_duration = current_time - self.silence_start_time
+                    if silence_duration >= self.vad.min_silence_time:
+                        self.logger.debug(f"Sufficient silence detected ({silence_duration:.2f}s), stopping recording")
+                        break
+                
+                # Check if we've exceeded the maximum recording time
+                if self.speaking_start_time > 0:
+                    recording_duration = current_time - self.speaking_start_time
+                    if recording_duration >= self.vad.max_speaking_time:
+                        self.logger.debug(f"Maximum recording time reached ({recording_duration:.2f}s), stopping recording")
+                        break
+                
+                # Check if we've been waiting for speech for too long
+                if self.speaking_start_time == 0 and current_time - start_time > 10:
+                    self.logger.debug("No speech detected within 10 seconds, stopping recording")
+                    break
+            
+            # After the loop, check if we have a valid recording
+            self._finalize_recording()
+            
+        except Exception as e:
+            self.logger.error(f"Error in recording loop: {e}")
+        finally:
+            self.recording_started = False
+            self.audio_provider.stop_stream()
+    
+    def _finalize_recording(self) -> None:
+        """
+        Finalize the recording process by checking if it's valid and saving it.
+        """
+        # Check if we have a valid recording
+        if self.speaking_start_time == 0:
+            self.logger.debug("No speech detected during recording")
+            return
+        
+        # Check if the recording meets the minimum duration
+        if self.last_speech_time - self.speaking_start_time < self.vad.min_speaking_time:
+            self.logger.debug(f"Recording too short ({self.last_speech_time - self.speaking_start_time:.2f}s), discarding")
+            return
+        
+        # Save the recording
+        try:
+            self._save_recording()
+        except Exception as e:
+            self.logger.error(f"Failed to save recording: {e}")
+    
+    def _save_recording(self) -> None:
+        """
+        Save the recorded audio to a WAV file.
+        """
+        if not self.frames:
+            self.logger.warning("No frames to save")
+            return
+        
+        # Generate unique filename
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"recording_{timestamp}.wav"
+        self.current_file_path = os.path.join(self.output_dir, filename)
+        
+        # Save as WAV file
+        try:
+            with wave.open(self.current_file_path, 'wb') as wave_file:
+                wave_file.setnchannels(self.audio_provider.channels)
+                wave_file.setsampwidth(self.audio_provider.get_sample_size())
+                wave_file.setframerate(self.audio_provider.rate)
+                wave_file.writeframes(b''.join(self.frames))
+            
+            self.logger.info(f"Recording saved to {self.current_file_path}")
+        except Exception as e:
+            self.logger.error(f"Error saving recording: {e}")
+            self.current_file_path = None
+    
+    def _reset_recording_state(self) -> None:
+        """Reset the internal recording state."""
+        self.frames = []
+        self.speaking_start_time = 0.0
+        self.last_speech_time = 0.0
+        self.silence_start_time = 0.0
+        self.current_file_path = None
+    
+    def cleanup(self) -> None:
+        """Clean up resources used by the audio recorder."""
+        with self.lock:
+            self.recording_started = False
+            
+            if self.audio_provider:
+                self.audio_provider.stop_stream()
+            
+            # Reset recording state
+            self._reset_recording_state()
+            
+            self.logger.debug("Audio recorder resources cleaned up")
+    
+    def __del__(self):
+        """Ensure cleanup when the object is garbage collected."""
+        self.cleanup()
 
 
 if __name__ == '__main__':

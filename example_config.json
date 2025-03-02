@@ -1,0 +1,30 @@
+{
+    "transcriber": {
+        "provider": "elevenlabs",
+        "model_id": "whisper-1",
+        "max_retries": 3,
+        "retry_delay": 2.0,
+        "timeout": 30.0
+    },
+    "audio": {
+        "rate": 16000,
+        "channels": 1,
+        "audio_format": 16,
+        "frames_per_buffer": 1024,
+        "energy_threshold": 300.0,
+        "silence_threshold": 50.0,
+        "min_speaking_time": 1.0,
+        "min_silence_time": 1.5,
+        "max_speaking_time": 30.0,
+        "frame_duration_ms": 30.0
+    },
+    "wake_word": {
+        "wake_word": "jarvis",
+        "sensitivity": 0.8,
+        "access_key": null
+    },
+    "paths": {
+        "output_dir": "./recordings",
+        "notification_sound_dir": "./sounds"
+    }
+} 

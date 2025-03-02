@@ -1,9 +1,22 @@
-recursive-include VoiceProcessingToolkit *.md
 include LICENSE
-include CONTRIBUTORS.md
-include CHANGELOG.md
 include README.md
-recursive-include VoiceProcessingToolkit *.py
-recursive-include VoiceProcessingToolkit/wake_word_detector *.py
-recursive-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3 notification.wav
-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3/notification.wav
+include example_config.json
+include pyproject.toml
+include MANIFEST.in
+
+recursive-include example_usage *.py
+recursive-include tests *.py
+recursive-include tests/resources *
+
+# Include sound files
+recursive-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3 *.wav
+
+# Include docs
+recursive-include docs *.md *.rst *.txt
+
+# Exclude unnecessary files
+global-exclude *.py[cod] __pycache__ *.so *.dylib .* 
+exclude .git* .vscode .pytest_cache
+prune .git
+prune .github
+prune .vscode

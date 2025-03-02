@@ -1,140 +1,184 @@
 # VoiceProcessingToolkit
 
+Voice Processing Toolkit is a Python package for voice processing tasks, providing a comprehensive suite of tools for wake word detection, voice recording, and transcription.
+
 ## Introduction
-VoiceProcessingToolkit is a Python library designed for voice processing tasks, including wake word detection and transcription. It aims to streamline the creation of voice-activated applications.
 
-> **Note:** Version 0.2.0 removes text-to-speech functionality and decorator patterns to focus on core wake word detection and transcription features. This results in a more streamlined and focused toolkit.
+This toolkit provides an end-to-end solution for voice processing applications, including wake word detection (using Porcupine), voice recording, and speech-to-text conversion (using ElevenLabs API). It features a modular design with well-defined interfaces, making it easy to extend or customize for your specific use case.
 
-1. [Introduction](#introduction)
-2. [Features](#features)
-3. [Installation](#installation)
-4. [Usage](#usage)
-   - [Basic Example](#basic-example)
-5. [Configuration](#configuration)
-6. [Example Usage](#example-usage)
-7. [Contributing](#contributing)
-8. [Support](#support)
-9. [License](#license)
-10. [Development Status](#development-status)
-11. [Acknowledgements](#acknowledgements)
-12. [Contact Information](#contact-information)
+## Features
 
-### Features
-+ Wake word detection using Picovoice Porcupine.
-+ High-quality voice recording with adjustable settings for Voice Activation Detection.
-+ Fast and accurate speech-to-text transcription with ElevenLabs Speech-to-Text API.
-+ Secure API key management with environment variables.
-+ Example scripts for easy demonstration and usage.
-+ Extensible architecture for feature additions and customization.
+- **Wake Word Detection**: Detect custom wake words using Porcupine engine
+- **Voice Recording**: Record voice commands with automatic silence detection
+- **Transcription**: Convert speech to text using the ElevenLabs API
+- **Modular Design**: Well-defined interfaces for extending functionality
+- **Resource Management**: Proper resource cleanup to prevent memory leaks
+- **Thread Safety**: Robust thread management for concurrent operations
+- **Comprehensive Configuration**: Flexible configuration system with sensible defaults
 
-### Installation
-The VoiceProcessingToolkit is available on PyPI. To install, run the following command:
+## Major Changes in v2.0
+
+- **Interface-Based Architecture**: All major components now implement interfaces, making the system more modular and extensible
+- **Improved Thread Management**: Robust thread handling with proper resource cleanup
+- **Centralized Configuration**: New configuration system with sensible defaults
+- **Enhanced Error Handling**: Comprehensive error handling with retries
+- **Better Resource Management**: Proper cleanup of resources to prevent memory leaks
+
+## Installation
+
+You can install the package using pip:
+
 ```bash
-pip install VoiceProcessingToolkit
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv add VoiceProcessingToolkit
 ```
 
 ## Usage
-### Basic Example
-The following is a quick-start guide to using the toolkit for wake word detection and speech transcription. 
+
+### Basic Usage
 
 ```python
-from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
-from dotenv import load_dotenv
+from VoiceProcessingToolkit import VoiceProcessingManager
 
-import logging
-import os
-import sys
+# Create a default manager instance
+manager = VoiceProcessingManager.create_default_instance()
 
-# logging.basicConfig(level=logging.INFO)
-load_dotenv()
-
-# Set environment variables for API keys
-os.getenv('PICOVOICE_APIKEY')
-os.getenv('ELEVENLABS_API_KEY')
-
-def main():
-    # Create a VoiceProcessingManager instance with default settings
-    vpm = VoiceProcessingManager.create_default_instance(wake_word='computer')
-
-    # Run the voice processing manager with transcription
-    text = vpm.run(transcription=True)
-    if text:
-        print(f"Processed text: {text}")
-    else:
-        print("No transcription result obtained.")
-
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nExiting program due to keyboard interrupt.")
-        sys.exit(0)
+# Process a voice command (detects wake word, records voice, and transcribes)
+transcription = manager.run()
+print(f"Transcription: {transcription}")
 ```
 
-The `VoiceProcessingManager` class is the central component of the toolkit, orchestrating the voice processing workflow. It is highly configurable, allowing you to tailor the behavior to your specific needs. Below are some of the key attributes and methods provided by this class:
+### Custom Configuration
 
-Attributes of `VoiceProcessingManager` include:
-- `wake_word`: The wake word for triggering voice recording.
-- `sensitivity`: Sensitivity for wake word detection.
-- `output_directory`: Directory for saving recorded audio files<.
-- `audio_format`, `channels`, `rate`, `frames_per_buffer`: Audio stream parameters.
-- `voice_threshold`, `silence_limit`, `inactivity_limit`, `min_recording_length`, `buffer_length`: Voice recording parameters.
-- `use_wake_word`: Flag to use wake word detection.
-- `save_wake_word_recordings`: Flag to save audio buffer that triggered the wake word detection.
-- `play_notification_sound`: Flag to play a sound on detection.
+```python
+from VoiceProcessingToolkit import VoiceProcessingManager, config
 
-Methods of `VoiceProcessingManager` include:
-- `run(transcription=True)`: Processes a voice command and optionally performs transcription.
-- `setup()`: Initializes the components of the voice processing manager.
-- `process_voice_command()`: Processes a voice command using the configured components.
+# Load custom configuration from file
+custom_config = config.get_config("config.json")
 
-For a more detailed explanation of these attributes and methods, please refer to the inline documentation within the `VoiceProcessingManager.py` file.
+# Create a manager with custom parameters
+manager = VoiceProcessingManager(
+    wake_word="jarvis",
+    sensitivity=0.8,
+    output_dir="my_recordings"
+)
 
-## Getting Started
-To begin using VoiceProcessingToolkit, follow these steps:
+# Process a voice command
+transcription = manager.run()
+```
 
-To get started with the VoiceProcessingToolkit, follow these simple steps:
+### Using Individual Components
 
-1. Install the toolkit via pip: `pip install VoiceProcessingToolkit`
+```python
+from VoiceProcessingToolkit.wake_word_detector import WakeWordDetector
+from VoiceProcessingToolkit.voice_detection import AudioRecorder
+from VoiceProcessingToolkit.transcription import ElevenLabsTranscriber
 
-2. Obtain API keys from Picovoice and ElevenLabs.
+# Create components
+wake_word_detector = WakeWordDetector(wake_word="alexa", sensitivity=0.7)
+recorder = AudioRecorder(output_dir="recordings")
+transcriber = ElevenLabsTranscriber()
 
-3. Set the API keys as environment variables.
+# Use components independently
+wake_word_detector.run_blocking()  # Wait for wake word
+recording_path = recorder.perform_recording()  # Record voice
+transcription = transcriber.transcribe_audio(recording_path)  # Transcribe
+```
 
-4. Run an example script from the `example_usage` directory.
+## Configuration
 
-5. Customize `VoiceProcessingManager` settings as needed.
+The toolkit uses a comprehensive configuration system with sensible defaults. You can customize the configuration in several ways:
 
-For a more detailed explanation of these steps, please refer to the inline documentation and example usage scripts provided in the toolkit. These resources provide detailed instructions on configuration, usage examples, and customization options.
+### Environment Variables
 
-If you have downloaded the github repository, you can run the examples from the `example_usage` directory. 
-Rename the `REMOVE_THIS_TEXT.env` file to `.env` and add your API keys.
-## Example Usage
-The `example_usage` directory contains scripts showcasing various features:
+Set these environment variables to configure API keys:
 
-- [Simple Setup](example_usage/Simple_setup.py): Demonstrates the basic setup and usage of the VoiceProcessingManager.
-- [Create Wake Word Data](example_usage/Create_wakeword_data.py): Demonstrates how to create a wake word dataset using the VoiceProcessingManager.
-- [Custom Recording Logic](example_usage/Custom_recording_logic.py): Demonstrates custom recording settings and runs the VoiceProcessingManager without the wake word detector.
+- `ELEVEN_LABS_API_KEY`: API key for ElevenLabs transcription service
+- `PORCUPINE_ACCESS_KEY`: Access key for Porcupine wake word detection
 
+### Configuration File
 
-### Configuration
-Customize the toolkit with settings like wake word sensitivity and audio sample rate. See the examples for more details.
+Create a JSON configuration file with your desired settings:
 
-### Contributing
-Contributions are welcome! See CONTRIBUTING.md for guidelines.
+```json
+{
+    "transcriber": {
+        "provider": "elevenlabs",
+        "model_id": "whisper-1",
+        "max_retries": 3
+    },
+    "audio": {
+        "rate": 16000,
+        "energy_threshold": 300.0,
+        "min_speaking_time": 1.0
+    },
+    "wake_word": {
+        "wake_word": "computer",
+        "sensitivity": 0.75
+    },
+    "paths": {
+        "output_dir": "/path/to/recordings"
+    }
+}
+```
 
-### Support
-For issues or questions, please use the [GitHub issue tracker](https://github.com/kristofferv98/VoiceProcessingToolkit/issues).
+Load the configuration in your code:
 
-### License
-Licensed under the MIT License. See LICENSE for details.
+```python
+from VoiceProcessingToolkit import config
 
-### Development Status
-The project is in development. Feedback and contributions are appreciated.
+custom_config = config.get_config("config.json")
+```
 
-### Acknowledgements
-Thanks to ElevenLabs and Picovoice for their tools that enhance this project.
+## Testing
 
-### Contact Information
-For help or inquiries, reach out via [GitHub Discussions](https://github.com/kristofferv98/VoiceProcessingToolkit/discussions).
+The toolkit includes a comprehensive testing framework to ensure the reliability and functionality of all components. For more information, see [Testing](tests/README.md).
+
+To run tests:
+
+```bash
+python -m pytest
+```
+
+To run tests with coverage:
+
+```bash
+python -m pytest --cov=VoiceProcessingToolkit
+```
+
+## Contributing
+
+Contributions are welcome! Here are some ways you can contribute:
+
+- Add support for additional transcription services
+- Improve wake word detection accuracy
+- Add new features
+- Fix bugs
+- Improve documentation
+
+Please make sure to update tests as appropriate.
+
+## Support
+
+If you need help using this toolkit, please open an issue on the GitHub repository.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Development Status
+
+This project is actively maintained and under development. The current version is 2.0.0.
+
+## Acknowledgements
+
+This toolkit uses the following open-source projects:
+
+- [Porcupine](https://github.com/Picovoice/porcupine) for wake word detection
+- [PyAudio](http://people.csail.mit.edu/hubert/pyaudio/) for audio input/output
+
+## Contact Information
+
+For questions, feedback, or support, please contact the maintainers through GitHub issues.
 

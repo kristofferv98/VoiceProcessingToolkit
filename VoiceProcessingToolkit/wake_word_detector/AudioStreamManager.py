@@ -1,115 +1,171 @@
 import logging
 import pyaudio
+import threading
+import wave
+from typing import Optional, Dict, Any
 
-logger = logging.getLogger(__name__)
+from VoiceProcessingToolkit.interfaces import AudioStreamInterface
+from VoiceProcessingToolkit.shared_resources import thread_manager
 
-
-class AudioStream:
-    def __init__(self, rate: int, channels: int, _audio_format: int, frames_per_buffer: int):
-        self._py_audio = pyaudio.PyAudio()
-        self._frames_per_buffer = frames_per_buffer
-        self._pre_buffer_seconds = 1.5  # Duration to keep before wake word
-        self._post_buffer_seconds = 1.5  # Duration to keep after wake word
-        # Calculate the buffer size based on the duration and sample rate
-        self._buffer_size = int(rate * (self._pre_buffer_seconds + self._post_buffer_seconds))
-        self._rolling_buffer = bytearray(self._buffer_size)
-        self._stream = self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
-
-    def update_rolling_buffer(self, data: bytes) -> None:
+class AudioStream(AudioStreamInterface):
+    """
+    Manages audio input streams and maintains a rolling buffer of audio data.
+    Implements the AudioStreamInterface.
+    
+    Attributes:
+        rolling_buffer_size (int): Size of the rolling buffer in bytes.
+        rolling_buffer (bytes): Buffer holding the most recent audio data.
+        p (pyaudio.PyAudio): PyAudio instance.
+        stream (pyaudio.Stream): Audio input stream.
+        is_closed (bool): Flag indicating if the stream is closed.
+        logger (logging.Logger): Logger for this class.
+        _lock (threading.Lock): Lock for thread-safe operations on the rolling buffer.
+    """
+    
+    def __init__(self, rolling_buffer_size: int = 8000):
         """
-        Updates the rolling buffer with new audio data.
-
+        Initialize a new AudioStream instance.
+        
         Args:
-            data (bytes): The audio data to add to the rolling buffer.
+            rolling_buffer_size: Size of the rolling buffer in bytes (default: 8000).
         """
-        # Ensure the rolling buffer contains the correct duration of audio data
-        self._rolling_buffer = (self._rolling_buffer[-(self._buffer_size - len(data)):] + data)
-
-    def get_rolling_buffer(self) -> bytes:
+        self.rolling_buffer_size = rolling_buffer_size
+        self.rolling_buffer = b''
+        self.p: Optional[pyaudio.PyAudio] = None
+        self.stream: Optional[pyaudio.Stream] = None
+        self.is_closed = True
+        self.logger = logging.getLogger(__name__)
+        self._lock = threading.Lock()
+    
+    def initialize_stream(self, rate: int, channels: int, audio_format: int, frames_per_buffer: int) -> None:
         """
-        Retrieves the current rolling buffer audio data.
-
-        Returns:
-            bytes: The current audio data in the rolling buffer.
+        Initialize the audio stream with the given parameters.
+        
+        Args:
+            rate: Sample rate of the audio stream.
+            channels: Number of audio channels.
+            audio_format: Format of the audio stream.
+            frames_per_buffer: Number of audio frames per buffer.
+        
+        Raises:
+            RuntimeError: If PyAudio initialization or stream opening fails.
         """
-        return bytes(self._rolling_buffer)
-
-    def _initialize_stream(self, rate: int, channels: int, _audio_format: int, frames_per_buffer: int):
-        """
-        Initializes the audio stream with the given parameters.
-        """
-        if self._py_audio is None:
-            self._py_audio = pyaudio.PyAudio()
+        # Clean up any existing resources first
+        self.cleanup()
+        
         try:
-            return self._py_audio.open(rate=rate, channels=channels, format=_audio_format,
-                                       input=True, frames_per_buffer=frames_per_buffer)
-        except (IOError, OSError) as e:
-            logger.exception("Failed to initialize audio stream: %s", e)
-            raise
-        except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt received during stream initialization")
-            raise
+            self.p = pyaudio.PyAudio()
+            self.stream = self.p.open(
+                format=audio_format,
+                channels=channels,
+                rate=rate,
+                input=True,
+                frames_per_buffer=frames_per_buffer
+            )
+            self.is_closed = False
+            self.logger.info("Audio stream initialized successfully")
         except Exception as e:
-            logger.exception("An unexpected error occurred while initializing the audio stream.", exc_info=e)
-            raise
-
-    def get_stream(self):
-        """Returns the initialized audio stream."""
-        return self._stream
-
-
+            self.cleanup()  # Clean up partial resources on failure
+            self.logger.error(f"Failed to initialize audio stream: {e}")
+            raise RuntimeError(f"Failed to initialize audio stream: {e}")
+    
     def read(self) -> bytes:
         """
-        Reads audio data from the stream and updates the rolling buffer.
-
+        Read audio data from the stream.
+        
         Returns:
             bytes: The audio data read from the stream.
+            
+        Raises:
+            RuntimeError: If the stream is closed or an error occurs while reading.
         """
-        data = bytearray()
+        if self.is_stream_closed():
+            self.logger.error("Attempted to read from closed stream")
+            raise RuntimeError("Cannot read from closed audio stream")
+        
         try:
-            data.extend(self._stream.read(self._frames_per_buffer, exception_on_overflow=False))
-        except IOError as e:
-            # Handle input overflow error if it occurs
-            if e.errno == pyaudio.paInputOverflowed:
-                logger.warning("Input overflow occurred while reading audio stream.")
-            else:
-                raise
-
-        self.update_rolling_buffer(data)
-        return data
-
-
-    def is_stream_closed(self):
+            data = self.stream.read(1024, exception_on_overflow=False)
+            return data
+        except Exception as e:
+            self.logger.error(f"Error reading from audio stream: {e}")
+            raise RuntimeError(f"Error reading from audio stream: {e}")
+    
+    def get_stream(self) -> Optional[pyaudio.Stream]:
         """
-        Checks if the audio stream is closed.
-
+        Get the underlying audio stream.
+        
+        Returns:
+            Optional[pyaudio.Stream]: The audio stream object or None if not initialized.
+        """
+        return self.stream
+    
+    def is_stream_closed(self) -> bool:
+        """
+        Check if the audio stream is closed.
+        
         Returns:
             bool: True if the stream is closed, False otherwise.
         """
-        return self._stream is None or self._stream.is_stopped()
-
-    def initialize_stream(self, rate, channels, _audio_format, frames_per_buffer):
+        return self.is_closed or self.stream is None
+    
+    def cleanup(self) -> None:
         """
-        Initializes the audio stream with the given parameters.
-
+        Clean up resources used by the audio stream.
+        Safe to call multiple times.
+        """
+        with self._lock:
+            # Mark as closed first to prevent new operations
+            self.is_closed = True
+            
+            # Stop and close the stream
+            if self.stream is not None:
+                try:
+                    self.stream.stop_stream()
+                    self.stream.close()
+                    self.logger.debug("Audio stream closed")
+                except Exception as e:
+                    self.logger.warning(f"Error closing audio stream: {e}")
+                finally:
+                    self.stream = None
+            
+            # Terminate PyAudio
+            if self.p is not None:
+                try:
+                    self.p.terminate()
+                    self.logger.debug("PyAudio terminated")
+                except Exception as e:
+                    self.logger.warning(f"Error terminating PyAudio: {e}")
+                finally:
+                    self.p = None
+    
+    def update_rolling_buffer(self, data: bytes) -> None:
+        """
+        Update the rolling buffer with new audio data.
+        Thread-safe implementation.
+        
         Args:
-            rate (int): Sample rate of the audio stream.
-            channels (int): Number of audio channels.
-            _audio_format (int): Format of the audio stream.
-            frames_per_buffer (int): Number of audio frames per buffer.
+            data: The audio data to add to the rolling buffer.
         """
-        self.cleanup()  # Ensure any existing stream is cleaned up before initializing a new one
-        self._initialize_stream(rate, channels, _audio_format, frames_per_buffer)
-
-    def cleanup(self):
-        # Check if the stream has been initialized and is open before attempting to stop and close
-        if self._stream and not self._stream.is_stopped():
-            if not self._stream.is_stopped():
-                self._stream.stop_stream()
-            self._stream.close()
-        self._stream = None
-        # Check if PyAudio instance has been initialized before terminating
-        if self._py_audio:
-            self._py_audio.terminate()
-            self._py_audio = None
+        with self._lock:
+            # Append the new data to the rolling buffer
+            self.rolling_buffer += data
+            
+            # Trim the buffer if it exceeds the maximum size
+            if len(self.rolling_buffer) > self.rolling_buffer_size:
+                self.rolling_buffer = self.rolling_buffer[-self.rolling_buffer_size:]
+    
+    def get_rolling_buffer(self) -> bytes:
+        """
+        Get the current rolling buffer audio data.
+        Thread-safe implementation.
+        
+        Returns:
+            bytes: The current audio data in the rolling buffer.
+        """
+        with self._lock:
+            return self.rolling_buffer
+    
+    def __del__(self):
+        """Ensure cleanup when the object is garbage collected."""
+        self.cleanup()
 
