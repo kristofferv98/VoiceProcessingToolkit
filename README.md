@@ -8,7 +8,6 @@ VoiceProcessingToolkit is a Python library designed for voice processing tasks, 
 3. [Installation](#installation)
 4. [Usage](#usage)
    - [Basic Example](#basic-example)
-   - [Example with Autogen](example_usage/Autogen_voice_assistant_example_pyfile.py)
 5. [Configuration](#configuration)
 6. [Example Usage](#example-usage)
 7. [Contributing](#contributing)
@@ -114,7 +113,6 @@ The `example_usage` directory contains scripts showcasing various features:
 - [Simple Setup](example_usage/Simple_setup.py): Demonstrates the basic setup and usage of the VoiceProcessingManager.
 - [Create Wake Word Data](example_usage/Create_wakeword_data.py): Demonstrates how to create a wake word dataset using the VoiceProcessingManager.
 - [Custom Recording Logic](example_usage/Custom_recording_logic.py): Demonstrates custom recording settings and runs the VoiceProcessingManager without the wake word detector.
-- [Autogen_voice_assistant](example_usage/Autogen_voice_assistant_example.ipynb): Demonstrates how to use the VoiceProcessingManager to create a voice assistant with custom wake words and instructions.
 
 
 ### Configuration
