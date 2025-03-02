@@ -42,6 +42,7 @@ from dotenv import load_dotenv
 
 import logging
 import os
+import sys
 
 # logging.basicConfig(level=logging.INFO)
 load_dotenv()
@@ -50,12 +51,23 @@ load_dotenv()
 os.getenv('PICOVOICE_APIKEY')
 os.getenv('ELEVENLABS_API_KEY')
 
-# Create a VoiceProcessingManager instance with default settings
-vpm = VoiceProcessingManager.create_default_instance(wake_word='computer')
+def main():
+    # Create a VoiceProcessingManager instance with default settings
+    vpm = VoiceProcessingManager.create_default_instance(wake_word='computer')
 
-# Run the voice processing manager with transcription
-text = vpm.run()
-print(text)
+    # Run the voice processing manager with transcription
+    text = vpm.run(transcription=True)
+    if text:
+        print(f"Processed text: {text}")
+    else:
+        print("No transcription result obtained.")
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting program due to keyboard interrupt.")
+        sys.exit(0)
 ```
 
 The `VoiceProcessingManager` class is the central component of the toolkit, orchestrating the voice processing workflow. It is highly configurable, allowing you to tailor the behavior to your specific needs. Below are some of the key attributes and methods provided by this class:

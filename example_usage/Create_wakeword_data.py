@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 import logging
 import os
+import sys
+import signal
 
 #logging.basicConfig(level=logging.INFO)
 load_dotenv()
@@ -11,6 +13,11 @@ load_dotenv()
 os.getenv('PICOVOICE_APIKEY')
 os.getenv('OPENAI_API_KEY')
 os.getenv('ELEVENLABS_API_KEY')
+
+# Define signal handler
+def signal_handler(sig, frame):
+    print("\nExiting program due to keyboard interrupt.")
+    sys.exit(0)
 
 def main():
     """
@@ -23,18 +30,23 @@ def main():
     The script can be terminated early by a KeyboardInterrupt (Ctrl+C).
     """
 
-    try:
-        # Create a WakeWordDetector instance with default settings
-        wake_word_detector = VoiceProcessingManager.create_default_instance(use_wake_word=True, wake_word='computer',
-                                                                            save_wake_word_recordings=True,
-                                                                            play_notification_sound=False)
+    # Create a WakeWordDetector instance with default settings
+    wake_word_detector = VoiceProcessingManager.create_default_instance(use_wake_word=True, wake_word='computer',
+                                                                        save_wake_word_recordings=True,
+                                                                        play_notification_sound=False)
 
-        # Run the wake word detector
-        wake_word_detector.run(transcription=False)
-
-    except KeyboardInterrupt:
-        logging.info("Interrupted by user, shutting down.")
-
+    # Run the wake word detector
+    result = wake_word_detector.run(transcription=False)
+    print("Wake word detection completed.")
+    return result
 
 if __name__ == '__main__':
-    main()
+    # Register signal handler for SIGINT (Ctrl+C)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        print("Running wake word dataset creation. Press Ctrl+C to exit.")
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting program due to keyboard interrupt.")
+        sys.exit(0)
