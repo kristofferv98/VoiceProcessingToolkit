@@ -4,106 +4,15 @@ import threading
 import time
 
 import pyaudio
-from elevenlabs import generate, stream
 
 from VoiceProcessingToolkit.transcription.elevenlabs import ElevenLabsTranscriber
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from VoiceProcessingToolkit.text_to_speech.elevenlabs_tts import ElevenLabsTextToSpeech, ElevenLabsConfig
 from VoiceProcessingToolkit.shared_resources import thread_manager
 
 logger = logging.getLogger(__name__)
-
-def tts(text, voice_id=None, api_key=None):
-    """
-    Converts text to speech using the ElevenLabs API.
-
-    This function synthesizes speech from the given text using ElevenLabs' text-to-speech technology. It handles
-    the creation of an ElevenLabsTextToSpeech object and manages the API key retrieval from the environment
-    variable or the provided parameter.
-
-    Args:
-        text (str): Text to be converted to speech.
-        voice_id (str, optional): Specific voice ID for speech synthesis.
-        api_key (str, optional): API key for ElevenLabs, if not provided in config.
-
-    Returns:
-        str or None: File path to the saved audio file, or None if synthesis fails.
-    """
-    config = ElevenLabsConfig(voice_id=voice_id, api_key=api_key or None)
-    tts = ElevenLabsTextToSpeech(config=config, voice_id=voice_id)
-    return tts.synthesize_speech(text)
-
-def text_to_speech(text, config=None, output_dir=None, voice_id=None, api_key=None):
-    """
-    Converts text to speech using the ElevenLabs API.
-
-    This function synthesizes speech from the given text using ElevenLabs' text-to-speech technology. It handles
-    the creation of an ElevenLabsTextToSpeech object and manages the API key retrieval from the environment
-    variable or the provided parameter.
-
-    Args:
-        text (str): Text to be converted to speech.
-        config (ElevenLabsConfig, optional): Configuration object for ElevenLabs TTS.
-        output_dir (str, optional): Directory to save the output audio file. Defaults to 'audio_files'.
-        voice_id (str, optional): Specific voice ID for speech synthesis.
-        api_key (str, optional): API key for ElevenLabs, if not provided in config.
-
-    Returns:
-        str or None: File path to the saved audio file, or None if synthesis fails.
-    """
-    if config is None:
-        config = ElevenLabsConfig(voice_id=voice_id, api_key=api_key or None)
-    tts = ElevenLabsTextToSpeech(config=config, voice_id=voice_id)
-    return tts.synthesize_speech(text, output_dir)
-
-
-def text_to_speech_stream(text, config=None, voice_id=None, api_key=None):
-    """
-    Streams synthesized speech from text using the ElevenLabs API.
-
-    This function streams synthesized speech directly without saving it to a file. It's useful for real-time
-    applications where immediate audio playback is required.
-
-    Args:
-        text (str): Text to be converted into speech for streaming.
-        config (ElevenLabsConfig, optional): Configuration for ElevenLabs API.
-        voice_id (str, optional): The ID of the voice to use for speech synthesis.
-        api_key (str, optional): API key for accessing ElevenLabs services.
-
-    Returns:
-        None
-    """
-    if config is None:
-        config = ElevenLabsConfig(api_key=api_key or None)
-    if not text:
-        logging.info("No text provided for synthesis.")
-        return
-
-    # Ensure text-to-speech is enabled
-    if not config.enable_text_to_speech:
-        logging.info("Text-to-speech is disabled in settings.")
-        return
-
-    try:
-        # Generate the audio stream
-        audio_stream = generate(
-            text=text,
-            voice=voice_id or config.voice_id,
-            model=config.model_id,
-            api_key=config.elevenlabs_api_key,
-            stream=True  # Enable streaming
-        )
-
-        # Stream the audio if playback is enabled
-        if config.playback_enabled:
-            stream(audio_stream)
-    except Exception as e:
-        logging.exception(f"An error occurred during streaming text-to-speech: {e}")
-
-
 
 class VoiceProcessingManager:
     def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='computer', sensitivity=0.75,
@@ -112,10 +21,9 @@ class VoiceProcessingManager:
                  voice_threshold=0.8, silence_limit=2.0, inactivity_limit=2.0, min_recording_length=2.0, buffer_length=2.0,
                  use_wake_word=True, save_wake_word_recordings=False, play_notification_sound=True):
         """
-        Manages the voice processing pipeline, including optional wake word detection, voice recording, transcription,
-        and text-to-speech synthesis. It can be configured to handle different use cases:
+        Manages the voice processing pipeline, including optional wake word detection, voice recording, and transcription.
+        It can be configured to handle different use cases:
         - Wake Word Detection: When enabled, the manager listens for a specific wake word before activating recording.
-        - Text-to-Speech: Converts transcribed text back into speech, which can be played back or streamed.
         - Transcription Only: Records and transcribes speech without wake word detection.
         - Notification Sound: Plays a notification sound when the wake word is detected, if enabled.
 
@@ -150,10 +58,9 @@ class VoiceProcessingManager:
             transcriber (ElevenLabsTranscriber): Transcribes recorded audio.
             action_manager (ActionManager): Manages actions triggered by voice commands.
             recorded_file (str): Path to the last recorded audio file.
-            elevenlabs_config (ElevenLabsConfig): Configuration for ElevenLabs text-to-speech service.
 
         Methods:
-            run(tts=False, streaming=False): Processes a voice command with optional text-to-speech functionality.
+            run(transcription=True): Processes a voice command.
             setup(): Initializes the components of the voice processing manager.
             process_voice_command(): Processes a voice command using the configured components.
             """
@@ -236,8 +143,8 @@ class VoiceProcessingManager:
             buffer_length (float): Length of the audio buffer.
             use_wake_word (bool): Flag to use wake word detection.
             save_wake_word_recordings (bool): Flag to save the audio buffer that triggered the wake word detection.
+            play_notification_sound (bool): Flag to play notification sound when wake word is detected.
 
-                                play_notification_sound=True,
         Returns:
             VoiceProcessingManager: An instance of VoiceProcessingManager with default settings and dependencies.
         """
@@ -253,16 +160,12 @@ class VoiceProcessingManager:
                    save_wake_word_recordings=save_wake_word_recordings or False,
                    play_notification_sound=play_notification_sound)
 
-    def _process_voice_command(self, streaming=False, tts=False, api_key=None, voice_id=None):
+    def _process_voice_command(self, transcription=True):
         """
-        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
-        Allows for passing an optional API key and voice ID for text-to-speech customization.
+        Processes a voice command after wake word detection.
 
         Args:
-            streaming (bool): If True, use streaming text-to-speech. Defaults to False.
-            tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
-            api_key (str, optional): API key for ElevenLabs, if not provided in config.
-            voice_id (str, optional): Specific voice ID for speech synthesis.
+            transcription (bool): If True, perform transcription on the recording. Defaults to True.
 
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
@@ -277,14 +180,9 @@ class VoiceProcessingManager:
         if self.voice_recorder.recording_thread:
             self.voice_recorder.recording_thread.join()
         # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file is not None:
+        if self.voice_recorder.last_saved_file is not None and transcription:
             transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
             logger.info(f"Transcription: {transcription}")
-            if transcription and tts:
-                if streaming:
-                    text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
-                else:
-                    text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
             return transcription
         logger.debug("Voice command processing completed.")
         return None
@@ -319,25 +217,14 @@ class VoiceProcessingManager:
         if self.is_stream_closed():
             self.audio_stream_manager.initialize_stream(self.rate, self.channels, self.audio_format, self.frames_per_buffer)
 
-    def run(self, tts=False, streaming=True, api_key=None, voice_id=None, transcription=None):
+    def run(self, transcription=True):
         """
-        Main method to start the voice processing workflow. It can be configured to perform different tasks based on
-        the provided arguments:
-        - tts (bool): If True, performs text-to-speech on the transcribed text.
-        - streaming (bool): If True, streams the synthesized speech instead of saving it to a file.
-        - api_key (str): Optional API key for text-to-speech service.
-        - voice_id (str): Optional voice ID for customizing the synthesized speech.
+        Main method to start the voice processing workflow.
 
-        Processes a voice command after wake word detection and optionally performs text-to-speech on the transcription.
-
-        Optionally performs text-to-speech on the transcription and can stream the synthesized speech. It also allows
-        for passing an optional API key and voice ID for text-to-speech customization.
+        Processes a voice command after wake word detection.
 
         Args:
-            tts (bool): If True, perform text-to-speech on the transcription. Defaults to False.
-            streaming (bool): If True, use streaming text-to-speech. Defaults to False. Only relevant if tts is True.
-            api_key (str, optional): API key for ElevenLabs, if not provided in config.
-            voice_id (str, optional): Specific voice ID for speech synthesis.
+            transcription (bool): If True, perform transcription on the recording. Defaults to True.
 
         Returns:
             str or None: The transcribed text of the voice command, or None if no valid recording was made.
@@ -345,10 +232,9 @@ class VoiceProcessingManager:
         logger.info("VoiceProcessingManager run method called.")
         if transcription is False and self.use_wake_word:
             self.wake_word_detector.run_blocking()
-
             return None
         try:
-            transcription = None
+            transcription_result = None
             self.reinitialize_stream()
             if self.use_wake_word:
                 # Initiate wake word detection and block until it completes
@@ -362,23 +248,16 @@ class VoiceProcessingManager:
                 self.voice_recorder.recording_thread.join()
 
             # Check if a recording was made
-            if self.voice_recorder.last_saved_file:
+            if self.voice_recorder.last_saved_file and transcription:
                 # Transcribe the recording
-                transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-                logger.info(f"Transcription: {transcription}")
-
-                # If transcription is successful and text-to-speech is enabled, synthesize speech
-                if transcription and tts:
-                    if streaming:
-                        text_to_speech_stream(transcription, api_key=api_key, voice_id=voice_id)
-                    else:
-                        text_to_speech(transcription, api_key=api_key, voice_id=voice_id)
+                transcription_result = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
+                logger.info(f"Transcription: {transcription_result}")
             else:
                 # If no recording was made or it was too short, log the information
                 logger.info("Recording was not made or was too short.")
 
             # Return the transcription or None if no valid recording was made
-            return transcription
+            return transcription_result
 
         except Exception as e:
             logger.exception("An error occurred during voice processing.", exc_info=e)
@@ -386,6 +265,8 @@ class VoiceProcessingManager:
 
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, performing cleanup.")
+            thread_manager.shutdown()
+            raise  # Re-raise the KeyboardInterrupt to propagate it to the caller
 
 
         finally:

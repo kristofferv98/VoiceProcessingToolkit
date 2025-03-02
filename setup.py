@@ -9,7 +9,7 @@ setup(
     author="Kristoffer Vatnehol",
     author_email="kristoffer.vatnehol@appacia.com",
     description="A comprehensive library for voice processing tasks such as wake word detection, speech recognition, "
-                "translation, and text-to-speech.",
+                "and transcription.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kristofferv98/VoiceProcessingToolkit.git",
@@ -35,7 +35,6 @@ setup(
         "pvkoala~=2.0.0",
         "pvporcupine~=3.0.1",
         "pygame~=2.5.2",
-        "setuptools~=68.2.2",
     ],
     package_data={
         'VoiceProcessingToolkit': ['wake_word_detector/Wav_MP3/*.wav'],
