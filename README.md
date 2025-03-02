@@ -3,6 +3,8 @@
 ## Introduction
 VoiceProcessingToolkit is a Python library designed for voice processing tasks, including wake word detection and transcription. It aims to streamline the creation of voice-activated applications.
 
+> **Note:** Version 0.2.0 removes text-to-speech functionality and decorator patterns to focus on core wake word detection and transcription features. This results in a more streamlined and focused toolkit.
+
 1. [Introduction](#introduction)
 2. [Features](#features)
 3. [Installation](#installation)

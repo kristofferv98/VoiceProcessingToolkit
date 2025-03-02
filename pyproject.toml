@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "VoiceProcessingToolkit"
-version = "0.1.8.3"
+version = "0.2.0"
 description = "A comprehensive library for voice processing tasks such as wake word detection, speech recognition, and transcription."
 readme = "README.md"
 authors = [
