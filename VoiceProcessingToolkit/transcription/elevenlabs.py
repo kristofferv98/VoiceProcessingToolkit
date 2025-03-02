@@ -72,7 +72,7 @@ class ElevenLabsTranscriber:
             # Create multipart form data
             with open(audio_file_path, "rb") as audio_file:
                 files = {
-                    "audio": (os.path.basename(audio_file_path), audio_file, "audio/wav")
+                    "file": (os.path.basename(audio_file_path), audio_file, "audio/wav")
                 }
                 
                 data = {
@@ -144,7 +144,7 @@ class ElevenLabsTranscriber:
             
             # Create multipart form data
             files = {
-                "audio": ("audio.wav", audio_bytes, "audio/wav")
+                "file": ("audio.wav", audio_bytes, "audio/wav")
             }
             
             data = {
