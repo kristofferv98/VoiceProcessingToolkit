@@ -76,7 +76,7 @@ class ElevenLabsTranscriber:
                 }
                 
                 data = {
-                    "model_id": "speech-recognition",
+                    "model_id": "scribe_v1",
                     "language_code": language
                 }
                 
@@ -148,7 +148,7 @@ class ElevenLabsTranscriber:
             }
             
             data = {
-                "model_id": "speech-recognition",
+                "model_id": "scribe_v1",
                 "language_code": language
             }
             
