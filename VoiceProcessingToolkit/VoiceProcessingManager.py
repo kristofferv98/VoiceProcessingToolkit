@@ -330,7 +330,9 @@ class VoiceProcessingManager:
         # Create transcriber if not provided
         if self.transcriber is None:
             logger.info("Creating default transcriber")
-            self.transcriber = ElevenLabsTranscriber(api_key=self._init_params['transcriber_api_key'])
+            self.transcriber = ElevenLabsTranscriber(
+                api_key=os.environ.get('ELEVENLABS_API_KEY') or os.getenv('ELEVENLABS_API_KEY')
+            )
 
     def process_voice_command(self):
         """

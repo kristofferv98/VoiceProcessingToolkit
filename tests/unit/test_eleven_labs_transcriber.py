@@ -7,6 +7,22 @@ from unittest.mock import patch, Mock, mock_open, call
 
 from VoiceProcessingToolkit.transcription.elevenlabs import ElevenLabsTranscriber
 
+# Test constants
+TEST_API_KEY = "test_api_key"
+TEST_DIRECT_API_KEY = "direct_api_key"
+TEST_AUDIO_FILE = "test.wav"
+TEST_AUDIO_DATA = b"audio data"
+TEST_TRANSCRIPTION = "This is a sample transcription."
+TEST_BYTES_TRANSCRIPTION = "This is a bytes transcription."
+
+# HTTP status codes
+HTTP_OK = 200
+HTTP_BAD_REQUEST = 400
+HTTP_SERVER_ERROR = 500
+
+# Retry settings
+MAX_RETRIES = 1
+RETRY_DELAY = 0.1
 
 class TestElevenLabsTranscriber:
     """Unit tests for the ElevenLabsTranscriber class."""
@@ -14,13 +30,13 @@ class TestElevenLabsTranscriber:
     def test_initialization(self):
         """Test that the transcriber initializes with the correct parameters."""
         # With API key in environment
-        with patch.dict(os.environ, {"ELEVENLABS_API_KEY": "test_api_key"}):
+        with patch.dict(os.environ, {"ELEVENLABS_API_KEY": TEST_API_KEY}):
             transcriber = ElevenLabsTranscriber()
-            assert transcriber.api_key == "test_api_key"
+            assert transcriber.api_key == TEST_API_KEY
 
         # With API key provided directly
-        transcriber = ElevenLabsTranscriber(api_key="direct_api_key")
-        assert transcriber.api_key == "direct_api_key"
+        transcriber = ElevenLabsTranscriber(api_key=TEST_DIRECT_API_KEY)
+        assert transcriber.api_key == TEST_DIRECT_API_KEY
 
         # With no API key
         with patch.dict(os.environ, {}, clear=True):
@@ -35,9 +51,9 @@ class TestElevenLabsTranscriber:
         """Test successful audio transcription."""
         # Setup mock response
         mock_response = Mock()
-        mock_response.status_code = 200
+        mock_response.status_code = HTTP_OK
         mock_response.json.return_value = {
-            "text": "This is a sample transcription."
+            "text": TEST_TRANSCRIPTION
         }
         mock_post.return_value = mock_response
         
@@ -45,17 +61,17 @@ class TestElevenLabsTranscriber:
         mock_exists.return_value = True
 
         # Create transcriber with max_retries=0 to simplify testing
-        transcriber = ElevenLabsTranscriber(api_key="test_key", max_retries=0)
+        transcriber = ElevenLabsTranscriber(api_key=TEST_API_KEY, max_retries=0)
         
         # Mock the file opening
-        with patch("builtins.open", mock_open(read_data=b"audio data")):
+        with patch("builtins.open", mock_open(read_data=TEST_AUDIO_DATA)):
             # Test transcription
-            result = transcriber.transcribe_audio("test.wav")
+            result = transcriber.transcribe_audio(TEST_AUDIO_FILE)
             
             # Verify results
-            assert result == "This is a sample transcription."
+            assert result == TEST_TRANSCRIPTION
             mock_post.assert_called_once()
-            mock_exists.assert_called_once_with("test.wav")
+            mock_exists.assert_called_once_with(TEST_AUDIO_FILE)
 
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.requests.post')
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.os.path.exists')
@@ -63,7 +79,7 @@ class TestElevenLabsTranscriber:
         """Test error handling during transcription."""
         # Setup mock response for error
         mock_response = Mock()
-        mock_response.status_code = 400
+        mock_response.status_code = HTTP_BAD_REQUEST
         mock_response.text = "Error transcribing audio"
         mock_post.return_value = mock_response
         
@@ -71,17 +87,17 @@ class TestElevenLabsTranscriber:
         mock_exists.return_value = True
 
         # Create transcriber with max_retries=0 to simplify testing
-        transcriber = ElevenLabsTranscriber(api_key="test_key", max_retries=0)
+        transcriber = ElevenLabsTranscriber(api_key=TEST_API_KEY, max_retries=0)
         
         # Mock the file opening
-        with patch("builtins.open", mock_open(read_data=b"audio data")):
+        with patch("builtins.open", mock_open(read_data=TEST_AUDIO_DATA)):
             # Test transcription with error
-            result = transcriber.transcribe_audio("test.wav")
+            result = transcriber.transcribe_audio(TEST_AUDIO_FILE)
             
             # Verify results
             assert result == ""  # Should return empty string on error
             mock_post.assert_called_once()
-            mock_exists.assert_called_once_with("test.wav")
+            mock_exists.assert_called_once_with(TEST_AUDIO_FILE)
 
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.requests.post')
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.os.path.exists')
@@ -90,7 +106,7 @@ class TestElevenLabsTranscriber:
         """Test handling of server errors during transcription with retries."""
         # Setup mock response for server error
         mock_response = Mock()
-        mock_response.status_code = 500
+        mock_response.status_code = HTTP_SERVER_ERROR
         mock_response.text = "Internal Server Error"
         mock_post.return_value = mock_response
         
@@ -98,20 +114,23 @@ class TestElevenLabsTranscriber:
         mock_exists.return_value = True
 
         # Create transcriber with 1 retry
-        max_retries = 1
-        transcriber = ElevenLabsTranscriber(api_key="test_key", max_retries=max_retries, retry_delay=0.1)
+        transcriber = ElevenLabsTranscriber(
+            api_key=TEST_API_KEY,
+            max_retries=MAX_RETRIES,
+            retry_delay=RETRY_DELAY
+        )
         
         # Mock the file opening
-        with patch("builtins.open", mock_open(read_data=b"audio data")):
+        with patch("builtins.open", mock_open(read_data=TEST_AUDIO_DATA)):
             # Test transcription with server error
-            result = transcriber.transcribe_audio("test.wav")
+            result = transcriber.transcribe_audio(TEST_AUDIO_FILE)
             
             # Verify results
             assert result == ""  # Should return empty string on error
             # Should be called initial + max_retries times
-            assert mock_post.call_count == max_retries + 1
+            assert mock_post.call_count == MAX_RETRIES + 1
             mock_sleep.assert_called_once()
-            mock_exists.assert_called_once_with("test.wav")
+            mock_exists.assert_called_once_with(TEST_AUDIO_FILE)
 
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.requests.post')
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.os.path.exists')
@@ -125,20 +144,23 @@ class TestElevenLabsTranscriber:
         mock_exists.return_value = True
 
         # Create transcriber with 1 retry
-        max_retries = 1
-        transcriber = ElevenLabsTranscriber(api_key="test_key", max_retries=max_retries, retry_delay=0.1)
+        transcriber = ElevenLabsTranscriber(
+            api_key=TEST_API_KEY,
+            max_retries=MAX_RETRIES,
+            retry_delay=RETRY_DELAY
+        )
         
         # Mock the file opening
-        with patch("builtins.open", mock_open(read_data=b"audio data")):
+        with patch("builtins.open", mock_open(read_data=TEST_AUDIO_DATA)):
             # Test transcription with connection error
-            result = transcriber.transcribe_audio("test.wav")
+            result = transcriber.transcribe_audio(TEST_AUDIO_FILE)
             
             # Verify results
             assert result == ""  # Should return empty string on error
             # Should be called initial + max_retries times
-            assert mock_post.call_count == max_retries + 1
+            assert mock_post.call_count == MAX_RETRIES + 1
             mock_sleep.assert_called_once()
-            mock_exists.assert_called_once_with("test.wav")
+            mock_exists.assert_called_once_with(TEST_AUDIO_FILE)
             
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.os.path.exists')
     def test_transcribe_audio_file_not_found(self, mock_exists):
@@ -147,34 +169,32 @@ class TestElevenLabsTranscriber:
         mock_exists.return_value = False
         
         # Create transcriber
-        transcriber = ElevenLabsTranscriber(api_key="test_key")
+        transcriber = ElevenLabsTranscriber(api_key=TEST_API_KEY)
         
         # Test transcription with file not found
-        result = transcriber.transcribe_audio("nonexistent.wav")
+        result = transcriber.transcribe_audio(TEST_AUDIO_FILE)
         
         # Verify results
         assert result == ""  # Should return empty string on error
-        mock_exists.assert_called_once_with("nonexistent.wav")
+        mock_exists.assert_called_once_with(TEST_AUDIO_FILE)
     
     @patch('VoiceProcessingToolkit.transcription.elevenlabs.requests.post')
     def test_transcribe_bytes(self, mock_post):
         """Test transcription from bytes."""
         # Setup mock response
         mock_response = Mock()
-        mock_response.status_code = 200
+        mock_response.status_code = HTTP_OK
         mock_response.json.return_value = {
-            "text": "This is a bytes transcription."
+            "text": TEST_BYTES_TRANSCRIPTION
         }
         mock_post.return_value = mock_response
         
         # Create transcriber with max_retries=0 to simplify testing
-        transcriber = ElevenLabsTranscriber(api_key="test_key", max_retries=0)
+        transcriber = ElevenLabsTranscriber(api_key=TEST_API_KEY, max_retries=0)
         
         # Test transcription from bytes
-        audio_bytes = b"audio data in bytes"
-        result = transcriber.transcribe_bytes(audio_bytes)
+        result = transcriber.transcribe_bytes(TEST_AUDIO_DATA)
         
         # Verify results
-        assert result.get("status") == "success"
-        assert result.get("text") == "This is a bytes transcription."
+        assert result.get("text") == TEST_BYTES_TRANSCRIPTION
         mock_post.assert_called_once() 

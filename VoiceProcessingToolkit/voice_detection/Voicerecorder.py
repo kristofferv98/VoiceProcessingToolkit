@@ -15,98 +15,9 @@ from termcolor import colored
 
 from VoiceProcessingToolkit.interfaces import AudioRecorderInterface
 from VoiceProcessingToolkit.config import default_config
-from VoiceProcessingToolkit.shared_resources import thread_manager
+from VoiceProcessingToolkit.shared_resources import thread_manager, AudioDataProvider
 
 logger = logging.getLogger(__name__)
-
-
-# Audio Data Provider Class
-class AudioDataProvider:
-    def __init__(self, audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512):
-        self.audio_format = audio_format
-        self.channels = channels
-        self.rate = rate
-        self.frames_per_buffer = frames_per_buffer
-        self.stream = None
-        self.py_audio = pyaudio.PyAudio()
-        self.recording_finished_event = threading.Event()  # Signal recording completion
-
-    def start_stream(self) -> bool:
-        """
-        Start the audio input stream.
-        
-        Returns:
-            bool: True if the stream was started successfully, False otherwise.
-        """
-        try:
-            self.stream = self.py_audio.open(
-                format=self.audio_format,
-                channels=self.channels,
-                rate=self.rate,
-                input=True,
-                frames_per_buffer=self.frames_per_buffer
-            )
-            return True
-        except Exception as e:
-            logger.error(f"Failed to start audio stream: {e}")
-            return False
-
-    def read_audio(self) -> Optional[bytes]:
-        """
-        Read audio data from the stream.
-        
-        Returns:
-            bytes or None: Audio data read from the stream, or None if an error occurred.
-        """
-        if not self.stream:
-            logger.error("Cannot read audio: stream not started")
-            return None
-        
-        try:
-            data = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
-            return data
-        except Exception as e:
-            logger.error(f"Error reading audio data: {e}")
-            return None
-
-    def get_next_frame(self):
-        """Legacy method for backward compatibility"""
-        return self.read_audio()
-
-    def stop_stream(self) -> None:
-        """Stop the audio input stream and clean up resources."""
-        if self.stream:
-            try:
-                self.stream.stop_stream()
-                self.stream.close()
-            except Exception as e:
-                logger.warning(f"Error closing audio stream: {e}")
-            finally:
-                self.stream = None
-                
-        if self.py_audio:
-            try:
-                self.py_audio.terminate()
-            except Exception as e:
-                logger.warning(f"Error terminating PyAudio: {e}")
-            finally:
-                self.py_audio = None
-    
-    def get_sample_size(self) -> int:
-        """
-        Get the sample size in bytes for the audio format.
-        
-        Returns:
-            int: Sample size in bytes.
-        """
-        if self.py_audio:
-            return self.py_audio.get_sample_size(self.audio_format)
-        return 2  # Default for paInt16
-    
-    def __del__(self):
-        """Ensure cleanup when the object is garbage collected."""
-        self.stop_stream()
-
 
 class AudioRecorder(AudioRecorderInterface):
     """
@@ -171,9 +82,13 @@ class AudioRecorder(AudioRecorderInterface):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
-        # Set up PyAudio
-        self.audio = pyaudio.PyAudio()
-        self.stream = None
+        # Initialize audio provider
+        self.audio_provider = AudioDataProvider(
+            rate=self.rate,
+            channels=self.channels,
+            audio_format=self.audio_format,
+            frames_per_buffer=self.frames_per_buffer
+        )
         
         # Threading setup
         self.recording_thread = None
@@ -222,14 +137,12 @@ class AudioRecorder(AudioRecorderInterface):
             return
         
         try:
-            # Open audio stream
-            self.stream = self.audio.open(
-                format=self.audio_format,
-                channels=self.channels,
-                rate=self.rate,
-                input=True,
-                frames_per_buffer=self.frames_per_buffer
-            )
+            # Start audio stream
+            if not self.audio_provider.start_stream():
+                logger.error("Failed to start audio stream")
+                with self.lock:
+                    self.is_recording = False
+                return
             
             logger.info(colored("Listening for voice activity...", "yellow"))
             
@@ -248,127 +161,94 @@ class AudioRecorder(AudioRecorderInterface):
             inactivity_frames = int(self.inactivity_limit / frame_duration)
             min_recording_frames = int(self.min_recording_length / frame_duration)
             
-            # Main recording loop
-            while not self.stopped:
+            while self.is_recording and not self.stopped:
                 # Read audio data
-                data = self.stream.read(self.frames_per_buffer, exception_on_overflow=False)
-                audio_frame = np.frombuffer(data, dtype=np.int16)
+                audio_data = self.audio_provider.read_audio()
+                if audio_data is None:
+                    logger.error("Failed to read audio data")
+                    break
                 
-                # Check voice activity with Cobra
-                voice_probability = self.cobra.process(audio_frame)
-                currently_speaking = voice_probability >= self.voice_threshold
+                # Convert audio data to numpy array for VAD
+                audio_array = np.frombuffer(audio_data, dtype=np.int16)
                 
-                if currently_speaking:
-                    if not is_speaking:
-                        logger.info(colored("Voice detected, recording...", "green"))
-                    
+                # Check for voice activity
+                voice_probability = self.cobra.process(audio_array)
+                
+                current_time = time.time()
+                
+                if voice_probability > self.voice_threshold:
                     is_speaking = True
-                    last_voice_time = time.time()
+                    last_voice_time = current_time
+                    silence_frames = []
                     
                     if not recording_started:
                         recording_started = True
-                        recording_start_time = time.time()
-                        # Add any buffered silence frames at the beginning
-                        frames.extend(silence_frames)
-                        silence_frames = []
+                        recording_start_time = current_time
+                        logger.info(colored("Voice activity detected, starting recording...", "green"))
                     
-                    frames.append(data)
+                    frames.append(audio_data)
                 else:
-                    # Not speaking, accumulate silence
-                    if recording_started:
-                        frames.append(data)
-                    else:
-                        # Buffer some silence before speech for better recordings
-                        silence_frames.append(data)
-                        if len(silence_frames) > int(self.buffer_length / frame_duration):
-                            silence_frames.pop(0)
+                    is_speaking = False
+                    silence_frames.append(audio_data)
                     
-                    # Check if we've exceeded silence limit
-                    elapsed_silence = time.time() - last_voice_time
-                    if recording_started and elapsed_silence >= self.silence_limit:
-                        logger.info(colored(f"Silence limit reached ({elapsed_silence:.1f}s), stopping recording", "yellow"))
+                    # Check for silence or inactivity
+                    if len(silence_frames) >= silence_limit_frames:
+                        logger.info(colored("Silence detected, stopping recording...", "yellow"))
+                        break
+                    
+                    if current_time - last_voice_time >= self.inactivity_limit:
+                        logger.info(colored("Inactivity detected, stopping recording...", "yellow"))
                         break
                 
-                # Check for inactivity timeout
-                if recording_started:
-                    elapsed_total = time.time() - recording_start_time
-                    if elapsed_total >= self.inactivity_limit:
-                        logger.info(colored(f"Recording reached inactivity limit ({elapsed_total:.1f}s), stopping", "yellow"))
+                # Check minimum recording length
+                if recording_started and current_time - recording_start_time >= self.min_recording_length:
+                    if not is_speaking:
+                        logger.info(colored("Minimum recording length reached, stopping...", "yellow"))
                         break
             
-            # Check if recording is valid (meets minimum length)
-            recording_length = len(frames) * frame_duration
-            if recording_started and recording_length >= self.min_recording_length:
-                # Save the recording
-                self.recorded_file = self._save_recording(frames)
-                logger.info(colored(f"Recording saved: {self.recorded_file} ({recording_length:.1f}s)", "green"))
+            # Save recording if we have enough frames
+            if len(frames) >= min_recording_frames:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = os.path.join(self.output_dir, f"recording_{timestamp}.wav")
+                
+                with wave.open(filename, 'wb') as wf:
+                    wf.setnchannels(self.channels)
+                    wf.setsampwidth(self.audio_provider.get_sample_size())
+                    wf.setframerate(self.rate)
+                    wf.writeframes(b''.join(frames))
+                
+                self.recorded_file = filename
+                logger.info(colored(f"Recording saved to {filename}", "green"))
             else:
-                logger.info(colored(f"Recording too short ({recording_length:.1f}s), discarding", "red"))
+                logger.warning(colored("Recording too short, not saving", "yellow"))
                 self.recorded_file = None
-        
+            
         except Exception as e:
             logger.error(f"Error during recording: {e}")
             self.recorded_file = None
-        
         finally:
-            # Clean up resources
-            self._cleanup()
+            # Clean up
+            self.audio_provider.stop_stream()
             with self.lock:
                 self.is_recording = False
     
-    def _save_recording(self, frames: List[bytes]) -> str:
-        """
-        Save the recorded audio frames to a WAV file.
-        
-        Args:
-            frames: List of audio frame data
-        
-        Returns:
-            str: Path to the saved file
-        """
-        timestamp = int(time.time())
-        filename = os.path.join(self.output_dir, f"recording_{timestamp}.wav")
-        
-        with wave.open(filename, 'wb') as wf:
-            wf.setnchannels(self.channels)
-            wf.setsampwidth(self.audio.get_sample_size(self.audio_format))
-            wf.setframerate(self.rate)
-            wf.writeframes(b''.join(frames))
-        
-        return filename
-    
     def stop_recording(self) -> None:
-        """
-        Stop the ongoing recording process.
-        """
-        logger.info("Stopping recording")
+        """Stop the current recording."""
         with self.lock:
             self.stopped = True
+            self.is_recording = False
     
-    def _cleanup(self) -> None:
-        """
-        Clean up audio resources.
-        """
-        if self.stream:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.stream = None
+    def get_last_saved_file(self) -> Optional[str]:
+        """Get the path of the last saved recording."""
+        return getattr(self, 'recorded_file', None)
     
-    def cleanup(self) -> None:
-        """
-        Clean up all resources used by the AudioRecorder.
-        """
-        logger.info("Cleaning up AudioRecorder resources")
+    def __del__(self):
+        """Clean up resources when the object is destroyed."""
         self.stop_recording()
-        self._cleanup()
-        
-        if self.audio:
-            self.audio.terminate()
-            self.audio = None
-        
-        if self.cobra:
+        if hasattr(self, 'audio_provider'):
+            self.audio_provider.stop_stream()
+        if hasattr(self, 'cobra') and self.cobra:
             self.cobra.delete()
-            self.cobra = None
 
 
 if __name__ == '__main__':
@@ -384,3 +264,4 @@ if __name__ == '__main__':
 
     # Clean up
     recorder.cleanup()
+

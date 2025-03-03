@@ -89,6 +89,30 @@ class Config:
                 logger.warning(f"Default notification sound not found at {default_sound_path}")
     
     @classmethod
+    def from_dict(cls, config_dict: Dict[str, Any]) -> 'Config':
+        """
+        Create a Config instance from a dictionary.
+        
+        Args:
+            config_dict: Dictionary containing configuration values.
+            
+        Returns:
+            Config: New configuration instance.
+        """
+        # Convert nested dictionaries to dataclasses
+        transcriber = TranscriberConfig(**config_dict.get("transcriber", {}))
+        audio = AudioConfig(**config_dict.get("audio", {}))
+        wake_word = WakeWordConfig(**config_dict.get("wake_word", {}))
+        paths = PathConfig(**config_dict.get("paths", {}))
+        
+        return cls(
+            transcriber=transcriber,
+            audio=audio,
+            wake_word=wake_word,
+            paths=paths
+        )
+    
+    @classmethod
     def load_from_file(cls, file_path: str) -> 'Config':
         """
         Load configuration from a JSON file.
@@ -102,19 +126,7 @@ class Config:
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 config_dict = json.load(f)
-            
-            # Convert nested dictionaries to dataclasses
-            transcriber = TranscriberConfig(**config_dict.get("transcriber", {}))
-            audio = AudioConfig(**config_dict.get("audio", {}))
-            wake_word = WakeWordConfig(**config_dict.get("wake_word", {}))
-            paths = PathConfig(**config_dict.get("paths", {}))
-            
-            return cls(
-                transcriber=transcriber,
-                audio=audio,
-                wake_word=wake_word,
-                paths=paths
-            )
+            return cls.from_dict(config_dict)
         except Exception as e:
             logger.error(f"Error loading configuration from {file_path}: {e}")
             logger.info("Using default configuration")

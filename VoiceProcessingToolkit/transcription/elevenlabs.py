@@ -3,9 +3,56 @@ import logging
 import os
 import time
 import requests
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Callable, TypeVar, Any
+from functools import wraps
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar('T')
+
+def retry_on_error(
+    max_retries: int = 3,
+    delay: float = 1.0,
+    backoff: float = 2.0,
+    exceptions: tuple = (requests.exceptions.RequestException,)
+) -> Callable:
+    """
+    Decorator that retries a function on specified exceptions with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        delay: Initial delay between retries in seconds
+        backoff: Multiplier for delay after each retry
+        exceptions: Tuple of exceptions to catch and retry on
+        
+    Returns:
+        Decorated function with retry logic
+    """
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> T:
+            current_delay = delay
+            last_exception = None
+            
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exception = e
+                    if attempt < max_retries - 1:
+                        logger.warning(
+                            f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}. "
+                            f"Retrying in {current_delay:.1f}s..."
+                        )
+                        time.sleep(current_delay)
+                        current_delay *= backoff
+                    else:
+                        logger.error(f"All {max_retries} attempts failed. Last error: {str(e)}")
+                        raise last_exception
+            
+            raise last_exception
+        return wrapper
+    return decorator
 
 class ElevenLabsTranscriber:
     """
@@ -41,6 +88,7 @@ class ElevenLabsTranscriber:
         result = self.transcribe_file(audio_file_path, language)
         return result.get("text", "")
         
+    @retry_on_error(max_retries=3, delay=1.0, backoff=2.0)
     def transcribe_file(self, audio_file_path: str, language: str = "en") -> Dict[str, Any]:
         """
         Transcribe an audio file using ElevenLabs Speech-to-Text API.
@@ -118,6 +166,7 @@ class ElevenLabsTranscriber:
             self._logger.error(f"Error during transcription: {str(e)}")
             return {"error": str(e), "text": ""}
         
+    @retry_on_error(max_retries=3, delay=1.0, backoff=2.0)
     def transcribe_bytes(self, audio_bytes: bytes, language: str = "en") -> Dict[str, Any]:
         """
         Transcribe audio from bytes using ElevenLabs Speech-to-Text API.

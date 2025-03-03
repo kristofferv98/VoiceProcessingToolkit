@@ -199,7 +199,7 @@ class WakeWordDetector:
 
         with wave.open(filepath, 'wb') as wave_file:
             wave_file.setnchannels(1)
-            wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16) if self._py_audio else 2)
+            wave_file.setsampwidth(self._audio_stream_manager.get_sample_size())
             wave_file.setframerate(self._porcupine.sample_rate)
             wave_file.writeframes(snippet_buffer)
             logger.info(f"Saved wake word audio snippet to {filepath}")
