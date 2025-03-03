@@ -44,311 +44,190 @@ import wave
 import pvporcupine
 import pyaudio
 from dotenv import load_dotenv
-from typing import Optional, List, Callable, Any
 
-import pvporcupine
-import pyaudio
-from VoiceProcessingToolkit.interfaces import WakeWordDetectorInterface, AudioStreamInterface
-from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
-from VoiceProcessingToolkit.shared_resources import shutdown_flag, thread_manager
-from VoiceProcessingToolkit.config import default_config
+from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
+from VoiceProcessingToolkit.wake_word_detector.NotificationSoundManager import NotificationSoundManager
+from VoiceProcessingToolkit.shared_resources import shutdown_flag
 
 logger = logging.getLogger(__name__)
 
 
-class NotificationSoundManager:
+class WakeWordDetector:
     """
-    Manages the playback of notification sounds.
-    
+    Detects a specified wake word using the Porcupine engine and executes registered actions upon detection.
+
     Attributes:
-        sound_file_path (str): Path to the notification sound file.
-        logger (logging.Logger): Logger for this class.
-        pyaudio_instance (pyaudio.PyAudio): Instance of PyAudio for playback.
+        _access_key (str): The access key for the Porcupine wake word engine.
+        _wake_word (str): The wake word that the detector should listen for.
+        _sensitivity (float): The sensitivity of the wake word detection, between 0 and 1.
+        _audio_stream_manager (AudioStreamManager): Manages the audio stream from the microphone.
+        _action_manager (ActionManager): Manages the actions to be executed when the wake word is detected.
+        _play_notification_sound (bool): Indicates whether to play a notification sound upon detection.
+        _stop_event (threading.Event): An event to signal the detection loop to stop.
+        _porcupine (pvporcupine.Porcupine): The Porcupine wake word engine instance.
+
+    Methods:
+        __init__(self, access_key, wake_word, sensitivity, action_manager, audio_stream_manager, play_notification_sound):
+            Initializes the WakeWordDetector with provided parameters.
+
+        initialize_porcupine(self):
+            Initializes the Porcupine engine.
+
+        voice_loop(self):
+            Listens for the wake word and triggers actions upon detection.
+
+        run(self):
+            Starts the wake word detection in a separate thread.
+
+        cleanup(self):
+            Cleans up resources.
+
+        # Additional method documentation...
     """
-    
-    def __init__(self, sound_file_path: str = None):
+
+    def __init__(self, access_key: str, wake_word: str, sensitivity: float,
+                 action_manager: ActionManager, audio_stream_manager: AudioStream,
+                 play_notification_sound: bool = True, save_audio_directory: str = None,
+                 snippet_length: float = 3.0) -> None:
         """
-        Initialize a new NotificationSoundManager.
-        
+                Initializes the WakeWordDetector with the specified parameters.
         Args:
-            sound_file_path (str, optional): Path to the notification sound file.
-                                             If None, uses the default from config.
+            access_key (str): Access key for Porcupine.
+            wake_word (str): Wake word to detect.
+            sensitivity (float): Detection sensitivity.
+            action_manager (ActionManager): Manages actions to execute on detection.
+            audio_stream_manager (AudioStreamManager): Manages audio stream.
+            play_notification_sound (bool): Flag to play a sound on detection.
+            save_audio_directory (str): Directory to save audio snippets upon detection.
+            snippet_length (float): Length of the audio snippet to save after wake word detection in seconds.
+
+        Raises:
+            ValueError: If any initialization parameter is invalid.
         """
-        self.sound_file_path = sound_file_path or default_config.wake_word.notification_sound_path
-        self.logger = logging.getLogger(__name__)
-        self.pyaudio_instance: Optional[pyaudio.PyAudio] = None
-        
-        if self.sound_file_path and not os.path.exists(self.sound_file_path):
-            self.logger.warning(f"Notification sound file not found: {self.sound_file_path}")
-    
-    def play_notification(self) -> bool:
+        self._snippet_frame_count = None
+        self.notification_sound_path = str(resources.files('VoiceProcessingToolkit.wake_word_detector.Wav_MP3').joinpath('notification.wav'))
+        if not os.path.exists(self.notification_sound_path):
+            raise FileNotFoundError("Notification sound file not found at expected path.")
+        self._pre_buffer_time = 1  # Time in seconds to save before wake word
+        self._post_buffer_time = 1.5  # Time in seconds to save after wake word
+        self._notification_sound_manager = NotificationSoundManager(str(self.notification_sound_path))
+
+        self._action_manager = action_manager
+        self._play_notification_sound = play_notification_sound
+        self._access_key = access_key if access_key else os.getenv('PICOVOICE_APIKEY')
+        self._wake_word = wake_word
+        self._sensitivity = sensitivity
+        self._audio_stream_manager = audio_stream_manager
+        self._stop_event = threading.Event()
+        self._porcupine = None
+        self._py_audio = None
+        self._snippet_length = snippet_length
+        self.initialize_porcupine()
+        self.is_running = False  # New attribute
+        self._save_audio_directory = save_audio_directory
+        if self._save_audio_directory and not os.path.exists(self._save_audio_directory):
+            os.makedirs(self._save_audio_directory)
+
+    def initialize_porcupine(self) -> None:
         """
-        Play the notification sound.
-        
-        Returns:
-            bool: True if the sound was played successfully, False otherwise.
+        Initializes the Porcupine wake word engine.
         """
-        if not self.sound_file_path or not os.path.exists(self.sound_file_path):
-            self.logger.warning("Cannot play notification: sound file not found")
-            return False
-        
         try:
-            import wave
-            
-            # Initialize PyAudio if needed
-            if self.pyaudio_instance is None:
-                self.pyaudio_instance = pyaudio.PyAudio()
-            
-            with wave.open(self.sound_file_path, 'rb') as wave_file:
-                # Open a stream for playback
-                stream = self.pyaudio_instance.open(
-                    format=self.pyaudio_instance.get_format_from_width(wave_file.getsampwidth()),
-                    channels=wave_file.getnchannels(),
-                    rate=wave_file.getframerate(),
-                    output=True
-                )
-                
-                # Read and play chunks of data
-                chunk_size = 1024
-                data = wave_file.readframes(chunk_size)
-                
-                while data:
-                    stream.write(data)
-                    data = wave_file.readframes(chunk_size)
-                
-                # Close the stream
-                stream.stop_stream()
-                stream.close()
-                
-                self.logger.debug("Notification sound played successfully")
-                return True
-                
+            if self._porcupine is None:
+                self._porcupine = pvporcupine.create(access_key=self._access_key, keywords=[self._wake_word],
+                                                     sensitivities=[self._sensitivity])
+                self._snippet_frame_count = int(self._porcupine.sample_rate * self._snippet_length)
+        except pvporcupine.PorcupineError as e:
+            logger.exception("Failed to initialize Porcupine with the given parameters.", exc_info=e)
+            raise
+
+    def voice_loop(self):
+        """
+        The main loop that listens for the wake word and triggers the action function.
+        """
+        self.is_running = True
+        try:
+            while not self._stop_event.is_set() and not shutdown_flag.is_set():
+                pcm = self._audio_stream_manager.read()
+                pcm = struct.unpack_from("h" * self._porcupine.frame_length, pcm)
+                if self._porcupine.process(pcm) >= 0:
+                    self.handle_wake_word_detection()
+
         except Exception as e:
-            self.logger.error(f"Error playing notification sound: {e}")
-            return False
-    
-    def cleanup(self) -> None:
-        """Clean up resources used by the NotificationSoundManager."""
-        if self.pyaudio_instance:
-            try:
-                self.pyaudio_instance.terminate()
-            except Exception as e:
-                self.logger.warning(f"Error terminating PyAudio: {e}")
-            finally:
-                self.pyaudio_instance = None
+            logger.exception("An error occurred during wake word detection.", exc_info=e)
+            raise RuntimeError("Wake word detection error.") from e
+        finally:
+            self.is_running = False
+
+    def handle_wake_word_detection(self):
+        """
+        Handle the detection of the wake word, play the notification sound, trigger actions, and then stop.
+        """
+        if self._save_audio_directory:
+            pre_detection_frames = int(self._porcupine.sample_rate * self._pre_buffer_time)
+            post_detection_frames = int(self._porcupine.sample_rate * self._post_buffer_time)
+            save_thread = threading.Thread(target=self.save_audio_snippet,
+                                           args=(pre_detection_frames, post_detection_frames))
+            save_thread.start()
+        action_thread = threading.Thread(target=lambda: asyncio.run(self._action_manager.execute_actions()))
+        action_thread.start()
+        # Play the notification sound in a non-blocking manner
+        if self._play_notification_sound:
+            sound_thread = threading.Thread(target=self._notification_sound_manager.play)
+            sound_thread.start()
+            sound_thread.join()  # Wait for the notification sound to finish playing
+            self._stop_event.set()  # Signal to stop the detection loop
+        else:
+            self._stop_event.set()
 
 
-class WakeWordDetector(WakeWordDetectorInterface):
-    """
-    Listens for a wake word and triggers actions when detected.
-    Implements the WakeWordDetectorInterface.
-    
-    Attributes:
-        access_key (str): Access key for the Porcupine wake word engine.
-        wake_word (str): The wake word to listen for.
-        sensitivity (float): Sensitivity for wake word detection (0.0 to 1.0).
-        action_manager (ActionManager): Manager for actions to execute on detection.
-        notification_manager (NotificationSoundManager): Manager for playing notifications.
-        audio_stream (AudioStreamInterface): Audio stream for capturing audio.
-        porcupine (pvporcupine.Porcupine): Porcupine wake word detection engine.
-        is_running (bool): Flag indicating if the detector is running.
-        detection_thread (threading.Thread): Thread for wake word detection.
-        logger (logging.Logger): Logger for this class.
-    """
-    
-    def __init__(
-        self,
-        access_key: Optional[str] = None,
-        wake_word: Optional[str] = None,
-        sensitivity: Optional[float] = None,
-        action_manager: Optional[ActionManager] = None,
-        notification_sound_path: Optional[str] = None,
-        audio_stream: Optional[AudioStreamInterface] = None
-    ):
+    def save_audio_snippet(self, pre_detection_frames: int, post_detection_frames: int):
         """
-        Initialize a new WakeWordDetector.
-        
-        Args:
-            access_key: Access key for Porcupine. If None, uses environment variable or config.
-            wake_word: Wake word to detect. If None, uses default from config.
-            sensitivity: Detection sensitivity (0.0 to 1.0). If None, uses default from config.
-            action_manager: Manager for actions to execute on detection. If None, creates a new one.
-            notification_sound_path: Path to notification sound file. If None, uses default from config.
-            audio_stream: Audio stream to use. If None, creates a new one.
+        Saves a snippet of audio from the buffer to the specified directory.
         """
-        # Initialize configuration
-        wake_word_config = default_config.wake_word
-        self.access_key = access_key or os.getenv('PORCUPINE_ACCESS_KEY') or wake_word_config.access_key
-        self.wake_word = wake_word or wake_word_config.wake_word
-        self.sensitivity = sensitivity if sensitivity is not None else wake_word_config.sensitivity
-        
-        # Initialize components
-        self.action_manager = action_manager or ActionManager()
-        self.notification_manager = NotificationSoundManager(notification_sound_path)
-        self.audio_stream = audio_stream
-        
-        # State management
-        self.porcupine = None
-        self.is_running = False
-        self.detection_thread = None
-        self.logger = logging.getLogger(__name__)
-        
-        # Validate configuration
-        if not self.access_key:
-            self.logger.warning("No Porcupine access key provided. Wake word detection will not work.")
-    
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"wake_word_{timestamp}.wav"
+        filepath = os.path.join(self._save_audio_directory, filename)
+        buffer = self._audio_stream_manager.get_rolling_buffer()
+
+        # Calculate the start and end indices for the snippet
+        end_index = len(buffer)
+        start_index = max(end_index - (pre_detection_frames + post_detection_frames + self._porcupine.frame_length) * 2,
+                          0)  # 2 bytes per frame (16-bit audio)
+        snippet_buffer = buffer[start_index:end_index]
+
+        with wave.open(filepath, 'wb') as wave_file:
+            wave_file.setnchannels(1)
+            wave_file.setsampwidth(self._py_audio.get_sample_size(pyaudio.paInt16) if self._py_audio else 2)
+            wave_file.setframerate(self._porcupine.sample_rate)
+            wave_file.writeframes(snippet_buffer)
+            logger.info(f"Saved wake word audio snippet to {filepath}")
+
     def run(self) -> None:
         """
-        Start the wake word detection in a non-blocking way.
-        Creates a daemon thread for detection.
+        Starts the wake word detection loop.
         """
-        if self.is_running:
-            self.logger.warning("Wake word detector is already running")
-            return
-        
-        # Create and start the detection thread
-        self.detection_thread = thread_manager.create_daemon_thread(
-            target=self.run_blocking,
-            name="WakeWordDetectionThread"
-        )
-        self.detection_thread.start()
-        self.logger.info("Wake word detection started in background thread")
-    
+        detection_thread = threading.Thread(target=self.voice_loop)
+        detection_thread.start()
+        detection_thread.join()  # Wait for the thread to finish
+        self.cleanup()  # Cleanup resources after the thread has finished
+
     def run_blocking(self) -> None:
         """
-        Start the wake word detection and block until detection occurs or shutdown is requested.
+        Starts the wake word detection loop and waits for it to finish before returning.
+        This method is intended to be used when the detection should block the calling thread.
         """
-        if self.is_running:
-            self.logger.warning("Wake word detector is already running")
-            return
-        
-        try:
-            self._initialize_detection()
-            self._voice_loop()
-        except Exception as e:
-            self.logger.error(f"Error in wake word detection: {e}")
-        finally:
-            self.cleanup()
-    
-    def _initialize_detection(self) -> None:
-        """
-        Initialize the wake word detection components.
-        
-        Raises:
-            RuntimeError: If initialization fails.
-        """
-        try:
-            # Initialize the wake word engine (Porcupine)
-            self.porcupine = pvporcupine.create(
-                access_key=self.access_key,
-                keywords=[self.wake_word],
-                sensitivities=[self.sensitivity]
-            )
-            
-            # Initialize audio stream if not provided
-            if self.audio_stream is None:
-                self.audio_stream = AudioStream(
-                    rolling_buffer_size=self.porcupine.frame_length * 2
-                )
-                self.audio_stream.initialize_stream(
-                    rate=self.porcupine.sample_rate,
-                    channels=1,
-                    audio_format=pyaudio.paInt16,
-                    frames_per_buffer=self.porcupine.frame_length
-                )
-            
-            self.is_running = True
-            self.logger.info(f"Wake word detector initialized with wake word '{self.wake_word}' "
-                             f"and sensitivity {self.sensitivity}")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to initialize wake word detection: {e}")
-            self.cleanup()
-            raise RuntimeError(f"Failed to initialize wake word detection: {e}")
-    
-    def _voice_loop(self) -> None:
-        """
-        Main detection loop that processes audio and detects the wake word.
-        """
-        if not self.is_running or not self.porcupine or not self.audio_stream:
-            self.logger.error("Cannot start voice loop: detection not properly initialized")
-            return
-        
-        self.logger.info("Starting wake word detection loop")
-        
-        while self.is_running and not thread_manager.is_shutdown_requested():
-            try:
-                # Read audio data
-                pcm = self.audio_stream.read()
-                
-                # Process audio with Porcupine
-                result = self.porcupine.process(pcm)
-                
-                # Check if wake word was detected
-                if result >= 0:
-                    self.logger.info(f"Wake word '{self.wake_word}' detected!")
-                    
-                    # Play notification sound if configured
-                    self.notification_manager.play_notification()
-                    
-                    # Execute registered actions
-                    if self.action_manager:
-                        try:
-                            # Use an async event loop to execute actions
-                            import asyncio
-                            asyncio.run(self.action_manager.execute_actions())
-                        except Exception as e:
-                            self.logger.error(f"Error executing actions: {e}")
-                
-            except KeyboardInterrupt:
-                self.logger.info("Keyboard interrupt detected in voice loop")
-                break
-            except Exception as e:
-                self.logger.error(f"Error in voice detection loop: {e}")
-                # Sleep briefly to avoid CPU spinning on repeated errors
-                time.sleep(0.1)
-        
-        self.logger.info("Voice detection loop ended")
-    
+        self.voice_loop()
+        time.sleep(0.5)
+        self.cleanup()
+
     def cleanup(self) -> None:
         """
-        Clean up resources used by the wake word detector.
-        Can be called multiple times safely.
+        Cleans up the resources used by the wake word detector.
         """
-        self.is_running = False
-        
-        # Clean up Porcupine
-        if self.porcupine:
-            try:
-                self.porcupine.delete()
-                self.logger.debug("Porcupine engine deleted")
-            except Exception as e:
-                self.logger.warning(f"Error cleaning up Porcupine: {e}")
-            finally:
-                self.porcupine = None
-        
-        # Clean up audio stream
-        if self.audio_stream:
-            try:
-                self.audio_stream.cleanup()
-                self.logger.debug("Audio stream cleaned up")
-            except Exception as e:
-                self.logger.warning(f"Error cleaning up audio stream: {e}")
-            
-        # Clean up notification manager
-        if hasattr(self, 'notification_manager'):
-            try:
-                self.notification_manager.cleanup()
-                self.logger.debug("Notification manager cleaned up")
-            except Exception as e:
-                self.logger.warning(f"Error cleaning up notification manager: {e}")
-        
-        self.logger.info("Wake word detector resources cleaned up")
-    
-    def __del__(self):
-        """Ensure cleanup when the object is garbage collected."""
-        self.cleanup()
+        self._audio_stream_manager.cleanup()
+        self._porcupine.delete()
 
 
 def main():
@@ -387,7 +266,10 @@ def main():
         wake_word=wake_word,
         sensitivity=sensitivity,
         action_manager=action_manager,
-        audio_stream=audio_stream_manager
+        audio_stream_manager=audio_stream_manager,
+        play_notification_sound=True,
+        save_audio_directory=save_audio_directory,
+        snippet_length=snippet_length
     )
 
     # Run the wake word detector

@@ -1,50 +1,61 @@
-# Byte-compiled / optimized / DLL files
+# Python virtual environments
+.venv/
+.venv_test/
+venv/
+ENV/
+
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.*
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Logs
+*.log
+
+# Local development settings
+.DS_Store
+
 # C extensions
 *.so
-
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-*.egg
 
 # PyInstaller
 *.manifest
 *.spec
 
 # Unit test / coverage reports
-htmlcov/
 .tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
 .hypothesis/
-.pytest_cache/
 
 # Translations
 *.mo
 *.pot
 
 # Environments
-.env
-.venv/
 env/
-venv/
-ENV/
 env.bak/
 venv.bak/
 
 # PyCharm
-.idea/
-
-# Spyder project settings
 .spyderproject
 .spyproject
 
@@ -68,7 +79,6 @@ cython_debug/
 *.swo
 
 # Operating System Files
-.DS_Store
 Thumbs.db
 ehthumbs.db
 Desktop.ini
@@ -79,7 +89,5 @@ Desktop.ini
 
 # Correcting the path to ensure .wav files are not ignored in the Wav_MP3 directory
 VoiceProcessingToolkit/wake_word_detector/Wav_MP3/*.wav
-
-
 
 .aider*
