@@ -11,9 +11,9 @@ from termcolor import colored
 from pathlib import Path
 
 # Add the parent directory to the path to make imports work
-parent_dir = str(Path(__file__).parent.parent)
+parent_dir = str(Path(__file__).parent.parent.absolute())
 if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
+    sys.path.insert(0, parent_dir)
 
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 from VoiceProcessingToolkit.config import get_config, Config

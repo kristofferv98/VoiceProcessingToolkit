@@ -14,7 +14,13 @@ import os
 import time
 import logging
 import sys
+from pathlib import Path
 from termcolor import colored
+
+# Add the parent directory to the path if running directly
+parent_dir = str(Path(__file__).parent.parent.absolute())
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 # Configure logging
 logging.basicConfig(

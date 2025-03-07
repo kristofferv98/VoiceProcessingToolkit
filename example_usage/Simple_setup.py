@@ -9,11 +9,19 @@ It demonstrates:
 3. Proper signal handling for graceful shutdown
 """
 
+# Import sys and set up path properly if run directly
+import sys
+import os
+from pathlib import Path
+
+# Add the parent directory to the path if running directly
+parent_dir = str(Path(__file__).parent.parent.absolute())
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
 from dotenv import load_dotenv
 import logging
-import os
-import sys
 import signal
 
 # Configure logging

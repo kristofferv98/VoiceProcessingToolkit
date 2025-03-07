@@ -1,17 +1,31 @@
-from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
-from dotenv import load_dotenv
+#!/usr/bin/env python3
+"""
+Utility script for creating wake word datasets.
+
+This script records audio snippets when the wake word is detected,
+which can be used to create a custom dataset for wake word training.
+"""
 
 import logging
 import os
 import sys
 import signal
+from pathlib import Path
+from dotenv import load_dotenv
 
-#logging.basicConfig(level=logging.INFO)
+# Add the parent directory to the path if running directly
+parent_dir = str(Path(__file__).parent.parent.parent.absolute())
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from VoiceProcessingToolkit.VoiceProcessingManager import VoiceProcessingManager
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 # Set environment variables for API keys in .env file
 os.getenv('PICOVOICE_APIKEY')
-os.getenv('OPENAI_API_KEY')
 os.getenv('ELEVENLABS_API_KEY')
 
 # Define signal handler
