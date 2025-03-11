@@ -274,10 +274,24 @@ class AudioRecorder(AudioRecorderInterface):
         """
         logger.info("Cleaning up AudioRecorder resources")
         self.stop_recording()
+        
+        # Guard against double cleanup
+        if hasattr(self, 'cleanup_completed') and self.cleanup_completed:
+            logger.debug("Cleanup already completed, skipping")
+            return
+            
         if hasattr(self, 'audio_provider') and self.audio_provider:
             self.audio_provider.stop_stream()
+            # Remove reference to prevent double free
+            self.audio_provider = None
+            
         if hasattr(self, 'cobra') and self.cobra:
-            self.cobra.delete()
+            try:
+                self.cobra.delete()
+                # Remove reference to prevent double free
+                self.cobra = None
+            except Exception as e:
+                logger.error(f"Error deleting Cobra: {e}")
         
         # Make sure recording thread is stopped
         if hasattr(self, 'recording_thread') and self.recording_thread and self.recording_thread.is_alive():
@@ -285,6 +299,9 @@ class AudioRecorder(AudioRecorderInterface):
             self.recording_thread.join(timeout=2.0)  # Wait for 2 seconds max
             if self.recording_thread.is_alive():
                 logger.warning("Recording thread did not finish in time")
+        
+        # Mark cleanup as completed
+        self.cleanup_completed = True
     
     def __del__(self):
         """Clean up resources when the object is destroyed."""
