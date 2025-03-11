@@ -94,6 +94,12 @@ VoiceProcessingToolkit/wake_word_detector/Wav_MP3/*.wav
 # Ignore all wav files in voice_detection/Wav_MP3 directory
 VoiceProcessingToolkit/voice_detection/Wav_MP3/*.wav
 
+# Ignore all recordings
+/recordings/
+/recordings/*.wav
+recordings/
+*.wav
+
 .aider*
 
 # Lock files
