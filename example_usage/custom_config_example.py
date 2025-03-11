@@ -63,35 +63,37 @@ def main():
     
     # Create the VoiceProcessingManager with custom settings
     print_step("Creating VoiceProcessingManager with custom settings")
-    manager = VoiceProcessingManager(
-        wake_word=custom_config.wake_word.wake_word,
-        sensitivity=custom_config.wake_word.sensitivity,
-        output_dir=custom_config.paths.output_dir,
-        access_key=custom_config.wake_word.access_key,
-        transcriber_api_key=custom_config.transcriber.api_key
-    )
-    
-    # Now we can use the manager to process voice commands
-    print_step("Ready to process voice commands")
-    print(colored("Say the wake word followed by your command.", "green"))
-    print(colored(f"Wake word: {custom_config.wake_word.wake_word}", "green"))
-    print(colored("Press Ctrl+C to exit", "yellow"))
-    
     try:
-        # Process a voice command (this will wait for the wake word, record, and transcribe)
-        transcription = manager.run()
+        manager = VoiceProcessingManager.create_with_config(
+            config_path=config_path  # Use the custom config file directly
+        )
         
-        if transcription:
-            print_step("Transcription result")
-            print(colored(f"Transcription: {transcription}", "green"))
-        else:
-            print_step("No valid transcription obtained")
+        # Now we can use the manager to process voice commands
+        print_step("Ready to process voice commands")
+        print(colored("Say the wake word followed by your command.", "green"))
+        print(colored(f"Wake word: {custom_config.wake_word.wake_word}", "green"))
+        print(colored("Press Ctrl+C to exit", "yellow"))
+        
+        try:
+            # Process a voice command (this will wait for the wake word, record, and transcribe)
+            transcription = manager.run()
             
-    except KeyboardInterrupt:
-        print_step("Exiting due to keyboard interrupt")
-    finally:
-        # Clean up resources
-        manager.cleanup()
+            if transcription:
+                print_step("Transcription result")
+                print(colored(f"Transcription: {transcription}", "green"))
+            else:
+                print_step("No valid transcription obtained")
+                
+        except KeyboardInterrupt:
+            print_step("Exiting due to keyboard interrupt")
+        finally:
+            # Clean up resources
+            manager.cleanup()
+    except Exception as e:
+        print_step("Error initializing VoiceProcessingManager")
+        print(colored(f"Error: {str(e)}", "red"))
+        print(colored("This is expected when using placeholder API keys.", "yellow"))
+        print(colored("To use this example, please set valid API keys in the config file or environment variables.", "yellow"))
     
     print_step("Example completed")
 

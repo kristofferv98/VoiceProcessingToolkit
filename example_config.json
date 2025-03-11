@@ -9,7 +9,7 @@
     "audio": {
         "rate": 16000,
         "channels": 1,
-        "audio_format": "paInt16",
+        "audio_format": 16,
         "frames_per_buffer": 512,
         "energy_threshold": 300,
         "silence_threshold": 50,
@@ -18,10 +18,10 @@
         "max_speaking_time": 10,
         "use_cobra_vad": true,
         "voice_threshold": 0.8,
-        "silence_limit": 2.0,
         "inactivity_limit": 2.0,
         "min_recording_length": 2.0,
-        "buffer_length": 2.0
+        "buffer_length": 2.0,
+        "frame_duration_ms": 30.0
     },
     "wake_word": {
         "wake_word": "computer",
@@ -29,7 +29,7 @@
         "access_key": "YOUR_PICOVOICE_ACCESS_KEY"
     },
     "paths": {
-        "output_dir": "Wav_MP3",
-        "notification_sound_dir": "notification_sounds"
+        "output_dir": "recordings",
+        "notification_sound_dir": "VoiceProcessingToolkit/wake_word_detector/Wav_MP3"
     }
 } 
