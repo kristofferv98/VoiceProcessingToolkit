@@ -77,6 +77,7 @@ cython_debug/
 # Temporary files
 *.swp
 *.swo
+*.tmp
 
 # Operating System Files
 Thumbs.db
@@ -100,11 +101,22 @@ VoiceProcessingToolkit/voice_detection/Wav_MP3/*.wav
 recordings/
 *.wav
 
+# Ignore audio files in the refactored codebase
+/audio_recordings/
+/audio_snippets/
+/wake_word_dataset/
+
+# Tool-specific files
 .aider*
 
 # Lock files
 uv.lock
 *.lock
+poetry.lock
 
 # Temporary environment files
 REMOVE_THIS_TEXT.env
+
+# Runtime files
+*.pid
+*.socket
