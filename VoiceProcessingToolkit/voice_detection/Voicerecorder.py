@@ -242,13 +242,53 @@ class AudioRecorder(AudioRecorderInterface):
         """Get the path of the last saved recording."""
         return getattr(self, 'recorded_file', None)
     
-    def __del__(self):
-        """Clean up resources when the object is destroyed."""
+    def perform_recording(self) -> Optional[str]:
+        """
+        Start recording audio until certain conditions are met.
+        
+        This implements the required method from AudioRecorderInterface.
+        
+        Returns:
+            str or None: Path to the recorded audio file if successful, None otherwise.
+        """
+        logger.info("Starting audio recording")
+        self.start_recording()
+        # The actual recording happens in a separate thread
+        # We return the path of the last saved file, which will be updated by the recording thread
+        return self.get_last_saved_file()
+    
+    @property
+    def last_saved_file(self) -> Optional[str]:
+        """
+        Get the path of the last saved recording.
+        
+        This property is added for compatibility with the interface.
+        """
+        return self.get_last_saved_file()
+    
+    def cleanup(self) -> None:
+        """
+        Release all resources used by the recorder.
+        
+        This implements the required method from AudioRecorderInterface.
+        """
+        logger.info("Cleaning up AudioRecorder resources")
         self.stop_recording()
-        if hasattr(self, 'audio_provider'):
+        if hasattr(self, 'audio_provider') and self.audio_provider:
             self.audio_provider.stop_stream()
         if hasattr(self, 'cobra') and self.cobra:
             self.cobra.delete()
+        
+        # Make sure recording thread is stopped
+        if hasattr(self, 'recording_thread') and self.recording_thread and self.recording_thread.is_alive():
+            logger.debug("Waiting for recording thread to finish")
+            self.recording_thread.join(timeout=2.0)  # Wait for 2 seconds max
+            if self.recording_thread.is_alive():
+                logger.warning("Recording thread did not finish in time")
+    
+    def __del__(self):
+        """Clean up resources when the object is destroyed."""
+        self.cleanup()
 
 
 if __name__ == '__main__':
