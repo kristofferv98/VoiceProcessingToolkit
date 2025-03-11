@@ -22,13 +22,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 dependencies = [
-    "pyaudio>=0.2.13",
-    "numpy>=1.24.3",
-    "requests>=2.29.0",
-    "pvporcupine>=2.1.4",
-    "pvcobra>=2.0.2",
-    "termcolor>=2.3.0",
-    "python-dotenv>=1.0.0"
+    "pyaudio~=0.2.14",
+    "python-dotenv~=1.0.1",
+    "requests~=2.32.3",
+    "elevenlabs~=1.52.0",
+    "numpy~=2.2.3",
+    "pvcobra~=2.0.5",
+    "pvkoala~=2.0.4",
+    "pvporcupine~=3.0.5",
+    "pygame~=2.6.1",
+    "termcolor~=2.5.0"
 ]
 
 [project.optional-dependencies]

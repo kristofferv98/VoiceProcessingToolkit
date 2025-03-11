@@ -2,6 +2,7 @@ import logging
 import os
 import threading
 import time
+import signal
 
 import pyaudio
 
@@ -11,6 +12,7 @@ from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordD
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.shared_resources import thread_manager
+from VoiceProcessingToolkit.config import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -182,30 +184,42 @@ class VoiceProcessingManager:
 
     def _process_voice_command(self, transcription=True):
         """
-        Processes a voice command after wake word detection.
-
+        Process a voice command with wake word detection.
+        
         Args:
-            transcription (bool): If True, perform transcription on the recording. Defaults to True.
-
+            transcription (bool, optional): Whether to transcribe the recording. Defaults to True.
+            
         Returns:
-            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+            str or None: Transcription result if available.
         """
-        logger.debug("Starting voice command processing.")
-        if self.use_wake_word:
-            # Start wake word detection and wait for it to finish
-            self.wake_word_detector.run_blocking()
+        logger.debug("Processing voice command with wake word detection")
+        
+        # Initiate wake word detection and block until it completes
+        self.wake_word_detector.run_blocking()
+        
+        if not transcription:
+            return None
+            
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
-        # Wait for the recording to complete
+        
+        # Wait for the recording to complete with a timeout
         if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
-        # If a recording was made, transcribe it
-        if self.voice_recorder.last_saved_file is not None and transcription:
-            transcription = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-            logger.info(f"Transcription: {transcription}")
-            return transcription
-        logger.debug("Voice command processing completed.")
-        return None
+            self.voice_recorder.recording_thread.join(timeout=60.0)
+            if self.voice_recorder.recording_thread.is_alive():
+                logger.warning("Recording thread did not complete within the timeout period.")
+        
+        # Check if a recording was made
+        if self.voice_recorder.last_saved_file:
+            # Transcribe the recording
+            logger.info(f"Transcribing file: {self.voice_recorder.last_saved_file}")
+            transcription_result = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
+            logger.info(f"Transcription result: {transcription_result}")
+            return transcription_result
+        else:
+            # If no recording was made or it was too short, log the information
+            logger.info("Recording was not made or was too short.")
+            return None
 
     def monitor_active_threads(self):
         """
@@ -239,69 +253,121 @@ class VoiceProcessingManager:
 
     def run(self, transcription=True):
         """
-        Main method to start the voice processing workflow.
-
-        Processes a voice command after wake word detection.
+        Run the voice processing pipeline.
 
         Args:
-            transcription (bool): If True, perform transcription on the recording. Defaults to True.
+            transcription (bool, optional): Flag to indicate whether to perform transcription. Defaults to True.
 
         Returns:
-            str or None: The transcribed text of the voice command, or None if no valid recording was made.
+            str or None: The transcription result, if available.
         """
-        logger.info("VoiceProcessingManager run method called.")
-        if transcription is False and self.use_wake_word:
-            self.wake_word_detector.run_blocking()
-            return None
         try:
-            transcription_result = None
-            self.reinitialize_stream()
+            self.setup()
+            
+            # Register a cleanup handler for SIGINT
+            signal_handler = signal.getsignal(signal.SIGINT)
+            def cleanup_handler(sig, frame):
+                logger.info("Received interrupt signal, cleaning up...")
+                self.cleanup()
+                # Call the original handler, if it exists
+                if signal_handler and callable(signal_handler):
+                    signal_handler(sig, frame)
+            signal.signal(signal.SIGINT, cleanup_handler)
+            
             if self.use_wake_word:
-                # Initiate wake word detection and block until it completes
-                self.wake_word_detector.run_blocking()
-
-            # Once wake word is detected, start recording
-            self.voice_recorder.perform_recording()
-
-            # Wait for the recording to complete
-            if self.voice_recorder.recording_thread:
-                self.voice_recorder.recording_thread.join()
-
-            # Check if a recording was made
-            if self.voice_recorder.last_saved_file and transcription:
-                # Transcribe the recording
-                transcription_result = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-                logger.info(f"Transcription: {transcription_result}")
+                logger.info(f"Running with wake word detection. Wake word: {self.wake_word}")
+                return self._process_voice_command(transcription)
             else:
-                # If no recording was made or it was too short, log the information
-                logger.info("Recording was not made or was too short.")
-
-            # Return the transcription or None if no valid recording was made
-            return transcription_result
+                logger.info("Running without wake word detection.")
+                self.voice_recorder.perform_recording()
+                
+                # Wait for the recording to complete with a timeout
+                if self.voice_recorder.recording_thread:
+                    self.voice_recorder.recording_thread.join(timeout=60.0)
+                    if self.voice_recorder.recording_thread.is_alive():
+                        logger.warning("Recording thread did not complete within the timeout period. Continuing anyway.")
+                
+                transcription_result = None
+                if transcription and self.voice_recorder.last_saved_file:
+                    logger.info(f"Transcribing file: {self.voice_recorder.last_saved_file}")
+                    transcription_result = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
+                    logger.info(f"Transcription result: {transcription_result}")
+                
+                return transcription_result
 
         except Exception as e:
             logger.exception("An error occurred during voice processing.", exc_info=e)
+            self.cleanup()
             raise
 
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt received, performing cleanup.")
-            thread_manager.shutdown()
+            self.cleanup()
             raise  # Re-raise the KeyboardInterrupt to propagate it to the caller
 
 
         finally:
-            thread_manager.shutdown()
+            self.cleanup()
             logger.info("VoiceProcessingManager run method completed.")
+            
+    def cleanup(self):
+        """
+        Properly clean up all resources.
+        
+        This method should be called before the program exits to ensure proper resource cleanup.
+        """
+        logger.info("Cleaning up resources...")
+        
+        # Clean up thread manager
+        try:
+            thread_manager.shutdown()
+        except Exception as e:
+            logger.error(f"Error during thread manager shutdown: {e}")
+        
+        # Clean up wake word detector if it exists
+        if hasattr(self, 'wake_word_detector') and self.wake_word_detector:
+            try:
+                if hasattr(self.wake_word_detector, 'cleanup'):
+                    self.wake_word_detector.cleanup()
+            except Exception as e:
+                logger.error(f"Error during wake word detector cleanup: {e}")
+        
+        # Clean up voice recorder if it exists
+        if hasattr(self, 'voice_recorder') and self.voice_recorder:
+            try:
+                if hasattr(self.voice_recorder, 'cleanup'):
+                    self.voice_recorder.cleanup()
+            except Exception as e:
+                logger.error(f"Error during voice recorder cleanup: {e}")
+        
+        # Clean up audio stream manager if it exists
+        if hasattr(self, 'audio_stream_manager') and self.audio_stream_manager:
+            try:
+                if hasattr(self.audio_stream_manager, 'cleanup'):
+                    self.audio_stream_manager.cleanup()
+            except Exception as e:
+                logger.error(f"Error during audio stream manager cleanup: {e}")
+        
+        logger.info("Cleanup completed.")
 
     def setup(self) -> None:
         """
         Initialize the components of the voice processing manager if not already done.
         """
+        # Validate API keys
+        picovoice_apikey = os.environ.get('PICOVOICE_APIKEY') or os.getenv('PICOVOICE_APIKEY')
+        elevenlabs_apikey = os.environ.get('ELEVENLABS_API_KEY') or os.getenv('ELEVENLABS_API_KEY')
+        
+        # Check for required API keys if wake word detection is enabled
+        if self.use_wake_word and not picovoice_apikey:
+            logger.error("PICOVOICE_APIKEY environment variable is not set. Wake word detection will not work.")
+            raise ValueError("PICOVOICE_APIKEY environment variable is required for wake word detection.")
+        
         # Create wake word detector if not provided
         if self.wake_word_detector is None:
             logger.info("Creating default wake word detector")
             self.wake_word_detector = WakeWordDetector(
-                access_key=os.environ.get('PICOVOICE_APIKEY') or os.getenv('PICOVOICE_APIKEY'),
+                access_key=picovoice_apikey,
                 wake_word=self.wake_word,
                 sensitivity=self.sensitivity,
                 action_manager=self.action_manager,
@@ -314,24 +380,37 @@ class VoiceProcessingManager:
         if self.voice_recorder is None:
             logger.info("Creating default voice recorder")
             # Use the configuration for either Cobra VAD or energy-based detection
-            if default_config.audio.use_cobra_vad:
-                logger.info("Using Cobra VAD for voice detection")
-                self.voice_recorder = AudioRecorder(
-                    output_dir=self.output_directory,
-                    voice_threshold=default_config.audio.voice_threshold,
-                    inactivity_limit=default_config.audio.inactivity_limit,
-                    min_recording_length=default_config.audio.min_recording_length,
-                    buffer_length=default_config.audio.buffer_length
-                )
-            else:
-                logger.info("Using energy-based voice detection")
+            try:
+                config = get_config()
+                if config.audio.use_cobra_vad:
+                    if not picovoice_apikey:
+                        logger.warning("PICOVOICE_APIKEY not set. Falling back to energy-based voice detection.")
+                        self.voice_recorder = AudioRecorder(output_dir=self.output_directory)
+                    else:
+                        logger.info("Using Cobra VAD for voice detection")
+                        self.voice_recorder = AudioRecorder(
+                            output_dir=self.output_directory,
+                            voice_threshold=config.audio.voice_threshold,
+                            inactivity_limit=config.audio.inactivity_limit,
+                            min_recording_length=config.audio.min_recording_length,
+                            buffer_length=config.audio.buffer_length
+                        )
+                else:
+                    logger.info("Using energy-based voice detection")
+                    self.voice_recorder = AudioRecorder(output_dir=self.output_directory)
+            except Exception as e:
+                logger.warning(f"Error reading configuration: {e}. Using default energy-based voice detection.")
                 self.voice_recorder = AudioRecorder(output_dir=self.output_directory)
         
         # Create transcriber if not provided
         if self.transcriber is None:
             logger.info("Creating default transcriber")
+            if not elevenlabs_apikey:
+                logger.error("ELEVENLABS_API_KEY environment variable is not set. Transcription will not work.")
+                raise ValueError("ELEVENLABS_API_KEY environment variable is required for transcription.")
+                
             self.transcriber = ElevenLabsTranscriber(
-                api_key=os.environ.get('ELEVENLABS_API_KEY') or os.getenv('ELEVENLABS_API_KEY')
+                api_key=elevenlabs_apikey
             )
 
     def process_voice_command(self):
@@ -345,9 +424,13 @@ class VoiceProcessingManager:
 
         # Once wake word is detected, start recording
         self.voice_recorder.perform_recording()
-        # Wait for the recording to complete
+        
+        # Wait for the recording to complete with a timeout to prevent hanging
         if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join()
+            # Add a reasonable timeout (e.g., 60 seconds) to prevent hanging
+            self.voice_recorder.recording_thread.join(timeout=60.0)
+            if self.voice_recorder.recording_thread.is_alive():
+                logger.warning("Recording thread did not complete within the timeout period. Continuing anyway.")
 
         # If a recording was made, transcribe it
         if self.voice_recorder.last_saved_file is not None:
