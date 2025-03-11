@@ -1,7 +1,7 @@
 """
-Interfaces for VoiceProcessingToolkit components.
+Interfaces and base classes for VoiceProcessingToolkit components.
 
-This module provides interface definitions for the various components
+This module provides interface definitions and base classes for the various components
 of the VoiceProcessingToolkit, enabling better code organization, type checking,
 and extensibility through well-defined abstractions.
 """
@@ -10,27 +10,8 @@ from abc import ABC, abstractmethod
 from typing import Optional, Any, Dict, List, Callable
 
 
-class AudioRecorderInterface(ABC):
-    """Interface for audio recording components."""
-    
-    @abstractmethod
-    def perform_recording(self) -> Optional[str]:
-        """
-        Start recording audio until certain conditions are met.
-        
-        Returns:
-            str or None: Path to the recorded audio file if successful, None otherwise.
-        """
-        pass
-    
-    @abstractmethod
-    def cleanup(self) -> None:
-        """Release all resources used by the recorder."""
-        pass
-
-
 class TranscriberInterface(ABC):
-    """Interface for audio transcription components."""
+    """Interface for audio transcription components (keeping as interface since we have multiple implementations)."""
     
     @abstractmethod
     def transcribe_audio(self, audio_file_path: str) -> Optional[str]:
@@ -46,10 +27,26 @@ class TranscriberInterface(ABC):
         pass
 
 
-class WakeWordDetectorInterface(ABC):
-    """Interface for wake word detection components."""
+class AudioRecorderBase:
+    """Base class for audio recording components."""
     
-    @abstractmethod
+    def perform_recording(self) -> Optional[str]:
+        """
+        Start recording audio until certain conditions are met.
+        
+        Returns:
+            str or None: Path to the recorded audio file if successful, None otherwise.
+        """
+        raise NotImplementedError("Subclasses must implement perform_recording")
+    
+    def cleanup(self) -> None:
+        """Release all resources used by the recorder."""
+        pass
+
+
+class WakeWordDetectorBase:
+    """Base class for wake word detection components."""
+    
     def run_blocking(self) -> bool:
         """
         Run wake word detection in a blocking manner.
@@ -57,50 +54,27 @@ class WakeWordDetectorInterface(ABC):
         Returns:
             bool: True if wake word was detected, False otherwise.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement run_blocking")
     
-    @abstractmethod
     def run_async(self) -> None:
         """Start wake word detection asynchronously."""
-        pass
+        raise NotImplementedError("Subclasses must implement run_async")
     
-    @abstractmethod
     def cleanup(self) -> None:
         """Release all resources used by the detector."""
         pass
 
 
-class AudioStreamInterface(ABC):
-    """Interface for audio stream management components."""
+class ActionManagerBase:
+    """Base class for action management components."""
     
-    @abstractmethod
-    def start(self) -> None:
-        """Start the audio stream."""
-        pass
-    
-    @abstractmethod
-    def stop(self) -> None:
-        """Stop the audio stream."""
-        pass
-    
-    @abstractmethod
-    def cleanup(self) -> None:
-        """Release all resources used by the stream."""
-        pass
-
-
-class ActionManagerInterface(ABC):
-    """Interface for action management components."""
-    
-    @abstractmethod
     def on_wake_word_detected(self) -> None:
         """
         Handle the wake word detection event.
         This method is called when a wake word is detected.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement on_wake_word_detected")
     
-    @abstractmethod
     def register_action(self, action_name: str, action_func: Callable) -> None:
         """
         Register an action to be executed on wake word detection.
@@ -109,13 +83,12 @@ class ActionManagerInterface(ABC):
             action_name: Name of the action to register.
             action_func: Function to execute when the action is triggered.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement register_action")
 
 
-class VoiceProcessingManagerInterface(ABC):
-    """Interface for voice processing manager components."""
+class VoiceProcessingManagerBase:
+    """Base class for voice processing manager components."""
     
-    @abstractmethod
     def run(self, transcription: bool = True) -> Optional[str]:
         """
         Run the voice processing pipeline.
@@ -126,14 +99,20 @@ class VoiceProcessingManagerInterface(ABC):
         Returns:
             str or None: The transcription result, if available.
         """
-        pass
+        raise NotImplementedError("Subclasses must implement run")
     
-    @abstractmethod
     def cleanup(self) -> None:
         """Release all resources used by the manager."""
         pass
     
-    @abstractmethod
     def setup(self) -> None:
         """Initialize components needed for voice processing."""
-        pass 
+        pass
+
+
+# Keep backward compatibility
+AudioRecorderInterface = AudioRecorderBase
+WakeWordDetectorInterface = WakeWordDetectorBase
+AudioStreamInterface = object  # No longer needed with the consolidated AudioManager
+ActionManagerInterface = ActionManagerBase
+VoiceProcessingManagerInterface = VoiceProcessingManagerBase 

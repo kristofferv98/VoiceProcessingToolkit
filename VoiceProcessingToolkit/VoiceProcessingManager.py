@@ -8,17 +8,39 @@ from typing import Optional, Dict, Any, Union
 import pyaudio
 
 from VoiceProcessingToolkit.transcription.elevenlabs import ElevenLabsTranscriber
-from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.WakeWordDetector import WakeWordDetector
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
-from VoiceProcessingToolkit.shared_resources import thread_manager
+from VoiceProcessingToolkit.audio.AudioManager import AudioManager
 from VoiceProcessingToolkit.config import get_config, Config
-from VoiceProcessingToolkit.interfaces import VoiceProcessingManagerInterface
+from VoiceProcessingToolkit.interfaces import VoiceProcessingManagerBase
 
 logger = logging.getLogger(__name__)
 
-class VoiceProcessingManager(VoiceProcessingManagerInterface):
+# Thread manager for local use (not global)
+class ThreadManager:
+    """Thread manager for tracking and cleaning up threads."""
+    
+    def __init__(self):
+        self.threads = []
+        self.shutdown_requested = threading.Event()
+    
+    def add_thread(self, thread):
+        """Add a thread to the manager."""
+        self.threads.append(thread)
+    
+    def request_shutdown(self):
+        """Request all threads to shut down."""
+        self.shutdown_requested.set()
+    
+    def join_all(self, timeout=None):
+        """Wait for all threads to complete."""
+        for thread in self.threads:
+            if thread.is_alive():
+                thread.join(timeout)
+        self.threads = [t for t in self.threads if t.is_alive()]
+
+class VoiceProcessingManager(VoiceProcessingManagerBase):
     """
     Manages the voice processing pipeline, including optional wake word detection, voice recording, and transcription.
     This class integrates different components using a central configuration and dependency injection.
@@ -26,42 +48,32 @@ class VoiceProcessingManager(VoiceProcessingManagerInterface):
     Use the create_with_config factory method for the most streamlined initialization.
     """
     
-    def __init__(self, config: Config, components: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Config, thread_manager: Optional[ThreadManager] = None, components: Optional[Dict[str, Any]] = None):
         """
         Initialize with a config object and optional component overrides.
         
         Args:
             config: Configuration object containing all settings
+            thread_manager: Optional thread manager for tracking created threads
             components: Optional dictionary of pre-configured components to use
-                Supported keys: 'transcriber', 'action_manager', 'audio_stream', 'wake_word_detector', 'voice_recorder'
+                Supported keys: 'transcriber', 'action_manager', 'audio_manager', 'wake_word_detector', 'voice_recorder'
         """
         self.config = config
+        self.thread_manager = thread_manager or ThreadManager()
         self.transcriber = None
         self.action_manager = None
-        self.audio_stream_manager = None
+        self.audio_manager = None
         self.wake_word_detector = None
         self.voice_recorder = None
         
-        # Save configuration values as instance variables for compatibility
-        self.wake_word = config.wake_word.wake_word
-        self.sensitivity = config.wake_word.sensitivity
-        self.output_directory = config.paths.output_dir
-        self.wake_word_output = os.path.join(config.paths.output_dir, "wake_word_dataset")
-        self.audio_format = pyaudio.paInt16
-        self.channels = config.audio.channels
-        self.rate = config.audio.rate
-        self.frames_per_buffer = config.audio.frames_per_buffer
-        self.voice_threshold = config.audio.voice_threshold
-        self.silence_limit = 2.0
-        self.inactivity_limit = config.audio.inactivity_limit
-        self.min_recording_length = config.audio.min_recording_length
-        self.buffer_length = config.audio.buffer_length
-        self.use_wake_word = True  # Default value, can be overridden in run method
-        self.save_wake_word_recordings = False
-        self.play_notification_sound = True
+        # Set defaults for operation mode
+        self.use_wake_word = config.use_wake_word
+        self.play_notification_sound = config.play_notification_sound
+        self.save_wake_word_recordings = config.save_wake_word_recordings
         
         # Set up components, using provided ones or creating from config
         self._setup_components(components or {})
+        logger.info("VoiceProcessingManager initialized")
         
     def _setup_components(self, components: Dict[str, Any]) -> None:
         """
@@ -70,12 +82,13 @@ class VoiceProcessingManager(VoiceProcessingManagerInterface):
         Args:
             components: Dictionary of pre-configured components
         """
-        # Create audio stream manager if not provided
-        self.audio_stream_manager = components.get('audio_stream') or AudioStream(
-            rate=self.rate,
-            channels=self.channels, 
-            _audio_format=self.audio_format,
-            frames_per_buffer=self.frames_per_buffer
+        # Create audio manager if not provided
+        self.audio_manager = components.get('audio_manager') or AudioManager(
+            rate=self.config.audio_rate,
+            channels=self.config.audio_channels, 
+            audio_format=pyaudio.paInt16,
+            frames_per_buffer=self.config.frames_per_buffer,
+            buffer_duration=self.config.buffer_length
         )
         
         # Create action manager if not provided
@@ -83,27 +96,30 @@ class VoiceProcessingManager(VoiceProcessingManagerInterface):
         
         # Create wake word detector if not provided
         self.wake_word_detector = components.get('wake_word_detector') or WakeWordDetector(
-            access_key=self.config.wake_word.access_key,
-            wake_word=self.wake_word,
-            sensitivity=self.sensitivity,
+            access_key=self.config.wake_word_access_key,
+            wake_word=self.config.wake_word,
+            sensitivity=self.config.wake_word_sensitivity,
             action_manager=self.action_manager,
-            audio_stream_manager=self.audio_stream_manager,
+            audio_stream_manager=self.audio_manager,  # Using AudioManager instead of AudioStream
             play_notification_sound=self.play_notification_sound,
-            save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None
+            save_audio_directory=self.config.wake_word_output if self.save_wake_word_recordings else None
         )
         
         # Create voice recorder if not provided
         self.voice_recorder = components.get('voice_recorder') or AudioRecorder(
-            output_dir=self.output_directory,
-            voice_threshold=self.voice_threshold,
-            inactivity_limit=self.inactivity_limit,
-            min_recording_length=self.min_recording_length,
-            buffer_length=self.buffer_length
+            output_dir=self.config.output_dir,
+            rate=self.config.audio_rate,
+            channels=self.config.audio_channels,
+            frames_per_buffer=self.config.frames_per_buffer,
+            voice_threshold=self.config.voice_threshold,
+            inactivity_limit=self.config.inactivity_limit,
+            min_recording_length=self.config.min_recording_length,
+            buffer_length=self.config.buffer_length
         )
         
         # Create transcriber if not provided
         self.transcriber = components.get('transcriber') or ElevenLabsTranscriber(
-            api_key=self.config.transcriber.api_key
+            api_key=self.config.transcriber_api_key
         )
     
     @classmethod
@@ -122,246 +138,89 @@ class VoiceProcessingManager(VoiceProcessingManagerInterface):
         config = get_config(config_path)
         
         # Override config values with any provided in kwargs
-        if 'wake_word' in kwargs:
-            config.wake_word.wake_word = kwargs['wake_word']
-        if 'sensitivity' in kwargs:
-            config.wake_word.sensitivity = kwargs['sensitivity']
-        if 'use_wake_word' in kwargs:
-            # This will be used when instantiating but isn't part of the config object
-            use_wake_word = kwargs['use_wake_word']
-        else:
-            use_wake_word = True
-        if 'play_notification_sound' in kwargs:
-            play_notification_sound = kwargs['play_notification_sound']
-        else:
-            play_notification_sound = True
-        if 'save_wake_word_recordings' in kwargs:
-            save_wake_word_recordings = kwargs['save_wake_word_recordings'] 
-        else:
-            save_wake_word_recordings = False
-            
+        for key, value in kwargs.items():
+            if hasattr(config, key):
+                setattr(config, key, value)
+        
         # Create the manager instance
         instance = cls(config)
         
-        # Set non-config properties that influence behavior
-        instance.use_wake_word = use_wake_word
-        instance.play_notification_sound = play_notification_sound
-        instance.save_wake_word_recordings = save_wake_word_recordings
-        
         return instance
         
-    @classmethod
-    def create_default_instance(cls, **kwargs) -> 'VoiceProcessingManager':
-        """
-        Create a default instance with optional parameter overrides.
-        
-        This is maintained for backward compatibility. New code should use create_with_config.
-        
-        Args:
-            **kwargs: Override parameters
-                
-        Returns:
-            VoiceProcessingManager: Configured instance
-        """
-        logger.info("Creating default VoiceProcessingManager instance")
-        return cls.create_with_config(None, **kwargs)
-
-    def run(self, transcription=True):
+    def run(self, transcription: bool = True) -> Optional[str]:
         """
         Run the voice processing pipeline.
-
-        Args:
-            transcription (bool, optional): Flag to indicate whether to perform transcription. Defaults to True.
-
-        Returns:
-            str or None: The transcription result, if available.
-        """
-        try:
-            self.setup()
-            
-            # Register a cleanup handler for SIGINT
-            signal_handler = signal.getsignal(signal.SIGINT)
-            def cleanup_handler(sig, frame):
-                logger.info("Received interrupt signal, cleaning up...")
-                self.cleanup()
-                # Call the original handler, if it exists
-                if signal_handler and callable(signal_handler):
-                    signal_handler(sig, frame)
-            signal.signal(signal.SIGINT, cleanup_handler)
-            
-            if self.use_wake_word:
-                logger.info(f"Running with wake word detection. Wake word: {self.wake_word}")
-                return self._process_voice_command(transcription)
-            else:
-                logger.info("Running without wake word detection.")
-                self.voice_recorder.perform_recording()
-                
-                # Wait for the recording to complete with a timeout
-                if self.voice_recorder.recording_thread:
-                    self.voice_recorder.recording_thread.join(timeout=60.0)
-                    if self.voice_recorder.recording_thread.is_alive():
-                        logger.warning("Recording thread did not complete within the timeout period. Continuing anyway.")
-                
-                transcription_result = None
-                if transcription and self.voice_recorder.last_saved_file:
-                    logger.info(f"Transcribing file: {self.voice_recorder.last_saved_file}")
-                    transcription_result = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-                    logger.info(f"Transcription result: {transcription_result}")
-                
-                return transcription_result
-
-        except Exception as e:
-            logger.exception("An error occurred during voice processing.", exc_info=e)
-            self.cleanup()
-            raise
-
-        except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt received, performing cleanup.")
-            self.cleanup()
-            raise  # Re-raise the KeyboardInterrupt to propagate it to the caller
-
-
-        finally:
-            self.cleanup()
-            logger.info("VoiceProcessingManager run method completed.")
-
-    def _process_voice_command(self, transcription=True):
-        """
-        Process a voice command with wake word detection.
         
         Args:
-            transcription (bool, optional): Whether to transcribe the recording. Defaults to True.
+            transcription: Whether to transcribe the recorded audio
             
         Returns:
-            str or None: Transcription result if available.
+            str or None: Transcription text if transcription is True and successful, None otherwise
         """
-        logger.debug("Processing voice command with wake word detection")
+        logger.info("Starting voice processing pipeline")
         
-        # Initiate wake word detection and block until it completes
-        self.wake_word_detector.run_blocking()
-        
-        if not transcription:
-            return None
+        if self.use_wake_word:
+            # Step 1: Wait for wake word
+            logger.info(f"Listening for wake word: '{self.config.wake_word}'")
+            wake_word_detected = self.wake_word_detector.run_blocking()
             
-        # Once wake word is detected, start recording
-        self.voice_recorder.perform_recording()
-        
-        # Wait for the recording to complete with a timeout
-        if self.voice_recorder.recording_thread:
-            self.voice_recorder.recording_thread.join(timeout=60.0)
-            if self.voice_recorder.recording_thread.is_alive():
-                logger.warning("Recording thread did not complete within the timeout period.")
-        
-        # Check if a recording was made
-        if self.voice_recorder.last_saved_file:
-            # Transcribe the recording
-            logger.info(f"Transcribing file: {self.voice_recorder.last_saved_file}")
-            transcription_result = self.transcriber.transcribe_audio(self.voice_recorder.last_saved_file)
-            logger.info(f"Transcription result: {transcription_result}")
-            return transcription_result
-        else:
-            # If no recording was made or it was too short, log the information
-            logger.info("Recording was not made or was too short.")
-            return None
-            
-    def cleanup(self):
-        """
-        Properly clean up all resources.
-        
-        This method should be called before the program exits to ensure proper resource cleanup.
-        """
-        logger.info("Cleaning up resources...")
-        
-        # Clean up thread manager
-        try:
-            thread_manager.shutdown()
-        except Exception as e:
-            logger.error(f"Error during thread manager shutdown: {e}")
-        
-        # Clean up wake word detector if it exists
-        if hasattr(self, 'wake_word_detector') and self.wake_word_detector:
-            try:
-                if hasattr(self.wake_word_detector, 'cleanup'):
-                    self.wake_word_detector.cleanup()
-            except Exception as e:
-                logger.error(f"Error during wake word detector cleanup: {e}")
-        
-        # Clean up voice recorder if it exists
-        if hasattr(self, 'voice_recorder') and self.voice_recorder:
-            try:
-                if hasattr(self.voice_recorder, 'cleanup'):
-                    self.voice_recorder.cleanup()
-            except Exception as e:
-                logger.error(f"Error during voice recorder cleanup: {e}")
-        
-        # Clean up audio stream manager if it exists
-        if hasattr(self, 'audio_stream_manager') and self.audio_stream_manager:
-            try:
-                if hasattr(self.audio_stream_manager, 'cleanup'):
-                    self.audio_stream_manager.cleanup()
-            except Exception as e:
-                logger.error(f"Error during audio stream manager cleanup: {e}")
-        
-        logger.info("Cleanup completed.")
-
-    def setup(self) -> None:
-        """
-        Initialize the components of the voice processing manager if not already done.
-        """
-        # Validate API keys
-        picovoice_apikey = self.config.wake_word.access_key
-        elevenlabs_apikey = self.config.transcriber.api_key
-        
-        # Check for required API keys if wake word detection is enabled
-        if self.use_wake_word and not picovoice_apikey:
-            logger.error("PICOVOICE_APIKEY environment variable is not set. Wake word detection will not work.")
-            raise ValueError("PICOVOICE_APIKEY environment variable is required for wake word detection.")
-        
-        # Create wake word detector if not provided
-        if self.wake_word_detector is None:
-            logger.info("Creating default wake word detector")
-            self.wake_word_detector = WakeWordDetector(
-                access_key=picovoice_apikey,
-                wake_word=self.wake_word,
-                sensitivity=self.sensitivity,
-                action_manager=self.action_manager,
-                audio_stream_manager=self.audio_stream_manager,
-                play_notification_sound=self.play_notification_sound,
-                save_audio_directory=self.wake_word_output if self.save_wake_word_recordings else None,
-            )
-        
-        # Create voice recorder if not provided
-        if self.voice_recorder is None:
-            logger.info("Creating default voice recorder")
-            # Use the configuration for either Cobra VAD or energy-based detection
-            try:
-                if self.config.audio.use_cobra_vad:
-                    if not picovoice_apikey:
-                        logger.warning("PICOVOICE_APIKEY not set. Falling back to energy-based voice detection.")
-                        self.voice_recorder = AudioRecorder(output_dir=self.output_directory)
-                    else:
-                        logger.info("Using Cobra VAD for voice detection")
-                        self.voice_recorder = AudioRecorder(
-                            output_dir=self.output_directory,
-                            voice_threshold=self.config.audio.voice_threshold,
-                            inactivity_limit=self.config.audio.inactivity_limit,
-                            min_recording_length=self.config.audio.min_recording_length,
-                            buffer_length=self.config.audio.buffer_length
-                        )
-                else:
-                    logger.info("Using energy-based voice detection")
-                    self.voice_recorder = AudioRecorder(output_dir=self.output_directory)
-            except Exception as e:
-                logger.warning(f"Error reading configuration: {e}. Using default energy-based voice detection.")
-                self.voice_recorder = AudioRecorder(output_dir=self.output_directory)
-        
-        # Create transcriber if not provided
-        if self.transcriber is None:
-            logger.info("Creating default transcriber")
-            if not elevenlabs_apikey:
-                logger.error("ELEVENLABS_API_KEY environment variable is not set. Transcription will not work.")
-                raise ValueError("ELEVENLABS_API_KEY environment variable is required for transcription.")
+            if not wake_word_detected:
+                logger.info("Wake word detection interrupted")
+                return None
                 
-            self.transcriber = ElevenLabsTranscriber(
-                api_key=elevenlabs_apikey
-            )
+            logger.info("Wake word detected, proceeding to recording")
+        
+        # Step 2: Record voice
+        logger.info("Starting audio recording")
+        audio_file = self.voice_recorder.perform_recording()
+        
+        if not audio_file:
+            logger.warning("No audio file was recorded")
+            return None
+            
+        logger.info(f"Audio recorded to: {audio_file}")
+        
+        # Step 3: Transcribe audio if requested
+        if transcription:
+            logger.info("Transcribing audio")
+            text = self.transcriber.transcribe_audio(audio_file)
+            logger.info(f"Transcription result: {text}")
+            return text
+        
+        return None
+    
+    def cleanup(self) -> None:
+        """
+        Clean up all resources used by the manager and its components.
+        """
+        logger.info("Cleaning up VoiceProcessingManager resources")
+        
+        # Request all threads to shut down
+        self.thread_manager.request_shutdown()
+        
+        # Clean up components
+        if self.wake_word_detector:
+            self.wake_word_detector.cleanup()
+            
+        if self.voice_recorder:
+            self.voice_recorder.cleanup()
+            
+        if self.audio_manager:
+            self.audio_manager.cleanup()
+            
+        # Wait for threads to complete
+        self.thread_manager.join_all(timeout=2.0)
+        
+        logger.info("VoiceProcessingManager cleanup complete")
+    
+    def __enter__(self):
+        """Support for context manager pattern."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up resources when exiting context."""
+        self.cleanup()
+    
+    def __del__(self):
+        """Ensure cleanup when object is garbage collected."""
+        self.cleanup()

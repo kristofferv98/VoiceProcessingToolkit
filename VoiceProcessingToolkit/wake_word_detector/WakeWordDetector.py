@@ -250,6 +250,18 @@ class WakeWordDetector(WakeWordDetectorInterface):
         self._audio_stream_manager.cleanup()
         self._porcupine.delete()
 
+    def __del__(self):
+        """Ensure resources are properly cleaned up."""
+        self.cleanup()
+        
+    def __enter__(self):
+        """Support for 'with' statement."""
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up resources when exiting a 'with' block."""
+        self.cleanup()
+
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
