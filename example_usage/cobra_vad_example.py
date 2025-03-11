@@ -30,7 +30,7 @@ logging.basicConfig(
 
 # Import the toolkit
 from VoiceProcessingToolkit import VoiceProcessingManager
-from VoiceProcessingToolkit.config import Config
+from VoiceProcessingToolkit.config import Config, get_config
 
 def verify_environment():
     """
@@ -78,7 +78,7 @@ def main():
     This function:
     1. Verifies environment setup
     2. Creates custom configuration
-    3. Initializes and runs the voice processing manager
+    3. Initializes and runs the voice processing manager with the simplified API
     4. Handles cleanup and exit
     """
     # Verify environment variables
@@ -93,23 +93,36 @@ def main():
     # Create configuration
     config = Config.from_dict(create_cobra_config())
     
-    # Create a VoiceProcessingManager instance
-    manager = VoiceProcessingManager.create_default_instance(
-        access_key=os.environ.get('PICOVOICE_APIKEY'),
-        output_directory="recordings",
-        voice_threshold=config.audio.voice_threshold,
-        inactivity_limit=config.audio.inactivity_limit,
-        min_recording_length=config.audio.min_recording_length,
-        buffer_length=config.audio.buffer_length
+    # Create a VoiceProcessingManager instance using the new simplified approach
+    print(colored("Creating VoiceProcessingManager with Cobra VAD configuration...", "cyan"))
+    manager = VoiceProcessingManager.create_with_config(
+        config_path=None,  # We'll use our own config object
+        use_wake_word=True,
+        play_notification_sound=True
     )
+    
+    # Override the default config with our custom config
+    manager.config = config
+    
+    # Make sure our custom settings are applied
+    manager.voice_threshold = config.audio.voice_threshold
+    manager.inactivity_limit = config.audio.inactivity_limit
+    manager.min_recording_length = config.audio.min_recording_length
+    manager.buffer_length = config.audio.buffer_length
+    manager.output_directory = "recordings"
     
     try:
         print(colored(f"\nListening for wake word: '{config.wake_word.wake_word}'", "cyan"))
         print(colored("Say something after the wake word is detected", "cyan"))
         print(colored("Press Ctrl+C to exit", "yellow"))
         
-        # Run the manager in continuous mode
-        manager.run_command(transcription=True)
+        # Run the voice processing pipeline
+        result = manager.run(transcription=True)
+        
+        if result:
+            print(colored(f"Transcription result: {result}", "green"))
+        else:
+            print(colored("No transcription result or interrupted", "yellow"))
         
     except KeyboardInterrupt:
         print(colored("\nExiting...", "yellow"))

@@ -219,6 +219,21 @@ class WakeWordDetector(WakeWordDetectorInterface):
         detection_thread.join()  # Wait for the thread to finish
         self.cleanup()  # Cleanup resources after the thread has finished
 
+    def run_async(self) -> None:
+        """
+        Starts the wake word detection loop in a separate thread and returns immediately.
+        
+        This method implements the required abstract method from WakeWordDetectorInterface.
+        It creates a background thread to run the voice detection loop.
+        """
+        logger.info("Starting wake word detection in background thread")
+        self._detection_thread = threading.Thread(
+            target=self.voice_loop,
+            name="WakeWordDetectionThread",
+            daemon=True  # Make it a daemon thread so it doesn't block program exit
+        )
+        self._detection_thread.start()
+
     def run_blocking(self) -> None:
         """
         Starts the wake word detection loop and waits for it to finish before returning.
