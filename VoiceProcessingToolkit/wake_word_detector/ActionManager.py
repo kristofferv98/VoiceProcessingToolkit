@@ -1,9 +1,12 @@
 import asyncio
 import logging
+from typing import Callable, List
+
+from VoiceProcessingToolkit.interfaces import ActionManagerInterface
 from VoiceProcessingToolkit.shared_resources import shutdown_flag
 
 
-class ActionManager:
+class ActionManager(ActionManagerInterface):
     """
     Manages a list of actions (functions) to be executed.
 
@@ -19,14 +22,26 @@ class ActionManager:
         self.__actions = []
         self.__logger = logging.getLogger(__name__)
 
-    def register_action(self, action_function):
+    def register_action(self, action_name: str, action_func: Callable) -> None:
         """
         Registers a new action function to the list of actions.
 
         Args:
-            action_function (callable): The function to be added to the actions list.
+            action_name: Name of the action to register.
+            action_func: Function to execute when the action is triggered.
         """
-        self.__actions.append(action_function)
+        self.__logger.info(f"Registering action: {action_name}")
+        self.__actions.append(action_func)
+
+    def on_wake_word_detected(self) -> None:
+        """
+        Handle the wake word detection event.
+        This method is called when a wake word is detected.
+        
+        Implements the ActionManagerInterface.on_wake_word_detected method.
+        """
+        self.__logger.info("Wake word detected, executing actions")
+        asyncio.run(self.execute_actions())
 
     async def execute_actions(self):
         """

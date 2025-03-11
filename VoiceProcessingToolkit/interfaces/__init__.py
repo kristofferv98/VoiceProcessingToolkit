@@ -7,7 +7,7 @@ and extensibility through well-defined abstractions.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List, Callable
 
 
 class AudioRecorderInterface(ABC):
@@ -86,4 +86,54 @@ class AudioStreamInterface(ABC):
     @abstractmethod
     def cleanup(self) -> None:
         """Release all resources used by the stream."""
+        pass
+
+
+class ActionManagerInterface(ABC):
+    """Interface for action management components."""
+    
+    @abstractmethod
+    def on_wake_word_detected(self) -> None:
+        """
+        Handle the wake word detection event.
+        This method is called when a wake word is detected.
+        """
+        pass
+    
+    @abstractmethod
+    def register_action(self, action_name: str, action_func: Callable) -> None:
+        """
+        Register an action to be executed on wake word detection.
+        
+        Args:
+            action_name: Name of the action to register.
+            action_func: Function to execute when the action is triggered.
+        """
+        pass
+
+
+class VoiceProcessingManagerInterface(ABC):
+    """Interface for voice processing manager components."""
+    
+    @abstractmethod
+    def run(self, transcription: bool = True) -> Optional[str]:
+        """
+        Run the voice processing pipeline.
+        
+        Args:
+            transcription: Flag to indicate whether to perform transcription.
+            
+        Returns:
+            str or None: The transcription result, if available.
+        """
+        pass
+    
+    @abstractmethod
+    def cleanup(self) -> None:
+        """Release all resources used by the manager."""
+        pass
+    
+    @abstractmethod
+    def setup(self) -> None:
+        """Initialize components needed for voice processing."""
         pass 

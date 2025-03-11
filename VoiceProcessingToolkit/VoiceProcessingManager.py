@@ -13,10 +13,11 @@ from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManage
 from VoiceProcessingToolkit.voice_detection.Voicerecorder import AudioRecorder
 from VoiceProcessingToolkit.shared_resources import thread_manager
 from VoiceProcessingToolkit.config import get_config
+from VoiceProcessingToolkit.interfaces import VoiceProcessingManagerInterface
 
 logger = logging.getLogger(__name__)
 
-class VoiceProcessingManager:
+class VoiceProcessingManager(VoiceProcessingManagerInterface):
     def __init__(self, transcriber, action_manager, audio_stream_manager, wake_word='computer', sensitivity=0.75,
                  output_directory='Wav_MP3', wake_word_output='wake_word_output',
                  audio_format=pyaudio.paInt16, channels=1, rate=16000, frames_per_buffer=512,
