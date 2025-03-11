@@ -1,10 +1,13 @@
 import logging
 import pyaudio
+from typing import Optional
+
+from VoiceProcessingToolkit.interfaces import AudioStreamInterface
 
 logger = logging.getLogger(__name__)
 
 
-class AudioStream:
+class AudioStream(AudioStreamInterface):
     def __init__(self, rate: int, channels: int, _audio_format: int, frames_per_buffer: int):
         self._py_audio = pyaudio.PyAudio()
         self._frames_per_buffer = frames_per_buffer
@@ -57,6 +60,25 @@ class AudioStream:
         """Returns the initialized audio stream."""
         return self._stream
 
+    def start(self) -> None:
+        """
+        Start the audio stream.
+        
+        Implements the AudioStreamInterface.start method.
+        """
+        if self._stream and self._stream.is_stopped():
+            self._stream.start_stream()
+            logger.debug("Audio stream started")
+
+    def stop(self) -> None:
+        """
+        Stop the audio stream.
+        
+        Implements the AudioStreamInterface.stop method.
+        """
+        if self._stream and not self._stream.is_stopped():
+            self._stream.stop_stream()
+            logger.debug("Audio stream stopped")
 
     def read(self) -> bytes:
         """
@@ -77,7 +99,6 @@ class AudioStream:
 
         self.update_rolling_buffer(data)
         return data
-
 
     def is_stream_closed(self):
         """

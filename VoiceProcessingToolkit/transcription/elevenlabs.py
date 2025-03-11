@@ -6,6 +6,8 @@ import requests
 from typing import Optional, Dict, Any, Callable, TypeVar, Any
 from functools import wraps
 
+from VoiceProcessingToolkit.interfaces import TranscriberInterface
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
@@ -54,7 +56,7 @@ def retry_on_error(
         return wrapper
     return decorator
 
-class ElevenLabsTranscriber:
+class ElevenLabsTranscriber(TranscriberInterface):
     """
     A transcriber that uses ElevenLabs Speech-to-Text API to convert audio to text.
     """

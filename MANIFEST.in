@@ -1,9 +1,11 @@
 recursive-include VoiceProcessingToolkit *.md
-include LICENSE
+include LICENSE.txt
 include CONTRIBUTORS.md
 include CHANGELOG.md
 include README.md
 recursive-include VoiceProcessingToolkit *.py
-recursive-include VoiceProcessingToolkit/wake_word_detector *.py
 recursive-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3 notification.wav
-include VoiceProcessingToolkit/wake_word_detector/Wav_MP3/notification.wav
+recursive-include VoiceProcessingToolkit/utils *.py
+include pyproject.toml
+prune VoiceProcessingToolkit/voice_detection/Wav_MP3
+global-exclude *.py[cod] __pycache__ *.so .DS_Store

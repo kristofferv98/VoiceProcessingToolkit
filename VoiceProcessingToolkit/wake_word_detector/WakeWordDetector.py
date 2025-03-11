@@ -23,11 +23,8 @@ Example:
         access_key='your-picovoice-api-key',
         wake_word='computer',
         sensitivity=0.5,
-        action_manager=custom_action,
-        audio_stream_manager=audio_stream_manager,
-        play_notification_sound=True
     )
-    detector.run()
+    detector.run_blocking()
     ```
 """
 
@@ -40,22 +37,31 @@ import struct
 import threading
 import time
 import wave
+import tempfile
+import datetime
+import queue
+import signal
+import platform
+import pathlib
+from typing import Optional, Union, List, Dict, Any, Callable
 
 import pvporcupine
 import pyaudio
 from dotenv import load_dotenv
+from termcolor import colored
 
+from VoiceProcessingToolkit.interfaces import WakeWordDetectorInterface
 from VoiceProcessingToolkit.wake_word_detector.ActionManager import ActionManager
 from VoiceProcessingToolkit.wake_word_detector.AudioStreamManager import AudioStream
 from VoiceProcessingToolkit.wake_word_detector.NotificationSoundManager import NotificationSoundManager
-from VoiceProcessingToolkit.shared_resources import shutdown_flag
+from VoiceProcessingToolkit.shared_resources import shutdown_flag, thread_manager
 
 logger = logging.getLogger(__name__)
 
 
-class WakeWordDetector:
+class WakeWordDetector(WakeWordDetectorInterface):
     """
-    Detects a specified wake word using the Porcupine engine and executes registered actions upon detection.
+    Detects specified wake words using the Porcupine wake word engine.
 
     Attributes:
         _access_key (str): The access key for the Porcupine wake word engine.
