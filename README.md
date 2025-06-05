@@ -1,4 +1,6 @@
  # VoiceProcessingToolkit
+ 
+🚨 This repository is no longer maintained: Visis [Realtime_MLx](https://github.com/kristofferv98/Realtime_mlx_STT) for the latest most up to date server with improved capabilities.
 
  ## Introduction
  VoiceProcessingToolkit is a Python library designed for voice processing tasks, including wake word detection, transcription, and synthesis. It aims to streamline the creation of voice-activated applications.
